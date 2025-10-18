@@ -2,22 +2,27 @@ import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import axios from 'axios';
 import {
-  Container,
   Box,
   Typography,
   TextField,
   Button,
   Alert,
-  Paper,
   Link,
   Grid,
-  IconButton,
-  InputAdornment,
-  MenuItem,
-  Snackbar
+  MenuItem
 } from '@mui/material';
-import { Visibility, VisibilityOff, CheckCircle } from '@mui/icons-material';
-import logoB2connect from '../assets/logoB2connect.webp';
+
+import AuthFormContainer from '../components/common/AuthFormContainer';
+import PasswordField from '../components/common/PasswordField';
+import CustomSnackbar from '../components/common/CustomSnackbar';
+import {
+ validateEmail,
+ validatePassword,
+ validateConfirmPassword,
+ validateRequired,
+ validatePostalCode,
+ validateCity
+} from '../utils/validation';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -35,11 +40,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -69,46 +70,11 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (!formData.first_name.trim()) {
-      newErrors.first_name = 'First name is required';
-    }
-    if (!formData.last_name.trim()) {
-      newErrors.last_name = 'Last name is required';
-    }
-
-    if (!formData.gender) {
-      newErrors.gender = 'Gender is required';
-    }
-
-    if (!formData.rue.trim()) {
-      newErrors.rue = 'Street address is required';
-    }
-    if (!formData.codePostal.trim()) {
-      newErrors.codePostal = 'Postal code is required';
-    } else if (!/^\d{5}$/.test(formData.codePostal)) {
-      newErrors.codePostal = 'Postal code must be 5 digits';
-    }
-    if (!formData.ville.trim()) {
-      newErrors.ville = 'City is required';
-    }
+    const emailError = validateEmail(formData.email);
+    if (emailError) newErrors.email = emailError;
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) newErrors.password = passwordError;
+    const confirmPasswordError = validateConfirmPassword(formData.password, formData.confirmPassword);
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -173,31 +139,7 @@ const Register = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <Container maxWidth="sm">
-        <Paper
-          elevation={3}
-          sx={{
-            p: { xs: 2, sm: 4 },
-            maxWidth: '100%',
-            borderRadius: 2
-          }}
-        >
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <img 
-              src={logoB2connect} 
-              alt="B2CONNECT Logo" 
-              style={{ maxWidth: '200px', height: 'auto' }}
-            />
-          </Box>
-
+     <AuthFormContainer>
           <Typography
             variant="h4"
             component="h1"
@@ -274,11 +216,10 @@ const Register = () => {
               variant="outlined"
             />
 
-            <TextField
+            <PasswordField
               fullWidth
               label="Mot de passe"
               name="password"
-              type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
@@ -287,26 +228,12 @@ const Register = () => {
               disabled={loading}
               autoComplete="new-password"
               variant="outlined"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowPassword(!showPassword)}
-                      edge="end"
-                      disabled={loading}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
             />
 
-            <TextField
+            <PasswordField
               fullWidth
               label="Confirmer le mot de passe"
               name="confirmPassword"
-              type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
@@ -314,20 +241,6 @@ const Register = () => {
               helperText={errors.confirmPassword}
               disabled={loading}
               autoComplete="new-password"
-              variant="outlined"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                      disabled={loading}
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
             />
 
             <TextField
@@ -432,32 +345,14 @@ const Register = () => {
               </Typography>
             </Box>
           </Box>
-        </Paper>
 
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        >
-          <Alert 
-            variant="filled"
-            severity="success" 
-            icon={<CheckCircle />}
-            sx={{ 
-              width: '100%',
-              minWidth: '300px',
-              fontSize: '1rem',
-              '& .MuiAlert-message': {
-                fontSize: '1rem'
-              }
-            }}
-          >
-            Inscription réussie! Redirection vers la page de connexion...
-          </Alert>
-        </Snackbar>
-      </Container>
-    </Box>
+        <CustomSnackbar
+        open={snackbarOpen}
+        onClose={() => setSnackbarOpen(false)}
+        message="Inscription réussie! Redirection vers la page de connexion..."
+        severity="success"
+        />
+      </AuthFormContainer>
   );
 };
 
