@@ -6,110 +6,103 @@ import {
 	Link,
 	MenuItem,
 	TextField,
-	Typography,
-} from "@mui/material";
-import axios from "axios";
-import { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+	Typography
+} from '@mui/material'
+import axios from 'axios'
+import { useState } from 'react'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 
-import AuthFormContainer from "../components/common/AuthFormContainer";
-import CustomSnackbar from "../components/common/CustomSnackbar";
-import PasswordField from "../components/common/PasswordField";
-import {
-	validateCity,
-	validateConfirmPassword,
-	validateEmail,
-	validatePassword,
-	validatePostalCode,
-	validateRequired,
-} from "../utils/validation";
+import AuthFormContainer from '../components/common/AuthFormContainer'
+import CustomSnackbar from '../components/common/CustomSnackbar'
+import PasswordField from '../components/common/PasswordField'
+import { validateEmail, validatePassword } from '../utils/validation'
 
 const Register = () => {
-	const navigate = useNavigate();
+	const navigate = useNavigate()
 	const [formData, setFormData] = useState({
-		email: "",
-		password: "",
-		confirmPassword: "",
-		first_name: "",
-		last_name: "",
-		gender: "",
-		rue: "",
-		codePostal: "",
-		ville: "",
-	});
-	const [errors, setErrors] = useState({});
-	const [apiError, setApiError] = useState("");
-	const [loading, setLoading] = useState(false);
-	const [snackbarOpen, setSnackbarOpen] = useState(false);
+		email: '',
+		password: '',
+		confirmPassword: '',
+		first_name: '',
+		last_name: '',
+		gender: '',
+		rue: '',
+		codePostal: '',
+		ville: ''
+	})
+	const [errors, setErrors] = useState({})
+	const [apiError, setApiError] = useState('')
+	const [loading, setLoading] = useState(false)
+	const [snackbarOpen, setSnackbarOpen] = useState(false)
 
 	const handleChange = (e) => {
-		const { name, value } = e.target;
+		const { name, value } = e.target
 
 		// Prevent numbers in ville field
-		if (name === "ville" && /\d/.test(value)) {
-			return;
+		if (name === 'ville' && /\d/.test(value)) {
+			return
 		}
 
 		setFormData((prev) => ({
 			...prev,
-			[name]: value,
-		}));
+			[name]: value
+		}))
 		// Clear field-specific error when user starts typing
 		if (errors[name]) {
 			setErrors((prev) => ({
 				...prev,
-				[name]: "",
-			}));
+				[name]: ''
+			}))
 		}
 		// Clear API error when user modifies form
 		if (apiError) {
-			setApiError("");
+			setApiError('')
 		}
-	};
+	}
 
 	const validateForm = () => {
-		const newErrors = {};
+		const newErrors = {}
 
-		const emailError = validateEmail(formData.email);
-		if (emailError) newErrors.email = emailError;
-		const passwordError = validatePassword(formData.password);
-		if (passwordError) newErrors.password = passwordError;
+		const emailError = validateEmail(formData.email)
+		if (emailError) newErrors.email = emailError
+		const passwordError = validatePassword(formData.password)
+		if (passwordError) newErrors.password = passwordError
 
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
+		setErrors(newErrors)
+		return Object.keys(newErrors).length === 0
+	}
 
 	const handleRegister = async () => {
 		// Clear previous API error
-		setApiError("");
+		setApiError('')
 
 		// Validate form
 		if (!validateForm()) {
-			return;
+			return
 		}
 
-		setLoading(true);
+		setLoading(true)
 
 		// Format address as: rue, code postal ville, France
-		const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
+		const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`
 
 		try {
-			await axios.post("/api/users/register", {
+			await axios.post('/api/users/register', {
 				email: formData.email,
 				password: formData.password,
 				first_name: formData.first_name,
 				last_name: formData.last_name,
 				gender: formData.gender,
-				address: formattedAddress,
-			});
+				address: formattedAddress
+			})
 
 			// Show success snackbar
-			setSnackbarOpen(true);
+			setSnackbarOpen(true)
 
 			// Redirect to login page after a short delay
 			setTimeout(() => {
-				navigate("/login");
-			}, 1500);
+				navigate('/login')
+			}, 1500)
 		} catch (error) {
 			// Handle API errors
 			if (error.response) {
@@ -117,25 +110,25 @@ const Register = () => {
 				setApiError(
 					error.response.data.message ||
 						error.response.data.error ||
-						"Registration failed. Please try again.",
-				);
+						'Registration failed. Please try again.'
+				)
 			} else if (error.request) {
 				// Request made but no response
-				setApiError("Unable to connect to server. Please try again.");
+				setApiError('Unable to connect to server. Please try again.')
 			} else {
 				// Other errors
-				setApiError("An unexpected error occurred. Please try again.");
+				setApiError('An unexpected error occurred. Please try again.')
 			}
 		} finally {
-			setLoading(false);
+			setLoading(false)
 		}
-	};
+	}
 
 	const handleKeyPress = (e) => {
-		if (e.key === "Enter" && !loading) {
-			handleRegister();
+		if (e.key === 'Enter' && !loading) {
+			handleRegister()
 		}
-	};
+	}
 
 	return (
 		<AuthFormContainer>
@@ -164,7 +157,7 @@ const Register = () => {
 				</Alert>
 			)}
 
-			<Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+			<Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 				<Grid container spacing={2}>
 					<Grid size={6}>
 						<TextField
@@ -294,7 +287,7 @@ const Register = () => {
 							inputProps={{ maxLength: 5 }}
 						/>
 					</Grid>
-					<Grid item size={{ xs: 12, sm: "grow" }}>
+					<Grid item size={{ xs: 12, sm: 'grow' }}>
 						<TextField
 							fullWidth
 							label="Ville"
@@ -321,17 +314,17 @@ const Register = () => {
 					sx={{
 						mt: 1,
 						py: 1.5,
-						textTransform: "none",
-						fontSize: "1rem",
-						fontWeight: 600,
+						textTransform: 'none',
+						fontSize: '1rem',
+						fontWeight: 600
 					}}
 				>
-					{loading ? "Création du compte..." : "S'inscrire"}
+					{loading ? 'Création du compte...' : "S'inscrire"}
 				</Button>
 
-				<Box sx={{ textAlign: "center", mt: 2 }}>
+				<Box sx={{ textAlign: 'center', mt: 2 }}>
 					<Typography variant="body2" color="text.secondary">
-						Déjà un compte?{" "}
+						Déjà un compte?{' '}
 						<Link
 							component={RouterLink}
 							to="/login"
@@ -351,7 +344,7 @@ const Register = () => {
 				severity="success"
 			/>
 		</AuthFormContainer>
-	);
-};
+	)
+}
 
-export default Register;
+export default Register
