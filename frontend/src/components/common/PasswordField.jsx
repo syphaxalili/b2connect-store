@@ -1,0 +1,49 @@
+import { useState } from 'react';
+import { TextField, IconButton, InputAdornment } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+
+const PasswordField = ({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  onKeyDown, 
+  error, 
+  helperText, 
+  disabled, 
+  autoComplete = 'current-password' 
+}) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <TextField
+      fullWidth
+      label={label}
+      name={name}
+      type={showPassword ? 'text' : 'password'}
+      value={value}
+      onChange={onChange}
+      onKeyDown={onKeyDown}
+      error={error}
+      helperText={helperText}
+      disabled={disabled}
+      autoComplete={autoComplete}
+      variant="outlined"
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <IconButton
+              onClick={() => setShowPassword(!showPassword)}
+              edge="end"
+              disabled={disabled}
+            >
+              {showPassword ? <VisibilityOff /> : <Visibility />}
+            </IconButton>
+          </InputAdornment>
+        )
+      }}
+    />
+  );
+};
+
+export default PasswordField;
