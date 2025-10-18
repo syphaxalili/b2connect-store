@@ -1,359 +1,357 @@
-import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import axios from 'axios';
 import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Link,
-  Grid,
-  MenuItem
-} from '@mui/material';
+	Alert,
+	Box,
+	Button,
+	Grid,
+	Link,
+	MenuItem,
+	TextField,
+	Typography,
+} from "@mui/material";
+import axios from "axios";
+import { useState } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import AuthFormContainer from '../components/common/AuthFormContainer';
-import PasswordField from '../components/common/PasswordField';
-import CustomSnackbar from '../components/common/CustomSnackbar';
+import AuthFormContainer from "../components/common/AuthFormContainer";
+import CustomSnackbar from "../components/common/CustomSnackbar";
+import PasswordField from "../components/common/PasswordField";
 import {
- validateEmail,
- validatePassword,
- validateConfirmPassword,
- validateRequired,
- validatePostalCode,
- validateCity
-} from '../utils/validation';
+	validateCity,
+	validateConfirmPassword,
+	validateEmail,
+	validatePassword,
+	validatePostalCode,
+	validateRequired,
+} from "../utils/validation";
 
 const Register = () => {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    first_name: '',
-    last_name: '',
-    gender: '',
-    rue: '',
-    codePostal: '',
-    ville: ''
-  });
-  const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+	const navigate = useNavigate();
+	const [formData, setFormData] = useState({
+		email: "",
+		password: "",
+		confirmPassword: "",
+		first_name: "",
+		last_name: "",
+		gender: "",
+		rue: "",
+		codePostal: "",
+		ville: "",
+	});
+	const [errors, setErrors] = useState({});
+	const [apiError, setApiError] = useState("");
+	const [loading, setLoading] = useState(false);
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Prevent numbers in ville field
-    if (name === 'ville' && /\d/.test(value)) {
-      return;
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear field-specific error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-    // Clear API error when user modifies form
-    if (apiError) {
-      setApiError('');
-    }
-  };
+	const handleChange = (e) => {
+		const { name, value } = e.target;
 
-  const validateForm = () => {
-    const newErrors = {};
+		// Prevent numbers in ville field
+		if (name === "ville" && /\d/.test(value)) {
+			return;
+		}
 
-    const emailError = validateEmail(formData.email);
-    if (emailError) newErrors.email = emailError;
-    const passwordError = validatePassword(formData.password);
-    if (passwordError) newErrors.password = passwordError;
-    const confirmPasswordError = validateConfirmPassword(formData.password, formData.confirmPassword);
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+		// Clear field-specific error when user starts typing
+		if (errors[name]) {
+			setErrors((prev) => ({
+				...prev,
+				[name]: "",
+			}));
+		}
+		// Clear API error when user modifies form
+		if (apiError) {
+			setApiError("");
+		}
+	};
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+	const validateForm = () => {
+		const newErrors = {};
 
-  const handleRegister = async () => {
-    // Clear previous API error
-    setApiError('');
+		const emailError = validateEmail(formData.email);
+		if (emailError) newErrors.email = emailError;
+		const passwordError = validatePassword(formData.password);
+		if (passwordError) newErrors.password = passwordError;
 
-    // Validate form
-    if (!validateForm()) {
-      return;
-    }
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
 
-    setLoading(true);
+	const handleRegister = async () => {
+		// Clear previous API error
+		setApiError("");
 
-    // Format address as: rue, code postal ville, France
-    const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
+		// Validate form
+		if (!validateForm()) {
+			return;
+		}
 
-    try {
-      await axios.post('/api/users/register', {
-        email: formData.email,
-        password: formData.password,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        gender: formData.gender,
-        address: formattedAddress
-      });
+		setLoading(true);
 
-      // Show success snackbar
-      setSnackbarOpen(true);
+		// Format address as: rue, code postal ville, France
+		const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
 
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
-    } catch (error) {
-      // Handle API errors
-      if (error.response) {
-        // Server responded with error status
-        setApiError(
-          error.response.data.message || 
-          error.response.data.error || 
-          'Registration failed. Please try again.'
-        );
-      } else if (error.request) {
-        // Request made but no response
-        setApiError('Unable to connect to server. Please try again.');
-      } else {
-        // Other errors
-        setApiError('An unexpected error occurred. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+		try {
+			await axios.post("/api/users/register", {
+				email: formData.email,
+				password: formData.password,
+				first_name: formData.first_name,
+				last_name: formData.last_name,
+				gender: formData.gender,
+				address: formattedAddress,
+			});
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !loading) {
-      handleRegister();
-    }
-  };
+			// Show success snackbar
+			setSnackbarOpen(true);
 
-  return (
-     <AuthFormContainer>
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            align="center"
-            sx={{ mb: 3, fontWeight: 600 }}
-          >
-            Rejoignez nous maintenant!
-          </Typography>
+			// Redirect to login page after a short delay
+			setTimeout(() => {
+				navigate("/login");
+			}, 1500);
+		} catch (error) {
+			// Handle API errors
+			if (error.response) {
+				// Server responded with error status
+				setApiError(
+					error.response.data.message ||
+						error.response.data.error ||
+						"Registration failed. Please try again.",
+				);
+			} else if (error.request) {
+				// Request made but no response
+				setApiError("Unable to connect to server. Please try again.");
+			} else {
+				// Other errors
+				setApiError("An unexpected error occurred. Please try again.");
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 
-          <Typography
-            variant="body1"
-            align="center"
-            color="text.secondary"
-            sx={{ mb: 4 }}
-          >
-            Créer votre compte pour commencer
-          </Typography>
+	const handleKeyPress = (e) => {
+		if (e.key === "Enter" && !loading) {
+			handleRegister();
+		}
+	};
 
-          {apiError && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {apiError}
-            </Alert>
-          )}
+	return (
+		<AuthFormContainer>
+			<Typography
+				variant="h4"
+				component="h1"
+				gutterBottom
+				align="center"
+				sx={{ mb: 3, fontWeight: 600 }}
+			>
+				Rejoignez nous maintenant!
+			</Typography>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-            <Grid container spacing={2}>
-              <Grid size={6}>
-                <TextField
-                  fullWidth
-                  label="Prénom"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  onKeyDown={handleKeyPress}
-                  error={!!errors.first_name}
-                  helperText={errors.first_name}
-                  disabled={loading}
-                  autoComplete="given-name"
-                  variant="outlined"
-                />
-              </Grid>
-            
+			<Typography
+				variant="body1"
+				align="center"
+				color="text.secondary"
+				sx={{ mb: 4 }}
+			>
+				Créer votre compte pour commencer
+			</Typography>
 
-              <Grid size={6}>
-                <TextField
-                  fullWidth
-                  label="Nom"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  onKeyDown={handleKeyPress}
-                  error={!!errors.last_name}
-                  helperText={errors.last_name}
-                  disabled={loading}
-                  autoComplete="family-name"
-                  variant="outlined"
-                />
-              </Grid>
-            </Grid>
+			{apiError && (
+				<Alert severity="error" sx={{ mb: 3 }}>
+					{apiError}
+				</Alert>
+			)}
 
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              onKeyDown={handleKeyPress}
-              error={!!errors.email}
-              helperText={errors.email}
-              disabled={loading}
-              autoComplete="email"
-              variant="outlined"
-            />
+			<Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+				<Grid container spacing={2}>
+					<Grid size={6}>
+						<TextField
+							fullWidth
+							label="Prénom"
+							name="first_name"
+							value={formData.first_name}
+							onChange={handleChange}
+							onKeyDown={handleKeyPress}
+							error={!!errors.first_name}
+							helperText={errors.first_name}
+							disabled={loading}
+							autoComplete="given-name"
+							variant="outlined"
+						/>
+					</Grid>
 
-            <PasswordField
-              fullWidth
-              label="Mot de passe"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              onKeyDown={handleKeyPress}
-              error={!!errors.password}
-              helperText={errors.password}
-              disabled={loading}
-              autoComplete="new-password"
-              variant="outlined"
-            />
+					<Grid size={6}>
+						<TextField
+							fullWidth
+							label="Nom"
+							name="last_name"
+							value={formData.last_name}
+							onChange={handleChange}
+							onKeyDown={handleKeyPress}
+							error={!!errors.last_name}
+							helperText={errors.last_name}
+							disabled={loading}
+							autoComplete="family-name"
+							variant="outlined"
+						/>
+					</Grid>
+				</Grid>
 
-            <PasswordField
-              fullWidth
-              label="Confirmer le mot de passe"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              onKeyDown={handleKeyPress}
-              error={!!errors.confirmPassword}
-              helperText={errors.confirmPassword}
-              disabled={loading}
-              autoComplete="new-password"
-            />
+				<TextField
+					fullWidth
+					label="Email"
+					name="email"
+					type="email"
+					value={formData.email}
+					onChange={handleChange}
+					onKeyDown={handleKeyPress}
+					error={!!errors.email}
+					helperText={errors.email}
+					disabled={loading}
+					autoComplete="email"
+					variant="outlined"
+				/>
 
-            <TextField
-              fullWidth
-              select
-              label="Genre"
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              error={!!errors.gender}
-              helperText={errors.gender}
-              disabled={loading}
-              variant="outlined"
-            >
-              <MenuItem value="male">Homme</MenuItem>
-              <MenuItem value="female">Femme</MenuItem>
-            </TextField>
+				<PasswordField
+					fullWidth
+					label="Mot de passe"
+					name="password"
+					value={formData.password}
+					onChange={handleChange}
+					onKeyDown={handleKeyPress}
+					error={!!errors.password}
+					helperText={errors.password}
+					disabled={loading}
+					autoComplete="new-password"
+					variant="outlined"
+				/>
 
-            <Typography variant="subtitle2" sx={{ mt: 1, mb: -1, fontWeight: 600 }}>
-              Adresse (France)
-            </Typography>
+				<PasswordField
+					fullWidth
+					label="Confirmer le mot de passe"
+					name="confirmPassword"
+					value={formData.confirmPassword}
+					onChange={handleChange}
+					onKeyDown={handleKeyPress}
+					error={!!errors.confirmPassword}
+					helperText={errors.confirmPassword}
+					disabled={loading}
+					autoComplete="new-password"
+				/>
 
-            <TextField
-              fullWidth
-              label="Rue"
-              name="rue"
-              value={formData.rue}
-              onChange={handleChange}
-              onKeyDown={handleKeyPress}
-              error={!!errors.rue}
-              helperText={errors.rue}
-              disabled={loading}
-              autoComplete="street-address"
-              variant="outlined"
-              placeholder="e.g., 111 boulevard Victor Hugo"
-            />
+				<TextField
+					fullWidth
+					select
+					label="Genre"
+					name="gender"
+					value={formData.gender}
+					onChange={handleChange}
+					error={!!errors.gender}
+					helperText={errors.gender}
+					disabled={loading}
+					variant="outlined"
+				>
+					<MenuItem value="male">Homme</MenuItem>
+					<MenuItem value="female">Femme</MenuItem>
+				</TextField>
 
-            <Grid container spacing={2}>
-              <Grid item size={{xs:12, sm:5}}>
-                <TextField
-                  fullWidth
-                  label="Code Postal"
-                  name="codePostal"
-                  value={formData.codePostal}
-                  onChange={handleChange}
-                  onKeyDown={handleKeyPress}
-                  error={!!errors.codePostal}
-                  helperText={errors.codePostal}
-                  disabled={loading}
-                  autoComplete="postal-code"
-                  variant="outlined"
-                  placeholder="e.g., 92230"
-                  inputProps={{ maxLength: 5 }}
-                />
-              </Grid>
-              <Grid item size={{xs:12, sm: 'grow'}}>
-                <TextField
-                  fullWidth
-                  label="Ville"
-                  name="ville"
-                  value={formData.ville}
-                  onChange={handleChange}
-                  onKeyDown={handleKeyPress}
-                  error={!!errors.ville}
-                  helperText={errors.ville}
-                  disabled={loading}
-                  autoComplete="address-level2"
-                  variant="outlined"
-                  placeholder="e.g., Gennevilliers"
-                />
-              </Grid>
-            </Grid>
+				<Typography variant="subtitle2" sx={{ mt: 1, mb: -1, fontWeight: 600 }}>
+					Adresse (France)
+				</Typography>
 
-            <Button
-              fullWidth
-              variant="contained"
-              size="large"
-              onClick={handleRegister}
-              disabled={loading}
-              sx={{
-                mt: 1,
-                py: 1.5,
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 600
-              }}
-            >
-              {loading ? 'Création du compte...' : 'S\'inscrire'}
-            </Button>
+				<TextField
+					fullWidth
+					label="Rue"
+					name="rue"
+					value={formData.rue}
+					onChange={handleChange}
+					onKeyDown={handleKeyPress}
+					error={!!errors.rue}
+					helperText={errors.rue}
+					disabled={loading}
+					autoComplete="street-address"
+					variant="outlined"
+					placeholder="e.g., 111 boulevard Victor Hugo"
+				/>
 
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Déjà un compte?{' '}
-                <Link
-                  component={RouterLink}
-                  to="/login"
-                  underline="hover"
-                  sx={{ fontWeight: 600 }}
-                >
-                  Se connecter
-                </Link>
-              </Typography>
-            </Box>
-          </Box>
+				<Grid container spacing={2}>
+					<Grid item size={{ xs: 12, sm: 5 }}>
+						<TextField
+							fullWidth
+							label="Code Postal"
+							name="codePostal"
+							value={formData.codePostal}
+							onChange={handleChange}
+							onKeyDown={handleKeyPress}
+							error={!!errors.codePostal}
+							helperText={errors.codePostal}
+							disabled={loading}
+							autoComplete="postal-code"
+							variant="outlined"
+							placeholder="e.g., 92230"
+							inputProps={{ maxLength: 5 }}
+						/>
+					</Grid>
+					<Grid item size={{ xs: 12, sm: "grow" }}>
+						<TextField
+							fullWidth
+							label="Ville"
+							name="ville"
+							value={formData.ville}
+							onChange={handleChange}
+							onKeyDown={handleKeyPress}
+							error={!!errors.ville}
+							helperText={errors.ville}
+							disabled={loading}
+							autoComplete="address-level2"
+							variant="outlined"
+							placeholder="e.g., Gennevilliers"
+						/>
+					</Grid>
+				</Grid>
 
-        <CustomSnackbar
-        open={snackbarOpen}
-        onClose={() => setSnackbarOpen(false)}
-        message="Inscription réussie! Redirection vers la page de connexion..."
-        severity="success"
-        />
-      </AuthFormContainer>
-  );
+				<Button
+					fullWidth
+					variant="contained"
+					size="large"
+					onClick={handleRegister}
+					disabled={loading}
+					sx={{
+						mt: 1,
+						py: 1.5,
+						textTransform: "none",
+						fontSize: "1rem",
+						fontWeight: 600,
+					}}
+				>
+					{loading ? "Création du compte..." : "S'inscrire"}
+				</Button>
+
+				<Box sx={{ textAlign: "center", mt: 2 }}>
+					<Typography variant="body2" color="text.secondary">
+						Déjà un compte?{" "}
+						<Link
+							component={RouterLink}
+							to="/login"
+							underline="hover"
+							sx={{ fontWeight: 600 }}
+						>
+							Se connecter
+						</Link>
+					</Typography>
+				</Box>
+			</Box>
+
+			<CustomSnackbar
+				open={snackbarOpen}
+				onClose={() => setSnackbarOpen(false)}
+				message="Inscription réussie! Redirection vers la page de connexion..."
+				severity="success"
+			/>
+		</AuthFormContainer>
+	);
 };
 
 export default Register;
