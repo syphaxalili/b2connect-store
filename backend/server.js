@@ -3,7 +3,7 @@ dotenv.config({quiet: true});
 
 const express = require('express');
 const { connectMongoDB, connectMySQL } = require('./config/db');
-
+const { initModels } = require('./models/mysql');
 
 const app = express();
 app.use(express.json());
@@ -12,7 +12,17 @@ app.use(express.json());
 const initDB = async () => {
   await connectMongoDB();
   await connectMySQL();
+  await initModels();
 };
+
+// Initialiser les routes
+app.use('/api', require('./routes'));
+
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong' });
+});
 
 // Démarrer le serveur
 const PORT = process.env.PORT || 5000;
