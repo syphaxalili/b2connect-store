@@ -4,8 +4,8 @@ import { Alert, Snackbar } from "@mui/material";
 const CustomSnackbar = ({
   open,
   onClose,
-  message,
   severity = "success",
+  message,
   autoHideDuration = 3000
 }) => {
   return (
@@ -20,11 +20,15 @@ const CustomSnackbar = ({
         severity={severity}
         icon={severity === "success" ? <CheckCircle /> : undefined}
         sx={{
+          display: "flex",
+          alignItems: "center",
           width: "100%",
-          minWidth: "300px",
-          fontSize: "1rem",
+          minWidth: "400px",
+          "& .MuiAlert-icon": {
+            fontSize: "2rem"
+          },
           "& .MuiAlert-message": {
-            fontSize: "1rem"
+            fontSize: "1.3rem"
           }
         }}
       >

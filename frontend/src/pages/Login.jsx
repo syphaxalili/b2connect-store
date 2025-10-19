@@ -1,12 +1,7 @@
 import {
-  Alert,
   Box,
   Button,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControlLabel,
   Link,
   TextField,
@@ -18,6 +13,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import AuthFormContainer from "../components/common/AuthFormContainer";
 import CustomSnackbar from "../components/common/CustomSnackbar";
 import PasswordField from "../components/common/PasswordField";
+import ForgotPasswordDialog from "../components/dialogs/ForgotPasswordDialog";
 import { setAuthToken } from "../utils/storage";
 import { validateEmail, validatePassword } from "../utils/validation";
 
@@ -27,18 +23,16 @@ const Login = () => {
     email: "",
     password: ""
   });
-  const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
-  const [forgotPasswordError, setForgotPasswordError] = useState("");
-  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
-  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-  const [forgotPasswordErrorSnackbar, setForgotPasswordErrorSnackbar] =
+  const [fieldsErrors, setFieldsErrors] = useState({});
+  const [snackBarData, setSnackBarData] = useState({
+    message: "",
+    severity: "success"
+  });
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [forgotPasswordDialogOpen, setForgotPasswordDialogOpen] =
     useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,16 +40,12 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-    // Clear field-specific error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
+
+    if (fieldsErrors[name]) {
+      setFieldsErrors((prev) => ({
         ...prev,
         [name]: ""
       }));
-    }
-    // Clear API error when user modifies form
-    if (apiError) {
-      setApiError("");
     }
   };
 
@@ -68,50 +58,34 @@ const Login = () => {
     const passwordError = validatePassword(formData.password);
     if (passwordError) newErrors.password = passwordError;
 
-    setErrors(newErrors);
+    setFieldsErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
-    // Clear previous API error
-    setApiError("");
-
-    // Validate form
     if (!validateForm()) {
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await axios.post("/api/users/login", {
         email: formData.email,
         password: formData.password
       });
 
-      if (response.data.token) {
-        setAuthToken(response.data.token, response.data.user_id, rememberMe);
-        setSnackbarOpen(true);
-        setTimeout(() => navigate("/"), 1000);
-      } else {
-        setApiError("Connexion réussie mais aucun token reçu");
-      }
-    } catch (error) {
-      // Handle API errors
-      if (error.response) {
-        // Server responded with error status
-        setApiError(
-          error.response.data.message ||
-            error.response.data.error ||
-            "Invalid email or password"
-        );
-      } else if (error.request) {
-        // Request made but no response
-        setApiError("Unable to connect to server. Please try again.");
-      } else {
-        // Other errors
-        setApiError("An unexpected error occurred. Please try again.");
-      }
+      setAuthToken(response.data.token, response.data.user_id, rememberMe);
+      setSnackBarData({
+        severity: "success",
+        message: "Connexion reussie"
+      });
+      setShowSnackbar(true);
+      setTimeout(() => navigate("/"), 1000);
+    } catch (err) {
+      setSnackBarData({
+        message: err.response.data.error,
+        severity: "error"
+      });
+      setShowSnackbar(true);
     } finally {
       setLoading(false);
     }
@@ -120,46 +94,6 @@ const Login = () => {
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !loading) {
       handleLogin();
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    setForgotPasswordError("");
-
-    const emailError = validateEmail(forgotPasswordEmail);
-    if (emailError) {
-      setForgotPasswordError(emailError);
-      setForgotPasswordErrorSnackbar(true);
-      return;
-    }
-
-    setForgotPasswordLoading(true);
-
-    try {
-      // Simulate API call - replace with actual endpoint
-      await axios.post("/api/users/forgot-password", {
-        email: forgotPasswordEmail
-      });
-
-      // Show success snackbar
-      setForgotPasswordSuccess(true);
-      setForgotPasswordOpen(false);
-      setForgotPasswordEmail("");
-    } catch (error) {
-      if (error.response) {
-        setForgotPasswordError(
-          error.response.data.message ||
-            error.response.data.error ||
-            "Failed to send reset email"
-        );
-      } else {
-        setForgotPasswordError(
-          "Unable to connect to server. Please try again."
-        );
-      }
-      setForgotPasswordErrorSnackbar(true);
-    } finally {
-      setForgotPasswordLoading(false);
     }
   };
 
@@ -184,38 +118,32 @@ const Login = () => {
         Se connecter à votre compte
       </Typography>
 
-      {apiError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {apiError}
-        </Alert>
-      )}
-
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         <TextField
           fullWidth
+          variant="outlined"
           label="Adresse mail"
           name="email"
           type="email"
+          autoComplete="email"
           value={formData.email}
           onChange={handleChange}
-          onKeyPress={handleKeyPress}
-          error={!!errors.email}
-          helperText={errors.email}
+          onKeyDown={handleKeyPress}
+          error={!!fieldsErrors.email}
+          helperText={fieldsErrors.email}
           disabled={loading}
-          autoComplete="email"
-          variant="outlined"
         />
 
         <PasswordField
           label="Mot de passe"
           name="password"
+          autoComplete="current-password"
           value={formData.password}
           onChange={handleChange}
           onKeyDown={handleKeyPress}
-          error={!!errors.password}
-          helperText={errors.password}
+          error={!!fieldsErrors.password}
+          helperText={fieldsErrors.password}
           disabled={loading}
-          autoComplete="current-password"
         />
 
         <Box
@@ -229,7 +157,7 @@ const Login = () => {
             control={
               <Checkbox
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={({ target }) => setRememberMe(target.checked)}
                 disabled={loading}
                 color="primary"
               />
@@ -239,7 +167,7 @@ const Login = () => {
           <Link
             component="button"
             variant="body2"
-            onClick={() => setForgotPasswordOpen(true)}
+            onClick={() => setForgotPasswordDialogOpen(true)}
             underline="hover"
             sx={{ fontWeight: 600, cursor: "pointer" }}
             type="button"
@@ -281,86 +209,20 @@ const Login = () => {
       </Box>
 
       <CustomSnackbar
-        open={snackbarOpen}
-        onClose={() => setSnackbarOpen(false)}
-        message="Connexion réussie!"
-        severity="success"
+        severity={snackBarData.severity}
+        open={showSnackbar}
+        onClose={() => setShowSnackbar(false)}
+        message={snackBarData.message}
       />
 
-      <CustomSnackbar
-        open={forgotPasswordSuccess}
-        onClose={() => setForgotPasswordSuccess(false)}
-        message="Email de réinitialisation de mot de passe envoyé! Veuillez vérifier votre boîte de réception."
-        severity="success"
-        autoHideDuration={4000}
-      />
-
-      <CustomSnackbar
-        open={forgotPasswordErrorSnackbar}
-        onClose={() => {
-          setForgotPasswordErrorSnackbar(false);
-          setForgotPasswordError("");
-        }}
-        message={forgotPasswordError}
-        severity="error"
-        autoHideDuration={4000}
-      />
-
-      <Dialog
-        open={forgotPasswordOpen}
-        onClose={() => {
-          setForgotPasswordOpen(false);
-          setForgotPasswordEmail("");
-          setForgotPasswordError("");
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Mot de passe oublié</DialogTitle>
-        <DialogContent>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 3, mt: 1 }}
-          >
-            Entrez votre adresse mail et nous vous enverrons un lien pour
-            réinitialiser votre mot de passe.
-          </Typography>
-          <TextField
-            fullWidth
-            label="Email"
-            type="email"
-            value={forgotPasswordEmail}
-            onChange={(e) => {
-              setForgotPasswordEmail(e.target.value);
-            }}
-            disabled={forgotPasswordLoading}
-            autoComplete="email"
-            variant="outlined"
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button
-            onClick={() => {
-              setForgotPasswordOpen(false);
-              setForgotPasswordEmail("");
-              setForgotPasswordError("");
-            }}
-            disabled={forgotPasswordLoading}
-          >
-            Annuler
-          </Button>
-          <Button
-            onClick={handleForgotPassword}
-            variant="contained"
-            disabled={forgotPasswordLoading}
-          >
-            {forgotPasswordLoading
-              ? "Envoi en cours..."
-              : "Envoyer le lien de réinitialisation"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {forgotPasswordDialogOpen ? (
+        <ForgotPasswordDialog
+          open={forgotPasswordDialogOpen}
+          onClose={() => setForgotPasswordDialogOpen(false)}
+          setShowSnackbar={setShowSnackbar}
+          setSnackBarData={setSnackBarData}
+        />
+      ) : null}
     </AuthFormContainer>
   );
 };

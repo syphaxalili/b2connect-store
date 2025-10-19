@@ -18,29 +18,31 @@ const PasswordField = ({
   return (
     <TextField
       fullWidth
+      variant="outlined"
       label={label}
       name={name}
       type={showPassword ? "text" : "password"}
+      autoComplete={autoComplete}
       value={value}
       onChange={onChange}
       onKeyDown={onKeyDown}
       error={error}
       helperText={helperText}
       disabled={disabled}
-      autoComplete={autoComplete}
-      variant="outlined"
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="end">
-            <IconButton
-              onClick={() => setShowPassword(!showPassword)}
-              edge="end"
-              disabled={disabled}
-            >
-              {showPassword ? <VisibilityOff /> : <Visibility />}
-            </IconButton>
-          </InputAdornment>
-        )
+      slotProps={{
+        input: {
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => setShowPassword(!showPassword)}
+                edge="end"
+                disabled={disabled}
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          )
+        }
       }}
     />
   );
