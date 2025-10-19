@@ -43,6 +43,12 @@ function ForgotPasswordDialog({ open, onClose }) {
     }
   };
 
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !loading) {
+      handleForgotPassword();
+    }
+  };
+
   return (
     <Dialog open={open} maxWidth="sm" fullWidth>
       <DialogTitle>Mot de passe oublié</DialogTitle>
@@ -68,6 +74,7 @@ function ForgotPasswordDialog({ open, onClose }) {
             setError("");
             setEmail(e.target.value);
           }}
+          onKeyDown={handleKeyPress}
           disabled={loading}
         />
       </DialogContent>

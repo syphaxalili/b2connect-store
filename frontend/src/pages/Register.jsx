@@ -1,5 +1,4 @@
 import {
-  Alert,
   Box,
   Button,
   Grid,
@@ -13,12 +12,20 @@ import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import AuthFormContainer from "../components/common/AuthFormContainer";
-import CustomSnackbar from "../components/common/CustomSnackbar";
 import PasswordField from "../components/common/PasswordField";
-import { validateEmail, validatePassword } from "../utils/validation";
+import { useSnackbar } from "../hooks/useSnackbar";
+import {
+  validateCity,
+  validateConfirmPassword,
+  validateEmail,
+  validatePassword,
+  validatePostalCode,
+  validateRequired
+} from "../utils/validation";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useSnackbar();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -31,32 +38,21 @@ const Register = () => {
     ville: ""
   });
   const [errors, setErrors] = useState({});
-  const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Prevent numbers in ville field
-    if (name === "ville" && /\d/.test(value)) {
-      return;
-    }
 
     setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
-    // Clear field-specific error when user starts typing
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: ""
       }));
-    }
-    // Clear API error when user modifies form
-    if (apiError) {
-      setApiError("");
     }
   };
 
@@ -65,25 +61,45 @@ const Register = () => {
 
     const emailError = validateEmail(formData.email);
     if (emailError) newErrors.email = emailError;
+
     const passwordError = validatePassword(formData.password);
     if (passwordError) newErrors.password = passwordError;
+
+    const confirmPasswordError = validateConfirmPassword(
+      formData.password,
+      formData.confirmPassword
+    );
+    if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
+
+    const firstNameError = validateRequired(formData.first_name, "Prénom");
+    if (firstNameError) newErrors.first_name = firstNameError;
+
+    const lastNameError = validateRequired(formData.last_name, "Nom");
+    if (lastNameError) newErrors.last_name = lastNameError;
+
+    const genderError = validateRequired(formData.gender, "Genre");
+    if (genderError) newErrors.gender = genderError;
+
+    const rueError = validateRequired(formData.rue, "Rue");
+    if (rueError) newErrors.rue = rueError;
+
+    const codePostalError = validatePostalCode(formData.codePostal);
+    if (codePostalError) newErrors.codePostal = codePostalError;
+
+    const villeError = validateCity(formData.ville);
+    if (villeError) newErrors.ville = villeError;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleRegister = async () => {
-    // Clear previous API error
-    setApiError("");
-
-    // Validate form
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
 
-    // Format address as: rue, code postal ville, France
     const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
 
     try {
@@ -96,30 +112,14 @@ const Register = () => {
         address: formattedAddress
       });
 
-      // Show success snackbar
-      setSnackbarOpen(true);
+      showSuccess("Registration successful!");
 
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
+      navigate("/login");
     } catch (error) {
-      // Handle API errors
-      if (error.response) {
-        // Server responded with error status
-        setApiError(
-          error.response.data.message ||
-            error.response.data.error ||
-            "Registration failed. Please try again."
-        );
-      } else if (error.request) {
-        // Request made but no response
-        setApiError("Unable to connect to server. Please try again.");
-      } else {
-        // Other errors
-        setApiError("An unexpected error occurred. Please try again.");
-      }
-    } finally {
+      showError(
+        error.response.data.error || "Registration failed. Please try again."
+      );
+
       setLoading(false);
     }
   };
@@ -150,12 +150,6 @@ const Register = () => {
       >
         Créer votre compte pour commencer
       </Typography>
-
-      {apiError && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {apiError}
-        </Alert>
-      )}
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         <Grid container spacing={2}>
@@ -336,13 +330,6 @@ const Register = () => {
           </Typography>
         </Box>
       </Box>
-
-      <CustomSnackbar
-        open={snackbarOpen}
-        onClose={() => setSnackbarOpen(false)}
-        message="Inscription réussie! Redirection vers la page de connexion..."
-        severity="success"
-      />
     </AuthFormContainer>
   );
 };

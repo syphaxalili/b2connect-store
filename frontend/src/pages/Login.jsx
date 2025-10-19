@@ -70,7 +70,7 @@ const Login = () => {
 
       setAuthToken(response.data.token, response.data.user_id, rememberMe);
       showSuccess("Connexion réussie!");
-      setTimeout(() => navigate("/"), 1000);
+      navigate("/");
     } catch (err) {
       const errorMessage =
         err.response?.data?.error ||
