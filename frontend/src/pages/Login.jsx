@@ -11,28 +11,23 @@ import axios from "axios";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import AuthFormContainer from "../components/common/AuthFormContainer";
-import CustomSnackbar from "../components/common/CustomSnackbar";
 import PasswordField from "../components/common/PasswordField";
 import ForgotPasswordDialog from "../components/dialogs/ForgotPasswordDialog";
+import { useSnackbar } from "../hooks/useSnackbar";
 import { setAuthToken } from "../utils/storage";
 import { validateEmail, validatePassword } from "../utils/validation";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useSnackbar();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
   const [fieldsErrors, setFieldsErrors] = useState({});
-  const [snackBarData, setSnackBarData] = useState({
-    message: "",
-    severity: "success"
-  });
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [forgotPasswordDialogOpen, setForgotPasswordDialogOpen] =
-    useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [openPasswordResetDialog, setOpenPasswordResetDialog] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,18 +69,14 @@ const Login = () => {
       });
 
       setAuthToken(response.data.token, response.data.user_id, rememberMe);
-      setSnackBarData({
-        severity: "success",
-        message: "Connexion reussie"
-      });
-      setShowSnackbar(true);
+      showSuccess("Connexion réussie!");
       setTimeout(() => navigate("/"), 1000);
     } catch (err) {
-      setSnackBarData({
-        message: err.response.data.error,
-        severity: "error"
-      });
-      setShowSnackbar(true);
+      const errorMessage =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Erreur de connexion";
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -167,7 +158,7 @@ const Login = () => {
           <Link
             component="button"
             variant="body2"
-            onClick={() => setForgotPasswordDialogOpen(true)}
+            onClick={() => setOpenPasswordResetDialog(true)}
             underline="hover"
             sx={{ fontWeight: 600, cursor: "pointer" }}
             type="button"
@@ -208,19 +199,10 @@ const Login = () => {
         </Box>
       </Box>
 
-      <CustomSnackbar
-        severity={snackBarData.severity}
-        open={showSnackbar}
-        onClose={() => setShowSnackbar(false)}
-        message={snackBarData.message}
-      />
-
-      {forgotPasswordDialogOpen ? (
+      {openPasswordResetDialog ? (
         <ForgotPasswordDialog
-          open={forgotPasswordDialogOpen}
-          onClose={() => setForgotPasswordDialogOpen(false)}
-          setShowSnackbar={setShowSnackbar}
-          setSnackBarData={setSnackBarData}
+          open={openPasswordResetDialog}
+          onClose={() => setOpenPasswordResetDialog(false)}
         />
       ) : null}
     </AuthFormContainer>

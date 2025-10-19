@@ -9,17 +9,14 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
+import { useSnackbar } from "../../hooks/useSnackbar";
 import { validateEmail } from "../../utils/validation";
 
-function ForgotPasswordDialog({
-  open,
-  onClose,
-  setSnackBarData,
-  setShowSnackbar
-}) {
+function ForgotPasswordDialog({ open, onClose }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { showSuccess, showError } = useSnackbar();
 
   const handleForgotPassword = async () => {
     setLoading(true);
@@ -36,15 +33,13 @@ function ForgotPasswordDialog({
       await axios.post("/api/users/forgot-password", {
         email
       });
-
+      showSuccess(
+        "Un lien de réinitialisation a été envoyé à votre adresse mail."
+      );
       onClose();
     } catch (error) {
       setLoading(false);
-      setSnackBarData({
-        severity: "error",
-        message: error.message
-      });
-      setShowSnackbar(true);
+      showError(error.message);
     }
   };
 
