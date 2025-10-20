@@ -87,9 +87,7 @@ function ForgotPasswordDialog({ open, onClose }) {
           variant="contained"
           disabled={loading}
         >
-          {loading
-            ? "Envoi en cours..."
-            : "Envoyer le lien de réinitialisation"}
+          {loading ? "Envoi en cours..." : "Envoyer"}
         </Button>
       </DialogActions>
     </Dialog>
