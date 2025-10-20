@@ -24,9 +24,13 @@ import {
   useTheme
 } from "@mui/material";
 import { useState } from "react";
+import { connect, useDispatch } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import b2connectLogo from "../../assets/logoB2connect.webp";
+import { clearUser } from "../../store/slices/authSlice";
 import { clearAuthToken } from "../../utils/storage";
+
+const mapStateToProps = (state) => ({ user: state.auth });
 
 const drawerWidth = 280;
 
@@ -41,6 +45,7 @@ function AdminLayout({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
+  const dispatch = useDispatch();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -49,6 +54,7 @@ function AdminLayout({ user }) {
   };
 
   const handleLogout = () => {
+    dispatch(clearUser());
     clearAuthToken();
     navigate("/login");
   };
@@ -269,4 +275,4 @@ function AdminLayout({ user }) {
   );
 }
 
-export default AdminLayout;
+export default connect(mapStateToProps)(AdminLayout);

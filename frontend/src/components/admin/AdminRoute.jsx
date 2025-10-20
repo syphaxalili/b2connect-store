@@ -1,14 +1,21 @@
+import { connect } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { isAuthenticated } from "../../utils/storage";
+import { isAdmin, isAuthenticated } from "../../utils/storage";
 
-const AdminRoute = ({ children }) => {
+const mapStateToProps = (state) => ({ user: state.auth });
+
+const AdminRoute = ({ children, user }) => {
   // Vérifier si l'utilisateur est authentifié
-  // TODO: Ajouter la vérification du rôle admin quand le backend sera prêt
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Vérifier si l'utilisateur est admin
+  if (!isAdmin(user)) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
-export default AdminRoute;
+export default connect(mapStateToProps)(AdminRoute);
