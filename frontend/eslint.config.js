@@ -1,33 +1,41 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import react from 'eslint-plugin-react'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { defineConfig, globalIgnores } from 'eslint/config'
+import js from "@eslint/js";
+import pluginReact from "eslint-plugin-react";
+import pluginReactRefresh from "eslint-plugin-react-refresh";
+import { defineConfig } from "eslint/config";
+import globals from "globals";
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  pluginReact.configs.flat.recommended,
+  pluginReactRefresh.configs.recommended,
   {
-    files: ['**/*.{js,jsx}'],
-    extends: [
-      js.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-      react.configs.recommended
-    ],
-    plugins: {
-      react,
-    },
+    files: ["**/*.{js,mjs,cjs,jsx}"],
     languageOptions: {
-      ecmaVersion: 'latest',
       globals: globals.browser,
       parserOptions: {
-        ecmaFeatures: { jsx: true },
-        sourceType: 'module',
-      },
+        ecmaVersion: "latest",
+        sourceType: "module",
+        ecmaFeatures: {
+          jsx: true
+        }
+      }
     },
+    settings: {
+      react: {
+        version: "detect"
+      }
+    },
+    plugins: {
+      js,
+      react: pluginReact,
+      "react-resfresh": pluginReactRefresh
+    },
+    extends: ["js/recommended"],
     rules: {
-      'react/react-in-jsx-scope': 'off', // pas besoin avec React 17+
-    },
-  },
-])
+      "react/react-in-jsx-scope": "off",
+      "react/prop-types": "off",
+      "react/no-unescaped-entities": "off",
+      "react-refresh/only-export-components": "warn",
+      "no-console": "warn"
+    }
+  }
+]);
