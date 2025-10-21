@@ -1,7 +1,6 @@
-export const setAuthToken = (token, userId, rememberMe = false) => {
+export const setAuthToken = (token, rememberMe = false) => {
   const storage = rememberMe ? localStorage : sessionStorage;
   storage.setItem("token", token);
-  storage.setItem("user_id", userId);
 };
 
 export const getAuthToken = () => {
@@ -10,11 +9,13 @@ export const getAuthToken = () => {
 
 export const clearAuthToken = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("user_id");
   sessionStorage.removeItem("token");
-  sessionStorage.removeItem("user_id");
 };
 
 export const isAuthenticated = () => {
   return getAuthToken() !== null;
+};
+
+export const isAdmin = (user) => {
+  return user?.role === "admin";
 };

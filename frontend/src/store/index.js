@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./slices/authSlice";
 import snackbarReducer from "./slices/snackbarSlice";
 
 export const store = configureStore({
   reducer: {
-    snackbar: snackbarReducer
+    snackbar: snackbarReducer,
+    auth: authReducer
   }
 });
 
