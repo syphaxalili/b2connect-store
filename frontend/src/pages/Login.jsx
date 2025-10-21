@@ -9,11 +9,13 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import AuthFormContainer from "../components/common/AuthFormContainer";
 import PasswordField from "../components/common/PasswordField";
 import ForgotPasswordDialog from "../components/dialogs/ForgotPasswordDialog";
 import { useSnackbar } from "../hooks/useSnackbar";
+import { setUser } from "../store/slices/authSlice";
 import { setAuthToken } from "../utils/storage";
 import { validateEmail, validatePassword } from "../utils/validation";
 
@@ -28,6 +30,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [openPasswordResetDialog, setOpenPasswordResetDialog] = useState(false);
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,9 +71,21 @@ const Login = () => {
         password: formData.password
       });
 
-      setAuthToken(response.data.token, response.data.user_id, rememberMe);
+      const { token, name, email, role } = response.data;
+
+      // Sauvegarder les données utilisateur dans Redux
+      dispatch(setUser({ name, email, role }));
+
+      setAuthToken(token, rememberMe);
+
       showSuccess("Connexion réussie!");
-      navigate("/");
+
+      // Rediriger selon le rôle
+      if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       const errorMessage =
         err.response?.data?.error ||
