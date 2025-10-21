@@ -76,7 +76,7 @@ function DataTable({
           <TableBody>
             {data.map((row) => (
               <TableRow
-                key={row.id}
+                key={row._id || row.id}
                 hover
                 sx={{
                   cursor: "pointer",

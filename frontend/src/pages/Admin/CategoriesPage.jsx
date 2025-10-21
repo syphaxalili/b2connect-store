@@ -1,53 +1,14 @@
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { deleteCategory, getCategories } from "../../api/categories";
 import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
 import DataTable from "../../components/admin/DataTable";
 import DataTableToolbar from "../../components/admin/DataTableToolbar";
 import ConfirmDialog from "../../components/dialogs/ConfirmDialog";
 import { useSnackbar } from "../../hooks/useSnackbar";
 
-// Données mockées - à remplacer par des appels API
-const mockCategories = [
-  {
-    id: 1,
-    name: "Électronique",
-    description: "Produits électroniques et gadgets",
-    created_at: "2024-01-15T10:30:00Z",
-    product_count: 45
-  },
-  {
-    id: 2,
-    name: "Vêtements",
-    description: "Mode et accessoires",
-    created_at: "2024-01-20T14:20:00Z",
-    product_count: 120
-  },
-  {
-    id: 3,
-    name: "Maison & Jardin",
-    description: "Articles pour la maison et le jardin",
-    created_at: "2024-02-01T09:15:00Z",
-    product_count: 78
-  },
-  {
-    id: 4,
-    name: "Sports & Loisirs",
-    description: "Équipements sportifs et loisirs",
-    created_at: "2024-02-10T16:45:00Z",
-    product_count: 32
-  },
-  {
-    id: 5,
-    name: "Livres",
-    description: "Livres et magazines",
-    created_at: "2024-02-15T11:00:00Z",
-    product_count: 156
-  }
-];
-
 const columns = [
-  { id: "id", label: "ID", align: "center" },
   { id: "name", label: "Nom" },
   { id: "description", label: "Description" },
   {
@@ -58,20 +19,22 @@ const columns = [
   {
     id: "product_count",
     label: "Nombre de produits",
-    align: "center"
+    align: "center",
+    render: (value) => value || "Non disponible"
   }
 ];
 
 function CategoriesPage() {
   const navigate = useNavigate();
-  const { showSuccess } = useSnackbar();
-  const [categories, setCategories] = useState(mockCategories);
-  const [filteredCategories, setFilteredCategories] = useState(mockCategories);
+  const { showSuccess, showError } = useSnackbar();
+  const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [orderBy, setOrderBy] = useState("id");
+  const [orderBy, setOrderBy] = useState("_id");
   const [order, setOrder] = useState("asc");
+  const [loading, setLoading] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState(
     columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
   );
@@ -84,6 +47,25 @@ function CategoriesPage() {
     { label: "Admin", path: "/admin" },
     { label: "Catégories", path: "/admin/categories" }
   ];
+
+  // Charger les catégories depuis l'API
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const response = await getCategories();
+      setCategories(response.data);
+    } catch (error) {
+      showError("Erreur lors du chargement des catégories");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger les catégories au montage du composant
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   // Filtrer et trier les catégories
   useEffect(() => {
@@ -101,8 +83,18 @@ function CategoriesPage() {
       if (orderBy === "created_at") {
         aVal = new Date(aVal);
         bVal = new Date(bVal);
+        return order === "asc" ? aVal - bVal : bVal - aVal;
       }
 
+      // Pour les chaînes de caractères, utiliser localeCompare pour gérer les accents
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        const comparison = aVal.localeCompare(bVal, "fr", {
+          sensitivity: "base"
+        });
+        return order === "asc" ? comparison : -comparison;
+      }
+
+      // Pour les nombres
       if (aVal < bVal) return order === "asc" ? -1 : 1;
       if (aVal > bVal) return order === "asc" ? 1 : -1;
       return 0;
@@ -117,7 +109,7 @@ function CategoriesPage() {
   };
 
   const handleRefresh = () => {
-    // TODO: Appeler l'API pour rafraîchir les données
+    fetchCategories();
     showSuccess("Données rafraîchies!");
   };
 
@@ -126,24 +118,27 @@ function CategoriesPage() {
   };
 
   const handleEdit = (category) => {
-    navigate(`/admin/categories/${category.id}/edit`);
+    navigate(`/admin/categories/${category._id}/edit`);
   };
 
   const handleRowClick = (category) => {
-    navigate(`/admin/categories/${category.id}`);
+    navigate(`/admin/categories/${category._id}`);
   };
 
   const handleDeleteClick = (category) => {
     setDeleteDialog({ open: true, category });
   };
 
-  const handleDeleteConfirm = () => {
-    // TODO: Appeler l'API pour supprimer
-    setCategories((prev) =>
-      prev.filter((cat) => cat.id !== deleteDialog.category.id)
-    );
-    showSuccess("Catégorie supprimée avec succès!");
-    setDeleteDialog({ open: false, category: null });
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteCategory(deleteDialog.category._id);
+      showSuccess("Catégorie supprimée avec succès!");
+      setDeleteDialog({ open: false, category: null });
+      fetchCategories(); // Recharger les données
+    } catch (error) {
+      showError("Erreur lors de la suppression de la catégorie");
+      console.error(error);
+    }
   };
 
   const handleDeleteCancel = () => {
@@ -179,6 +174,19 @@ function CategoriesPage() {
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
   );
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>

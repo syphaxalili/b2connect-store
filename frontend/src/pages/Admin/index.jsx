@@ -13,9 +13,9 @@ function Admin() {
       <Route element={<AdminLayout />}>
         <Route index element={<Navigate to="/admin/categories" replace />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="categories/new" element={<CategoryForm />} />
         <Route path="categories/:id" element={<CategoryDetails />} />
         <Route path="categories/:id/edit" element={<CategoryForm />} />
-        <Route path="categories/new" element={<CategoryForm />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="orders" element={<OrdersPage />} />
         <Route path="users" element={<UsersPage />} />

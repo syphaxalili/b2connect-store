@@ -4,37 +4,47 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
+  CircularProgress,
   Divider,
   Grid,
   Typography
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { deleteCategory, getCategoryById } from "../../api/categories";
 import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../components/dialogs/ConfirmDialog";
 import { useSnackbar } from "../../hooks/useSnackbar";
 
-// Mock data - à remplacer par un appel API
-const mockCategory = {
-  id: 1,
-  name: "Électronique",
-  description: "Produits électroniques et gadgets",
-  created_at: "2024-01-15T10:30:00Z",
-  product_count: 45
-};
-
 function CategoryDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showSuccess } = useSnackbar();
-  const [category] = useState(mockCategory);
+  const { showSuccess, showError } = useSnackbar();
+  const [category, setCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState(false);
+
+  // Charger les données de la catégorie
+  useEffect(() => {
+    const fetchCategory = async () => {
+      try {
+        setLoading(true);
+        const response = await getCategoryById(id);
+        setCategory(response.data);
+      } catch (error) {
+        showError("Erreur lors du chargement de la catégorie");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCategory();
+  }, [id]);
 
   const breadcrumbItems = [
     { label: "Admin", path: "/admin" },
     { label: "Catégories", path: "/admin/categories" },
-    { label: category.name, path: `/admin/categories/${id}` }
+    { label: category?.name || "Détails", path: `/admin/categories/${id}` }
   ];
 
   const handleEdit = () => {
@@ -45,15 +55,42 @@ function CategoryDetails() {
     setDeleteDialog(true);
   };
 
-  const handleDeleteConfirm = () => {
-    // TODO: Appeler l'API pour supprimer
-    showSuccess("Catégorie supprimée avec succès!");
-    navigate("/admin/categories");
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteCategory(id);
+      showSuccess("Catégorie supprimée avec succès!");
+      navigate("/admin/categories");
+    } catch (error) {
+      showError("Erreur lors de la suppression de la catégorie");
+      console.error(error);
+    }
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialog(false);
   };
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!category) {
+    return (
+      <Box>
+        <AdminBreadcrumbs items={breadcrumbItems} />
+        <Typography>Catégorie non trouvée</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -73,11 +110,6 @@ function CategoryDetails() {
               <Typography variant="h4" fontWeight={700} gutterBottom>
                 {category.name}
               </Typography>
-              <Chip
-                label={`${category.product_count} produits`}
-                color="primary"
-                size="small"
-              />
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button
@@ -101,38 +133,6 @@ function CategoryDetails() {
           <Divider sx={{ my: 3 }} />
 
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                gutterBottom
-              >
-                ID
-              </Typography>
-              <Typography variant="body1" fontWeight={500}>
-                #{category.id}
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                gutterBottom
-              >
-                Date de création
-              </Typography>
-              <Typography variant="body1" fontWeight={500}>
-                {new Date(category.created_at).toLocaleDateString("fr-FR", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
-              </Typography>
-            </Grid>
-
             <Grid item xs={12}>
               <Typography
                 variant="subtitle2"
@@ -155,7 +155,26 @@ function CategoryDetails() {
                 Nombre de produits
               </Typography>
               <Typography variant="body1" fontWeight={500}>
-                {category.product_count} produits dans cette catégorie
+                {category.product_count || "Non disponible"}
+              </Typography>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
+                Date de création
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {new Date(category.created_at).toLocaleDateString("fr-FR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })}
               </Typography>
             </Grid>
           </Grid>

@@ -4,19 +4,25 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   TextField,
   Typography
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  createCategory,
+  getCategoryById,
+  updateCategory
+} from "../../api/categories";
 import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../hooks/useSnackbar";
 
 function CategoryForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { showSuccess } = useSnackbar();
-  const isEditMode = id !== "new";
+  const { showSuccess, showError } = useSnackbar();
+  const isEditMode = id && id !== "new";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,6 +30,8 @@ function CategoryForm() {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const breadcrumbItems = [
     { label: "Admin", path: "/admin" },
@@ -35,6 +43,28 @@ function CategoryForm() {
         : "/admin/categories/new"
     }
   ];
+
+  // Charger les données en mode édition
+  useEffect(() => {
+    if (isEditMode) {
+      const fetchCategory = async () => {
+        try {
+          setLoading(true);
+          const response = await getCategoryById(id);
+          setFormData({
+            name: response.data.name,
+            description: response.data.description || ""
+          });
+        } catch (error) {
+          showError("Erreur lors du chargement de la catégorie");
+          console.error(error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchCategory();
+    }
+  }, [id, isEditMode]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,22 +83,47 @@ function CategoryForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
-    // TODO: Appeler l'API pour créer/modifier
-    showSuccess(
-      isEditMode
-        ? "Catégorie modifiée avec succès!"
-        : "Catégorie créée avec succès!"
-    );
-    navigate("/admin/categories");
+    try {
+      setSubmitting(true);
+      if (isEditMode) {
+        await updateCategory(id, formData);
+        showSuccess("Catégorie modifiée avec succès!");
+      } else {
+        await createCategory(formData);
+        showSuccess("Catégorie créée avec succès!");
+      }
+      navigate("/admin/categories");
+    } catch (error) {
+      showError(
+        error.response?.data?.error ||
+          "Erreur lors de l'enregistrement de la catégorie"
+      );
+      console.error(error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     navigate("/admin/categories");
   };
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -99,6 +154,7 @@ function CategoryForm() {
               error={!!errors.name}
               helperText={errors.name}
               required
+              disabled={submitting}
             />
 
             <TextField
@@ -111,18 +167,30 @@ function CategoryForm() {
               rows={4}
               error={!!errors.description}
               helperText={errors.description}
+              disabled={submitting}
             />
 
             <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-              <Button variant="outlined" onClick={handleCancel}>
+              <Button
+                variant="outlined"
+                onClick={handleCancel}
+                disabled={submitting}
+              >
                 Annuler
               </Button>
               <Button
                 type="submit"
                 variant="contained"
-                startIcon={<SaveIcon />}
+                startIcon={
+                  submitting ? <CircularProgress size={20} /> : <SaveIcon />
+                }
+                disabled={submitting}
               >
-                {isEditMode ? "Enregistrer" : "Créer"}
+                {submitting
+                  ? "Enregistrement..."
+                  : isEditMode
+                    ? "Enregistrer"
+                    : "Créer"}
               </Button>
             </Box>
           </Box>

@@ -7,10 +7,10 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import axios from "axios";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
 import AuthFormContainer from "../components/common/AuthFormContainer";
 import PasswordField from "../components/common/PasswordField";
 import ForgotPasswordDialog from "../components/dialogs/ForgotPasswordDialog";
@@ -66,7 +66,7 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post("/api/users/login", {
+      const response = await login({
         email: formData.email,
         password: formData.password
       });
