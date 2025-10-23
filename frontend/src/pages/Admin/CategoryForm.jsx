@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Divider,
   TextField,
   Typography
 } from "@mui/material";
@@ -16,6 +17,7 @@ import {
   updateCategory
 } from "../../api/categories";
 import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
+import DynamicFieldsBuilder from "../../components/admin/DynamicFieldsBuilder";
 import { useSnackbar } from "../../hooks/useSnackbar";
 
 function CategoryForm() {
@@ -26,23 +28,13 @@ function CategoryForm() {
 
   const [formData, setFormData] = useState({
     name: "",
-    description: ""
+    description: "",
+    specs: []
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const breadcrumbItems = [
-    { label: "Admin", path: "/admin" },
-    { label: "Catégories", path: "/admin/categories" },
-    {
-      label: isEditMode ? "Modifier" : "Nouvelle catégorie",
-      path: isEditMode
-        ? `/admin/categories/${id}/edit`
-        : "/admin/categories/new"
-    }
-  ];
 
   // Charger les données en mode édition
   useEffect(() => {
@@ -51,9 +43,15 @@ function CategoryForm() {
         try {
           setLoading(true);
           const response = await getCategoryById(id);
+          const category = response.data;
           setFormData({
-            name: response.data.name,
-            description: response.data.description || ""
+            name: category.name,
+            description: category.description || "",
+            specs:
+              category.specs?.map((spec, index) => ({
+                ...spec,
+                id: Date.now() + index
+              })) || []
           });
         } catch (error) {
           showError("Erreur lors du chargement de la catégorie");
@@ -89,11 +87,17 @@ function CategoryForm() {
 
     try {
       setSubmitting(true);
+
+      // Préparer les specs sans l'id temporaire
+      // eslint-disable-next-line no-unused-vars
+      const specsToSave = formData.specs.map(({ id, ...spec }) => spec);
+      const dataToSave = { ...formData, specs: specsToSave };
+
       if (isEditMode) {
-        await updateCategory(id, formData);
+        await updateCategory(id, dataToSave);
         showSuccess("Catégorie modifiée avec succès!");
       } else {
-        await createCategory(formData);
+        await createCategory(dataToSave);
         showSuccess("Catégorie créée avec succès!");
       }
       navigate("/admin/categories");
@@ -127,7 +131,7 @@ function CategoryForm() {
 
   return (
     <Box>
-      <AdminBreadcrumbs items={breadcrumbItems} />
+      <AdminBreadcrumbs />
 
       <Card>
         <CardContent sx={{ p: 4 }}>
@@ -169,6 +173,15 @@ function CategoryForm() {
               helperText={errors.description}
               disabled={submitting}
             />
+
+            <Divider sx={{ my: 2 }} />
+
+            <DynamicFieldsBuilder
+              fields={formData.specs}
+              onChange={(specs) => setFormData({ ...formData, specs })}
+            />
+
+            <Divider sx={{ my: 2 }} />
 
             <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
               <Button

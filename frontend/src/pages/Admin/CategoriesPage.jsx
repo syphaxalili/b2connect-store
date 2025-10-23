@@ -43,11 +43,6 @@ function CategoriesPage() {
     category: null
   });
 
-  const breadcrumbItems = [
-    { label: "Admin", path: "/admin" },
-    { label: "Catégories", path: "/admin/categories" }
-  ];
-
   // Charger les catégories depuis l'API
   const fetchCategories = async () => {
     try {
@@ -190,7 +185,7 @@ function CategoriesPage() {
 
   return (
     <Box>
-      <AdminBreadcrumbs items={breadcrumbItems} />
+      <AdminBreadcrumbs />
 
       <DataTableToolbar
         title="Liste des catégories"

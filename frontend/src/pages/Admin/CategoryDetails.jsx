@@ -41,12 +41,6 @@ function CategoryDetails() {
     fetchCategory();
   }, [id]);
 
-  const breadcrumbItems = [
-    { label: "Admin", path: "/admin" },
-    { label: "Catégories", path: "/admin/categories" },
-    { label: category?.name || "Détails", path: `/admin/categories/${id}` }
-  ];
-
   const handleEdit = () => {
     navigate(`/admin/categories/${id}/edit`);
   };
@@ -86,7 +80,7 @@ function CategoryDetails() {
   if (!category) {
     return (
       <Box>
-        <AdminBreadcrumbs items={breadcrumbItems} />
+        <AdminBreadcrumbs />
         <Typography>Catégorie non trouvée</Typography>
       </Box>
     );
@@ -94,7 +88,7 @@ function CategoryDetails() {
 
   return (
     <Box>
-      <AdminBreadcrumbs items={breadcrumbItems} />
+      <AdminBreadcrumbs customLabel={category.name} />
 
       <Card>
         <CardContent sx={{ p: 4 }}>
