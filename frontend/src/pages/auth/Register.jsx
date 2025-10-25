@@ -7,13 +7,11 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import axios from "axios";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import AuthFormContainer from "../components/common/AuthFormContainer";
-import PasswordField from "../components/common/PasswordField";
-import { useSnackbar } from "../hooks/useSnackbar";
+import { register } from "../../api/auth";
+import { useSnackbar } from "../../hooks/useSnackbar";
 import {
   validateCity,
   validateConfirmPassword,
@@ -21,7 +19,9 @@ import {
   validatePassword,
   validatePostalCode,
   validateRequired
-} from "../utils/validation";
+} from "../../utils/validation";
+import PasswordField from "./components/PasswordField";
+import AuthFormContainer from "./containers/AuthFormContainer";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -103,7 +103,7 @@ const Register = () => {
     const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
 
     try {
-      await axios.post("/api/users/register", {
+      await register({
         email: formData.email,
         password: formData.password,
         first_name: formData.first_name,

@@ -1,16 +1,19 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 const auth = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+  const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
-    return res.status(401).json({ error: 'Accès non autorisé, token manquant' });
+    return res
+      .status(401)
+      .json({ error: "Accès non autorisé, token manquant" });
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Token invalide' });
+    console.log(error);
+    res.status(401).json({ error: "Token invalide" });
   }
 };
 
