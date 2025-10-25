@@ -4,7 +4,7 @@ module.exports = (sequelize) => {
   const User = sequelize.define(
     "User",
     {
-      user_id: {
+      id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -27,6 +27,10 @@ module.exports = (sequelize) => {
       },
       address: {
         type: DataTypes.TEXT,
+      },
+      gender: {
+        type: DataTypes.ENUM("male", "female"),
+        allowNull: true,
       },
       role: {
         type: DataTypes.ENUM("client", "admin"),
