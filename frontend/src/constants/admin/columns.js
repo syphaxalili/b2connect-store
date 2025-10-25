@@ -10,7 +10,7 @@ export const CATEGORIES_COLUMNS = [
     id: "product_count",
     label: "Nombre de produits",
     align: "center",
-    render: (value) => value || "Non disponible"
+    render: (value) => value
   }
 ];
 

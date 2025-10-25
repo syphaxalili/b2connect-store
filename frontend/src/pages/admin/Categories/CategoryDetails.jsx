@@ -165,7 +165,7 @@ function CategoryDetails() {
                   Nombre de produits
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {category.product_count || "0"}
+                  {category.product_count}
                 </Typography>
               </Paper>
             </Grid>
