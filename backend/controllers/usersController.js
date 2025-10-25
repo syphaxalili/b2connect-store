@@ -1,48 +1,20 @@
 const { User } = require("../models/mysql");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
-const register = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
-    const { email, password, first_name, last_name, address } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      email,
-      password: hashedPassword,
-      first_name,
-      last_name,
-      address,
+    const users = await User.findAll({
+      attributes: { exclude: ["password"] },
     });
-    res.status(201).json({ user_id: user.user_id, email: user.email });
+    res.status(200).json(users);
   } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: "Identifiants invalides" });
-    }
-    const token = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.status(200).json({
-      token,
-      name: `${user.first_name} ${user.last_name}`,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-const getCurrentUser = async (req, res) => {
+const getUserById = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.user_id, {
+    const user = await User.findByPk(req.params.id, {
       attributes: { exclude: ["password"] },
     });
     if (!user) {
@@ -54,23 +26,70 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
-const updateCurrentUser = async (req, res) => {
+const createUser = async (req, res) => {
   try {
-    const { email, first_name, last_name, address } = req.body;
-    const user = await User.findByPk(req.user.user_id);
+    const { email, first_name, last_name, address, gender } = req.body;
+    const user = await User.create({
+      email,
+      password: "",
+      first_name,
+      last_name,
+      address,
+      gender,
+    });
+    res.status(201).json({ id: user.id, email: user.email });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const updateUserById = async (req, res) => {
+  try {
+    const { email, first_name, last_name, address, gender, role } = req.body;
+    const user = await User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    await user.update({ email, first_name, last_name, address });
+    await user.update({ email, first_name, last_name, address, gender, role });
     res.status(200).json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
+const deleteUserById = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    await user.destroy();
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ["password"] },
+    });
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
-  register,
-  login,
+  getAllUsers,
   getCurrentUser,
-  updateCurrentUser,
+  getUserById,
+  createUser,
+  updateUserById,
+  deleteUserById,
 };

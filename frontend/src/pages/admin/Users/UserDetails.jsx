@@ -13,48 +13,42 @@ import {
   Grid,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteCategory, getCategoryById } from "../../../api/categories";
+import { deleteUser, getUserById } from "../../../api/users";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 
-function CategoryDetails() {
+function UserDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
-  const [category, setCategory] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState(false);
 
-  // Charger les données de la catégorie
+  // Charger les données de l'utilisateur
   useEffect(() => {
-    const fetchCategory = async () => {
+    const fetchUser = async () => {
       try {
         setLoading(true);
-        const response = await getCategoryById(id);
-        setCategory(response.data);
+        const response = await getUserById(id);
+        setUser(response.data);
       } catch (error) {
-        showError("Erreur lors du chargement de la catégorie");
+        showError("Erreur lors du chargement de l'utilisateur");
         console.error(error);
       } finally {
         setLoading(false);
       }
     };
-    fetchCategory();
+    fetchUser();
   }, [id]);
 
   const handleEdit = () => {
-    navigate(`/admin/categories/${id}/edit`);
+    navigate(`/admin/users/${id}/edit`);
   };
 
   const handleDeleteClick = () => {
@@ -63,11 +57,11 @@ function CategoryDetails() {
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteCategory(id);
-      showSuccess("Catégorie supprimée avec succès!");
-      navigate("/admin/categories");
+      await deleteUser(id);
+      showSuccess("Utilisateur supprimé avec succès!");
+      navigate("/admin/users");
     } catch (error) {
-      showError("Erreur lors de la suppression de la catégorie");
+      showError("Erreur lors de la suppression de l'utilisateur");
       console.error(error);
     }
   };
@@ -77,7 +71,7 @@ function CategoryDetails() {
   };
 
   const handleBack = () => {
-    navigate("/admin/categories");
+    navigate("/admin/users");
   };
 
   return (
@@ -95,7 +89,9 @@ function CategoryDetails() {
         pb: 2
       }}
     >
-      <AdminBreadcrumbs customLabel={category?.name} />
+      <AdminBreadcrumbs
+        customLabel={user ? `${user.first_name} ${user.last_name}` : ""}
+      />
 
       <Box
         sx={{
@@ -112,7 +108,7 @@ function CategoryDetails() {
           fontWeight={600}
           sx={{ mb: 2, mt: 2 }}
         >
-          {category?.name || `Catégorie ${id}`}
+          {user ? `${user.first_name} ${user.last_name}` : `Utilisateur ${id}`}
         </Typography>
       </Box>
 
@@ -130,20 +126,31 @@ function CategoryDetails() {
         >
           <CircularProgress />
         </Box>
-      ) : !category ? (
+      ) : !user ? (
         <Box sx={{ flexGrow: 1 }}>
-          <Alert severity="error">Catégorie non trouvée</Alert>
+          <Alert severity="error">Utilisateur non trouvé</Alert>
         </Box>
       ) : (
         <Box sx={{ flexGrow: 1, width: "100%" }}>
           <Grid container spacing={2} sx={{ width: "100%" }}>
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Prénom
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.first_name}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Nom
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {category.name}
+                  {user.last_name}
                 </Typography>
               </Paper>
             </Grid>
@@ -151,10 +158,10 @@ function CategoryDetails() {
             <Grid size={{ xs: 12 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  Description
+                  Email
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {category.description || "Aucune description"}
+                  {user.email}
                 </Typography>
               </Paper>
             </Grid>
@@ -162,10 +169,10 @@ function CategoryDetails() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  Nombre de produits
+                  Genre
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {category.product_count}
+                  {user.gender === "male" ? "Homme" : "Femme"}
                 </Typography>
               </Paper>
             </Grid>
@@ -173,10 +180,36 @@ function CategoryDetails() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  Date de création
+                  Rôle
+                </Typography>
+                <Box sx={{ mb: 1 }}>
+                  <Chip
+                    label={user.role === "admin" ? "Administrateur" : "Client"}
+                    color={user.role === "admin" ? "primary" : "default"}
+                    size="small"
+                  />
+                </Box>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Adresse
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {new Date(category.created_at).toLocaleDateString("fr-FR", {
+                  {user.address || "Non renseignée"}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Date d'inscription
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {new Date(user.created_at).toLocaleDateString("fr-FR", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -187,72 +220,16 @@ function CategoryDetails() {
               </Paper>
             </Grid>
 
-            {category.specs && category.specs.length > 0 && (
-              <Grid size={{ xs: 12 }}>
-                <Paper sx={{ width: "100%", overflow: "hidden" }}>
-                  <Box sx={{ px: 2, pt: 2, pb: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      Spécifications
-                    </Typography>
-                  </Box>
-                  <TableContainer sx={{ overflowX: "auto" }}>
-                    <Table sx={{ minWidth: 500 }}>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell
-                            sx={{ fontWeight: 600, bgcolor: "grey.50" }}
-                          >
-                            Label
-                          </TableCell>
-                          <TableCell
-                            sx={{ fontWeight: 600, bgcolor: "grey.50" }}
-                          >
-                            Type de données
-                          </TableCell>
-                          <TableCell
-                            align="center"
-                            sx={{ fontWeight: 600, bgcolor: "grey.50" }}
-                          >
-                            Requis
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {category.specs.map((spec, index) => (
-                          <TableRow
-                            key={index}
-                            sx={{
-                              "&:last-child td, &:last-child th": { border: 0 }
-                            }}
-                          >
-                            <TableCell component="th" scope="row">
-                              <Typography variant="body2" fontWeight={500}>
-                                {spec.label}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                label={spec.dataType}
-                                size="small"
-                                variant="outlined"
-                              />
-                            </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={spec.required ? "Oui" : "Non"}
-                                size="small"
-                                color={spec.required ? "success" : "default"}
-                                variant={spec.required ? "filled" : "outlined"}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Paper>
-              </Grid>
-            )}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  ID Utilisateur
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.id}
+                </Typography>
+              </Paper>
+            </Grid>
           </Grid>
 
           <Divider sx={{ my: 3 }} />
@@ -293,7 +270,7 @@ function CategoryDetails() {
       <ConfirmDialog
         open={deleteDialog}
         title="Confirmer la suppression"
-        message={`Êtes-vous sûr de vouloir supprimer la catégorie "${category?.name}" ? Cette action est irréversible.`}
+        message={`Êtes-vous sûr de vouloir supprimer l'utilisateur "${user?.first_name} ${user?.last_name}" ? Cette action est irréversible.`}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
@@ -301,4 +278,4 @@ function CategoryDetails() {
   );
 }
 
-export default CategoryDetails;
+export default UserDetails;
