@@ -78,7 +78,15 @@ function DynamicFieldsBuilder({ fields, onChange }) {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 2,
+          mb: 3
+        }}
+      >
         <Typography variant="h6" fontWeight={600}>
           Champs spécifiques de la catégorie
         </Typography>
@@ -102,7 +110,14 @@ function DynamicFieldsBuilder({ fields, onChange }) {
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {localFields.map((field, index) => (
             <Paper key={field.id} sx={{ p: 2 }}>
-              <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  alignItems: "flex-start",
+                  flexWrap: "wrap"
+                }}
+              >
                 {/* Drag handle */}
                 <Box
                   sx={{

@@ -130,11 +130,11 @@ function CategoryForm() {
   }
 
   return (
-    <Box>
+    <Box sx={{ p: 2 }}>
       <AdminBreadcrumbs />
 
       <Card>
-        <CardContent sx={{ p: 4 }}>
+        <CardContent sx={{ p: 3 }}>
           <Typography variant="h5" fontWeight={600} gutterBottom>
             {isEditMode ? "Modifier la catégorie" : "Nouvelle catégorie"}
           </Typography>
