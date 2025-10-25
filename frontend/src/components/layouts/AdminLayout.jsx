@@ -262,11 +262,12 @@ function AdminLayout({ user }) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 0, sm: 2, md: 3 },
           width: { md: `calc(100% - ${drawerWidth}px)` },
-          mt: { xs: 8, md: 0 },
+          mt: { xs: 10, md: 0 },
           bgcolor: "grey.50",
-          minHeight: "100vh"
+          minHeight: "100vh",
+          overflow: "hidden"
         }}
       >
         <Outlet />

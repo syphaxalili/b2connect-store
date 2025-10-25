@@ -13,6 +13,7 @@ import {
   TableSortLabel,
   Tooltip
 } from "@mui/material";
+import TableFilters from "./TableFilters";
 
 function DataTable({
   columns,
@@ -28,7 +29,11 @@ function DataTable({
   onRowsPerPageChange,
   orderBy,
   order,
-  onSort
+  onSort,
+  searchValue,
+  onSearchChange,
+  onExport,
+  onToggleColumn
 }) {
   const handleSort = (columnId) => {
     const isAsc = orderBy === columnId && order === "asc";
@@ -37,8 +42,23 @@ function DataTable({
 
   return (
     <Paper sx={{ width: "100%", overflow: "hidden" }}>
-      <TableContainer sx={{ maxHeight: 600 }}>
-        <Table stickyHeader>
+      <TableFilters
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        onExport={onExport}
+        columns={columns}
+        visibleColumns={visibleColumns}
+        onToggleColumn={onToggleColumn}
+      />
+
+      <TableContainer
+        sx={{
+          maxHeight: 600,
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch"
+        }}
+      >
+        <Table stickyHeader sx={{ minWidth: 650 }}>
           {/* Table header */}
           <TableHead>
             <TableRow>
@@ -74,57 +94,69 @@ function DataTable({
 
           {/* Table body */}
           <TableBody>
-            {data.map((row) => (
-              <TableRow
-                key={row._id || row.id}
-                hover
-                sx={{
-                  cursor: "pointer",
-                  "&:hover": { bgcolor: "action.hover" }
-                }}
-                onClick={() => onRowClick(row)}
-              >
-                {columns
-                  .filter((col) => visibleColumns[col.id])
-                  .map((column) => (
-                    <TableCell key={column.id} align={column.align || "left"}>
-                      {column.render
-                        ? column.render(row[column.id], row)
-                        : row[column.id]}
-                    </TableCell>
-                  ))}
-                <TableCell align="center">
-                  <Box
-                    sx={{ display: "flex", gap: 0.5, justifyContent: "center" }}
-                  >
-                    <Tooltip title="Modifier">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(row);
-                        }}
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Supprimer">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(row);
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
+            {data.length > 0 ? (
+              data.map((row) => (
+                <TableRow
+                  key={row._id || row.id}
+                  hover
+                  sx={{
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "action.hover" }
+                  }}
+                  onClick={() => onRowClick(row)}
+                >
+                  {columns
+                    .filter((col) => visibleColumns[col.id])
+                    .map((column) => (
+                      <TableCell key={column.id} align={column.align || "left"}>
+                        {column.render
+                          ? column.render(row[column.id], row)
+                          : row[column.id]}
+                      </TableCell>
+                    ))}
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        justifyContent: "center"
+                      }}
+                    >
+                      <Tooltip title="Modifier">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(row);
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Supprimer">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(row);
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length + 1} align="center">
+                  Aucune donnée disponible
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

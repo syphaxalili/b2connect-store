@@ -1,10 +1,10 @@
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteCategory, getCategories } from "../../api/categories";
 import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
 import DataTable from "../../components/admin/DataTable";
-import DataTableToolbar from "../../components/admin/DataTableToolbar";
+import TopActions from "../../components/admin/TopActions";
 import ConfirmDialog from "../../components/dialogs/ConfirmDialog";
 import { useSnackbar } from "../../hooks/useSnackbar";
 
@@ -184,20 +184,43 @@ function CategoriesPage() {
   }
 
   return (
-    <Box>
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: { lg: "1200px" },
+        height: "100%",
+        mt: {
+          xs: 0,
+          md: 2
+        },
+        mx: "auto",
+        px: { xs: 2, sm: 2, md: 3 },
+        pb: 2
+      }}
+    >
       <AdminBreadcrumbs />
 
-      <DataTableToolbar
-        title="Liste des catégories"
-        searchValue={searchValue}
-        onSearchChange={handleSearchChange}
-        onAdd={handleAdd}
-        onRefresh={handleRefresh}
-        onExport={handleExport}
-        columns={columns}
-        visibleColumns={visibleColumns}
-        onToggleColumn={handleToggleColumn}
-      />
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2
+        }}
+      >
+        <Typography
+          variant="h4"
+          component="h1"
+          fontWeight={600}
+          sx={{ mb: 2, mt: 2 }}
+          align={"center"}
+        >
+          Catégories
+        </Typography>
+
+        <TopActions onAdd={handleAdd} onRefresh={handleRefresh} />
+      </Box>
 
       <DataTable
         columns={columns}
@@ -220,6 +243,10 @@ function CategoriesPage() {
           setOrderBy(columnId);
           setOrder(direction);
         }}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        onExport={handleExport}
+        onToggleColumn={handleToggleColumn}
       />
 
       <ConfirmDialog
