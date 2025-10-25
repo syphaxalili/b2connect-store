@@ -15,7 +15,7 @@ const register = async (req, res) => {
       address,
       gender,
     });
-    res.status(201).json({ user_id: user.user_id, email: user.email });
+    res.status(201).json({ user_id: user.id, email: user.email });
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: error.message });
@@ -29,7 +29,7 @@ const login = async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
-    const token = jwt.sign({ user_id: user.user_id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
     res.status(200).json({

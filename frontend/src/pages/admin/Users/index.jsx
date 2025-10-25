@@ -105,11 +105,11 @@ function UsersPage() {
   };
 
   const handleEdit = (user) => {
-    navigate(`/admin/users/${user.user_id}/edit`);
+    navigate(`/admin/users/${user.id}/edit`);
   };
 
   const handleRowClick = (user) => {
-    navigate(`/admin/users/${user.user_id}`);
+    navigate(`/admin/users/${user.id}`);
   };
 
   const handleDeleteClick = (user) => {
@@ -118,7 +118,7 @@ function UsersPage() {
 
   const handleDeleteConfirm = async () => {
     try {
-      await deleteUser(deleteDialog.user.user_id);
+      await deleteUser(deleteDialog.user.id);
       showSuccess("Utilisateur supprimé avec succès!");
       setDeleteDialog({ open: false, user: null });
       fetchUsers(); // Recharger les données
