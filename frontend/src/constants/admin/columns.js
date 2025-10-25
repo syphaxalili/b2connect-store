@@ -13,3 +13,29 @@ export const CATEGORIES_COLUMNS = [
     render: (value) => value || "Non disponible"
   }
 ];
+
+export const USERS_COLUMNS = [
+  {
+    id: "name",
+    label: "Nom complet",
+    render: (value, row) => `${row.first_name} ${row.last_name}`
+  },
+  { id: "email", label: "Email" },
+  {
+    id: "role",
+    label: "Rôle",
+    align: "center",
+    render: (value) => (value === "admin" ? "Administrateur" : "Client")
+  },
+  {
+    id: "gender",
+    label: "Genre",
+    align: "center",
+    render: (value) => (value === "male" ? "Homme" : "Femme")
+  },
+  {
+    id: "created_at",
+    label: "Date d'inscription",
+    render: (value) => new Date(value).toLocaleDateString("fr-FR")
+  }
+];

@@ -10,14 +10,13 @@ const {
   getUserById,
   updateUserById,
   deleteUserById,
+  createUser,
 } = require("../controllers/usersController");
 
 router.get("/", auth, getAllUsers);
 router.get("/me", auth, getCurrentUser);
 router.get("/:id", auth, getUserById);
-router.post("/login", login);
-router.post("/register", register);
-router.put("/me", auth, updateCurrentUser);
+router.post("/", auth, createUser);
 router.put("/:id", auth, updateUserById);
 router.delete("/:id", auth, deleteUserById);
 

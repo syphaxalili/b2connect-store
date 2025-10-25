@@ -6,6 +6,8 @@ import CategoryForm from "../pages/admin/Categories/CategoryForm";
 import OrdersPage from "../pages/admin/Orders";
 import ProductsPage from "../pages/admin/Products";
 import UsersPage from "../pages/admin/Users";
+import UserDetails from "../pages/admin/Users/UserDetails";
+import UserForm from "../pages/admin/Users/UserForm";
 
 const AdminRouter = () => {
   return (
@@ -18,6 +20,9 @@ const AdminRouter = () => {
       <Route path="products" element={<ProductsPage />} />
       <Route path="orders" element={<OrdersPage />} />
       <Route path="users" element={<UsersPage />} />
+      <Route path="users/new" element={<UserForm />} />
+      <Route path="users/:id" element={<UserDetails />} />
+      <Route path="users/:id/edit" element={<UserForm />} />
     </>
   );
 };
