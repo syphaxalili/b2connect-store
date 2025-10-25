@@ -16,8 +16,8 @@ import { setUser } from "../../store/slices/authSlice";
 import { setAuthToken } from "../../utils/storage";
 import { validateEmail, validatePassword } from "../../utils/validation";
 import PasswordField from "./components/PasswordField";
-import AuthFormContainer from "./containers/AuthFormContainer";
 import ForgotPasswordDialog from "./dialogs/ForgotPasswordDialog";
+import AuthFormContainer from "./layouts/AuthFormContainer";
 
 const Login = () => {
   const navigate = useNavigate();
