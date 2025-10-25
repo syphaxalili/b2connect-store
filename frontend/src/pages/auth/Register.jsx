@@ -9,7 +9,6 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-
 import { register } from "../../api/auth";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import {
@@ -21,7 +20,7 @@ import {
   validateRequired
 } from "../../utils/validation";
 import PasswordField from "./components/PasswordField";
-import AuthFormContainer from "./containers/AuthFormContainer";
+import AuthFormContainer from "./layouts/AuthFormContainer";
 
 const Register = () => {
   const navigate = useNavigate();
