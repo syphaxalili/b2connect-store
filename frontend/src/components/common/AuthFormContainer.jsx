@@ -1,5 +1,5 @@
 import { Box, Container, Paper } from "@mui/material";
-import logoB2connect from "../../assets/logoB2connect.webp";
+import logoB2connect from "../../assets/images/logoB2connect.webp";
 
 const AuthFormContainer = ({ children, maxWidth = "sm" }) => {
   return (

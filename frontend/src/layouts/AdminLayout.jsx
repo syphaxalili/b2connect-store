@@ -26,9 +26,9 @@ import {
 import { useState } from "react";
 import { connect, useDispatch } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import b2connectLogo from "../../assets/logoB2connect.webp";
-import { clearUser } from "../../store/slices/authSlice";
-import { clearAuthToken } from "../../utils/storage";
+import b2connectLogo from "../assets/images/logoB2connect.webp";
+import { clearUser } from "../store/slices/authSlice";
+import { clearAuthToken } from "../utils/storage";
 
 const mapStateToProps = (state) => ({ user: state.auth });
 

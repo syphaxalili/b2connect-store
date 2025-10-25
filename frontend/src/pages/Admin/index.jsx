@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import AdminLayout from "../../components/layouts/AdminLayout";
+import AdminLayout from "../../layouts/AdminLayout";
 import CategoriesPage from "./CategoriesPage";
 import CategoryDetails from "./CategoryDetails";
 import CategoryForm from "./CategoryForm";
