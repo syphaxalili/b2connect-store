@@ -7,17 +7,17 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import axios from "axios";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import AuthFormContainer from "../components/common/AuthFormContainer";
-import PasswordField from "../components/common/PasswordField";
-import ForgotPasswordDialog from "../components/dialogs/ForgotPasswordDialog";
-import { useSnackbar } from "../hooks/useSnackbar";
-import { setUser } from "../store/slices/authSlice";
-import { setAuthToken } from "../utils/storage";
-import { validateEmail, validatePassword } from "../utils/validation";
+import { login } from "../../api/auth";
+import { useSnackbar } from "../../hooks/useSnackbar";
+import { setUser } from "../../store/slices/authSlice";
+import { setAuthToken } from "../../utils/storage";
+import { validateEmail, validatePassword } from "../../utils/validation";
+import PasswordField from "./components/PasswordField";
+import AuthFormContainer from "./containers/AuthFormContainer";
+import ForgotPasswordDialog from "./dialogs/ForgotPasswordDialog";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const response = await axios.post("/api/users/login", {
+      const response = await login({
         email: formData.email,
         password: formData.password
       });

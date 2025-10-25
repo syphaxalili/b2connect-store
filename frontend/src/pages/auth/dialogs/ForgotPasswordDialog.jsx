@@ -9,8 +9,8 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
-import { useSnackbar } from "../../hooks/useSnackbar";
-import { validateEmail } from "../../utils/validation";
+import { useSnackbar } from "../../../hooks/useSnackbar";
+import { validateEmail } from "../../../utils/validation";
 
 function ForgotPasswordDialog({ open, onClose }) {
   const [email, setEmail] = useState("");
@@ -87,7 +87,7 @@ function ForgotPasswordDialog({ open, onClose }) {
           variant="contained"
           disabled={loading}
         >
-          {loading ? "Envoi en cours..." : "Envoyer"}
+          {loading ? "Envoi en cours..." : "Envoyers"}
         </Button>
       </DialogActions>
     </Dialog>

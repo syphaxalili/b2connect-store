@@ -1,5 +1,5 @@
 import { Box, Paper, Typography } from "@mui/material";
-import PageHeader from "../../components/admin/PageHeader";
+import PageHeader from "../../../components/admin/PageHeader";
 
 function UsersPage() {
   return (
