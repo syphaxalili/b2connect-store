@@ -15,10 +15,10 @@ import {
   createCategory,
   getCategoryById,
   updateCategory
-} from "../../api/categories";
-import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
-import DynamicFieldsBuilder from "../../components/admin/DynamicFieldsBuilder";
-import { useSnackbar } from "../../hooks/useSnackbar";
+} from "../../../api/categories";
+import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
+import { useSnackbar } from "../../../hooks/useSnackbar";
+import DynamicFieldsBuilder from "./components/DynamicFieldsBuilder";
 
 function CategoryForm() {
   const { id } = useParams();

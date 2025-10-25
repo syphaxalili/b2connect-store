@@ -1,28 +1,13 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteCategory, getCategories } from "../../api/categories";
-import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
-import DataTable from "../../components/admin/DataTable";
-import TopActions from "../../components/admin/TopActions";
-import ConfirmDialog from "../../components/dialogs/ConfirmDialog";
-import { useSnackbar } from "../../hooks/useSnackbar";
-
-const columns = [
-  { id: "name", label: "Nom" },
-  { id: "description", label: "Description" },
-  {
-    id: "created_at",
-    label: "Date de création",
-    render: (value) => new Date(value).toLocaleDateString("fr-FR")
-  },
-  {
-    id: "product_count",
-    label: "Nombre de produits",
-    align: "center",
-    render: (value) => value || "Non disponible"
-  }
-];
+import { deleteCategory, getCategories } from "../../../api/categories";
+import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
+import DataTable from "../../../components/admin/DataTable";
+import TopActions from "../../../components/admin/DataTable/TopActions";
+import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
+import { CATEGORIES_COLUMNS as columns } from "../../../constants/admin/columns";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 function CategoriesPage() {
   const navigate = useNavigate();

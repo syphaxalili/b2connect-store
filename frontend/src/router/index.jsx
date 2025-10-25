@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import Home from "../pages/Home";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
 import { isAuthenticated } from "../utils/storage";
 import AdminRouter from "./AdminRouter";
 import AdminRoute from "./route-gards/AdminRoute";

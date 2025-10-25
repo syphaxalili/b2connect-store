@@ -1,13 +1,11 @@
 import { Navigate, Route } from "react-router-dom";
 
-// Layouts
-// Admin Pages
-import CategoriesPage from "../pages/Admin/CategoriesPage";
-import CategoryDetails from "../pages/Admin/CategoryDetails";
-import CategoryForm from "../pages/Admin/CategoryForm";
-import OrdersPage from "../pages/Admin/OrdersPage";
-import ProductsPage from "../pages/Admin/ProductsPage";
-import UsersPage from "../pages/Admin/UsersPage";
+import CategoriesPage from "../pages/admin/Categories";
+import CategoryDetails from "../pages/admin/Categories/CategoryDetails";
+import CategoryForm from "../pages/admin/Categories/CategoryForm";
+import OrdersPage from "../pages/admin/Orders";
+import ProductsPage from "../pages/admin/Products";
+import UsersPage from "../pages/admin/Users";
 
 const AdminRouter = () => {
   return (

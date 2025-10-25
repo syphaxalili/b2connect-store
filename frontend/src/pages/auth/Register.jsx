@@ -10,10 +10,8 @@ import {
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
-import { register } from "../api/auth";
-import AuthFormContainer from "../components/common/AuthFormContainer";
-import PasswordField from "../components/common/PasswordField";
-import { useSnackbar } from "../hooks/useSnackbar";
+import { register } from "../../api/auth";
+import { useSnackbar } from "../../hooks/useSnackbar";
 import {
   validateCity,
   validateConfirmPassword,
@@ -21,7 +19,9 @@ import {
   validatePassword,
   validatePostalCode,
   validateRequired
-} from "../utils/validation";
+} from "../../utils/validation";
+import PasswordField from "./components/PasswordField";
+import AuthFormContainer from "./containers/AuthFormContainer";
 
 const Register = () => {
   const navigate = useNavigate();

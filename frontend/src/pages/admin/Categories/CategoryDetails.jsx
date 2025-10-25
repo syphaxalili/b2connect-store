@@ -23,10 +23,10 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { deleteCategory, getCategoryById } from "../../api/categories";
-import AdminBreadcrumbs from "../../components/admin/AdminBreadcrumbs";
-import ConfirmDialog from "../../components/dialogs/ConfirmDialog";
-import { useSnackbar } from "../../hooks/useSnackbar";
+import { deleteCategory, getCategoryById } from "../../../api/categories";
+import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
+import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 function CategoryDetails() {
   const { id } = useParams();
