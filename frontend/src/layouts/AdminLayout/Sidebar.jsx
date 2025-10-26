@@ -119,7 +119,7 @@ const Sidebar = ({ user, onLogout, onNavigate }) => {
                 whiteSpace: "nowrap"
               }}
             >
-              {user?.name || "Admin"}
+              {user?.name}
             </Typography>
             <Typography
               variant="caption"
@@ -131,7 +131,7 @@ const Sidebar = ({ user, onLogout, onNavigate }) => {
                 display: "block"
               }}
             >
-              {user?.email || "admin@b2connect.com"}
+              {user?.email}
             </Typography>
           </Box>
         </Box>

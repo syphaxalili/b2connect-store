@@ -3,7 +3,7 @@ import { useState } from "react";
 import { connect, useDispatch } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import { clearUser } from "../../store/slices/authSlice";
-import { clearAuthToken } from "../../utils/storage";
+import { clearAuthToken, clearUserData } from "../../utils/storage";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -25,6 +25,7 @@ function AdminLayout({ user }) {
   const handleLogout = () => {
     dispatch(clearUser());
     clearAuthToken();
+    clearUserData();
     navigate("/login");
   };
 
