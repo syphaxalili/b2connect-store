@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import ResetPassword from "../pages/auth/ResetPassword";
 import Home from "../pages/Home";
 import { isAuthenticated } from "../utils/storage";
 import AdminRouter from "./AdminRouter";
@@ -18,6 +19,10 @@ const AppRouter = () => {
       <Route
         path="/register"
         element={isAuthenticated() ? <Navigate to="/" /> : <Register />}
+      />
+      <Route
+        path="/reset-password"
+        element={isAuthenticated() ? <Navigate to="/" /> : <ResetPassword />}
       />
       <Route
         path={"/admin/*"}

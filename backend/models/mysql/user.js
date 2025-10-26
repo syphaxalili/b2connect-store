@@ -37,6 +37,14 @@ module.exports = (sequelize) => {
         defaultValue: "client",
         allowNull: false,
       },
+      reset_token: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      reset_token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
