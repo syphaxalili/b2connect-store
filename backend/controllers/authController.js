@@ -27,7 +27,13 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+
+    // Bloquer les comptes sans mot de passe défini (créés par admin)
+    if (!user || !user.password) {
+      return res.status(401).json({ error: "Identifiants invalides" });
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
     const token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET, {
@@ -54,21 +60,18 @@ const requestPasswordReset = async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      // Ne pas révéler si l'email existe ou non (sécurité)
       return res.status(200).json({
         message:
           "Si cet email existe, un lien de réinitialisation a été envoyé",
       });
     }
 
-    // Générer un token unique
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetTokenHashed = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    // Sauvegarder le token et son expiration (15 minutes)
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
     await user.update({
       reset_token: resetTokenHashed,
@@ -77,7 +80,6 @@ const requestPasswordReset = async (req, res) => {
 
     // // Construire le lien de réinitialisation
     // const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
     // console.log(`[PASSWORD RESET] Lien de réinitialisation: ${resetLink}`);
 
     res.status(200).json({
@@ -99,7 +101,6 @@ const resetPassword = async (req, res) => {
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Trouver l'utilisateur avec ce token
     const user = await User.findOne({
       where: {
         reset_token: hashedToken,
@@ -110,9 +111,7 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Token invalide" });
     }
 
-    // Vérifier que le token n'a pas expiré
     if (Date.now() > new Date(user.reset_token_expires_at).getTime()) {
-      // Nettoyer le token expiré
       await user.update({
         reset_token: null,
         reset_token_expires_at: null,
@@ -120,10 +119,8 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ error: "Token expiré" });
     }
 
-    // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Mettre à jour le mot de passe et nettoyer le token
     await user.update({
       password: hashedPassword,
       reset_token: null,

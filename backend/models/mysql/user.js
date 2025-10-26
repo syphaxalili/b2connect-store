@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
       },
       password: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true, // null pour les comptes créés par admin en attente d'activation
       },
       first_name: {
         type: DataTypes.STRING(100),

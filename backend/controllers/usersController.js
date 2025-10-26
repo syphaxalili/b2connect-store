@@ -1,4 +1,5 @@
 const { User } = require("../models/mysql");
+const crypto = require("crypto");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -31,12 +32,28 @@ const createUser = async (req, res) => {
     const { email, first_name, last_name, address, gender } = req.body;
     const user = await User.create({
       email,
-      password: "",
+      password: null, // null jusqu'à ce que l'utilisateur définisse son mot de passe
       first_name,
       last_name,
       address,
       gender,
     });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHashed = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+    await user.update({
+      reset_token: resetTokenHashed,
+      reset_token_expires_at: expiresAt,
+    });
+
+    // Envoyer mail: votre compte vient d'etre créé, veuillez activer votre compte en cliquant sur le lien suivant:
+    // const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    // console.log(`[PASSWORD RESET] Lien de réinitialisation: ${resetLink}`);
+
     res.status(201).json({ id: user.id, email: user.email });
   } catch (error) {
     console.error(error);
