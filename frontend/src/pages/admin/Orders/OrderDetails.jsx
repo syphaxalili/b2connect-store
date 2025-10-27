@@ -510,14 +510,16 @@ function OrderDetails() {
           >
             Retour
           </Button>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={handleDeleteClick}
-          >
-            Supprimer
-          </Button>
+          {["cancelled", "archived"].includes(order.status) && (
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteClick}
+            >
+              Supprimer
+            </Button>
+          )}
         </Stack>
       </Box>
 

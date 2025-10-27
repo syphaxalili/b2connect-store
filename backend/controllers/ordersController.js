@@ -110,7 +110,14 @@ const getOrderById = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "first_name", "last_name", "email", "address", "phone_number"],
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "address",
+            "phone_number",
+          ],
         },
         {
           model: OrderItem,
@@ -152,6 +159,13 @@ const deleteOrder = async (req, res) => {
     const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ error: "Commande non trouvée" });
+    }
+    // Vérifier que la commande est annulée ou archivée
+    if (!["cancelled", "archived"].includes(order.status)) {
+      return res.status(400).json({
+        error:
+          "Seules les commandes annulées ou archivées peuvent être supprimées",
+      });
     }
     await OrderItem.destroy({ where: { order_id: order.id } });
     await order.destroy();
