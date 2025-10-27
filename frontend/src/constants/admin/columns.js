@@ -66,3 +66,37 @@ export const PRODUCTS_COLUMNS = [
     render: (value) => new Date(value).toLocaleDateString("fr-FR")
   }
 ];
+
+export const ORDERS_COLUMNS = [
+  { id: "id", label: "N° Commande", align: "center" },
+  {
+    id: "User",
+    label: "Client",
+    render: (value) => `${value?.first_name || ""} ${value?.last_name || ""}`.trim() || "N/A"
+  },
+  {
+    id: "total_amount",
+    label: "Montant total",
+    align: "right",
+    render: (value) => `${parseFloat(value).toFixed(2)} €`
+  },
+  {
+    id: "status",
+    label: "Statut",
+    align: "center",
+    render: (value) => {
+      const statusMap = {
+        pending: "En attente",
+        shipped: "Expédiée",
+        delivered: "Livrée",
+        cancelled: "Annulée"
+      };
+      return statusMap[value] || value;
+    }
+  },
+  {
+    id: "created_at",
+    label: "Date de commande",
+    render: (value) => new Date(value).toLocaleDateString("fr-FR")
+  }
+];
