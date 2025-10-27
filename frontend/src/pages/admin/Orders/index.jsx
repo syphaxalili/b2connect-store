@@ -1,18 +1,567 @@
-import { Box, Paper, Typography } from "@mui/material";
-import PageHeader from "../../../components/admin/PageHeader";
+import {
+  Archive as ArchiveIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckCircleIcon,
+  Delete as DeleteIcon,
+  LocalShipping as LocalShippingIcon
+} from "@mui/icons-material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Tooltip,
+  Typography
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { deleteOrder, getOrders, updateOrderStatus } from "../../../api/orders";
+import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
+import DataTable from "../../../components/admin/DataTable";
+import TopActions from "../../../components/admin/DataTable/TopActions";
+import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
+import {
+  ORDERS_COLUMNS as columns,
+  STATUS_SORT_ORDER
+} from "../../../constants/admin/columns";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 function OrdersPage() {
+  const navigate = useNavigate();
+  const { showSuccess, showError } = useSnackbar();
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [orderBy, setOrderBy] = useState("status");
+  const [order, setOrder] = useState("asc");
+  const [loading, setLoading] = useState(true);
+  const [visibleColumns, setVisibleColumns] = useState(
+    columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
+  );
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    order: null
+  });
+  const [actionDialog, setActionDialog] = useState({
+    open: false,
+    order: null,
+    action: null
+  });
+  const [trackingDialog, setTrackingDialog] = useState({
+    open: false,
+    order: null,
+    trackingNumber: ""
+  });
+
+  // Charger les commandes depuis l'API
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await getOrders();
+      setOrders(response.data);
+    } catch (error) {
+      showError("Erreur lors du chargement des commandes");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Charger les commandes au montage du composant
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  // Filtrer et trier les commandes
+  useEffect(() => {
+    let filtered = orders.filter((orderItem) => {
+      const fullName =
+        `${orderItem.User?.first_name || ""} ${orderItem.User?.last_name || ""}`.trim();
+      const matchesSearch =
+        orderItem.id.toString().includes(searchValue) ||
+        fullName.toLowerCase().includes(searchValue.toLowerCase()) ||
+        orderItem.User?.email
+          ?.toLowerCase()
+          .includes(searchValue.toLowerCase());
+      const matchesStatus = !statusFilter || orderItem.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+
+    // Tri
+    filtered.sort((a, b) => {
+      let aVal = a[orderBy];
+      let bVal = b[orderBy];
+
+      // Gestion spéciale pour User
+      if (orderBy === "User") {
+        aVal = `${a.User?.first_name || ""} ${a.User?.last_name || ""}`.trim();
+        bVal = `${b.User?.first_name || ""} ${b.User?.last_name || ""}`.trim();
+      }
+
+      // Gestion spéciale pour status (tri personnalisé)
+      if (orderBy === "status") {
+        const aOrder = STATUS_SORT_ORDER[aVal] ?? 999;
+        const bOrder = STATUS_SORT_ORDER[bVal] ?? 999;
+        return order === "asc" ? aOrder - bOrder : bOrder - aOrder;
+      }
+
+      if (orderBy === "created_at") {
+        aVal = new Date(aVal);
+        bVal = new Date(bVal);
+        return order === "asc" ? aVal - bVal : bVal - aVal;
+      }
+
+      // Pour les chaînes de caractères
+      if (typeof aVal === "string" && typeof bVal === "string") {
+        const comparison = aVal.localeCompare(bVal, "fr", {
+          sensitivity: "base"
+        });
+        return order === "asc" ? comparison : -comparison;
+      }
+
+      // Pour les nombres
+      if (aVal < bVal) return order === "asc" ? -1 : 1;
+      if (aVal > bVal) return order === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredOrders(filtered);
+  }, [orders, searchValue, statusFilter, orderBy, order]);
+
+  const handleSearchChange = (value) => {
+    setSearchValue(value);
+    setPage(0);
+  };
+
+  const handleRefresh = () => {
+    fetchOrders();
+    showSuccess("Données rafraîchies!");
+  };
+
+  const handleRowClick = (order) => {
+    navigate(`/admin/orders/${order.id}`);
+  };
+
+  const handleDeleteClick = (order) => {
+    setDeleteDialog({ open: true, order });
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteOrder(deleteDialog.order.id);
+      showSuccess("Commande supprimée avec succès!");
+      setDeleteDialog({ open: false, order: null });
+      fetchOrders();
+    } catch (error) {
+      showError("Erreur lors de la suppression de la commande");
+      console.error(error);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ open: false, order: null });
+  };
+
+  const handleApprove = (order) => {
+    setActionDialog({ open: true, order, action: "approve" });
+  };
+
+  const handleCancel = (order) => {
+    setActionDialog({ open: true, order, action: "cancel" });
+  };
+
+  const handleActionConfirm = async () => {
+    try {
+      let newStatus;
+      let successMessage;
+
+      if (actionDialog.action === "approve") {
+        newStatus = "approved";
+        successMessage = "Commande validée avec succès!";
+      } else if (actionDialog.action === "cancel") {
+        newStatus = "cancelled";
+        successMessage = "Commande annulée avec succès!";
+      } else if (actionDialog.action === "archive") {
+        newStatus = "archived";
+        successMessage = "Commande archivée avec succès!";
+      }
+
+      await updateOrderStatus(actionDialog.order.id, newStatus);
+      showSuccess(successMessage);
+      setActionDialog({ open: false, order: null, action: null });
+      fetchOrders();
+    } catch (error) {
+      showError("Erreur lors de la mise à jour de la commande");
+      console.error(error);
+    }
+  };
+
+  const handleActionCancel = () => {
+    setActionDialog({ open: false, order: null, action: null });
+  };
+
+  const handleTrackingClick = (order) => {
+    setTrackingDialog({
+      open: true,
+      order,
+      trackingNumber: order.tracking_number || ""
+    });
+  };
+
+  const handleTrackingSave = async () => {
+    if (!trackingDialog.trackingNumber.trim()) {
+      showError("Veuillez entrer un numéro de suivi");
+      return;
+    }
+
+    try {
+      await updateOrderStatus(
+        trackingDialog.order.id,
+        "shipped",
+        trackingDialog.trackingNumber
+      );
+      showSuccess("Numéro de suivi enregistré et commande expédiée!");
+      setTrackingDialog({ open: false, order: null, trackingNumber: "" });
+      fetchOrders();
+    } catch (error) {
+      showError("Erreur lors de l'enregistrement du numéro de suivi");
+      console.error(error);
+    }
+  };
+
+  const handleTrackingCancel = () => {
+    setTrackingDialog({ open: false, order: null, trackingNumber: "" });
+  };
+
+  const handleArchive = (order) => {
+    setActionDialog({ open: true, order, action: "archive" });
+  };
+
+  const handleToggleColumn = (columnId) => {
+    setVisibleColumns((prev) => ({
+      ...prev,
+      [columnId]: !prev[columnId]
+    }));
+  };
+
+  const handleExport = () => {
+    const csv = [
+      columns.map((col) => col.label).join(","),
+      ...filteredOrders.map((order) =>
+        columns
+          .map((col) => {
+            const value = order[col.id];
+            if (col.render) {
+              return col.render(value, order);
+            }
+            return value;
+          })
+          .join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "commandes.csv";
+    a.click();
+    showSuccess("Export réussi!");
+  };
+
+  const paginatedData = filteredOrders.slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box>
-      <PageHeader
-        title="Gestion des Commandes"
-        subtitle="Suivez et gérez toutes les commandes"
-      />
-      <Paper sx={{ p: 3, mt: 3 }}>
-        <Typography variant="body1" color="text.secondary">
-          Contenu de la page commandes à venir...
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: { lg: "1200px" },
+        height: "100%",
+        mt: {
+          xs: 0,
+          md: 2
+        },
+        mx: "auto",
+        px: { xs: 2, sm: 2, md: 3 },
+        pb: 2
+      }}
+    >
+      <AdminBreadcrumbs />
+
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+          gap: 2
+        }}
+      >
+        <Typography
+          variant="h4"
+          component="h1"
+          fontWeight={600}
+          sx={{ mb: 2, mt: 2 }}
+          align={"center"}
+        >
+          Commandes
         </Typography>
-      </Paper>
+
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <TopActions onRefresh={handleRefresh} showAddButton={false} />
+          <FormControl sx={{ minWidth: 200 }} size="small">
+            <InputLabel>Filtre par statut</InputLabel>
+            <Select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(0);
+              }}
+              label="Filtre par statut"
+            >
+              <MenuItem value="">Tous les statuts</MenuItem>
+              <MenuItem value="pending">En attente</MenuItem>
+              <MenuItem value="approved">Validée</MenuItem>
+              <MenuItem value="shipped">Expédiée</MenuItem>
+              <MenuItem value="delivered">Livrée</MenuItem>
+              <MenuItem value="cancelled">Annulée</MenuItem>
+              <MenuItem value="archived">Archivée</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
+
+      <DataTable
+        columns={columns}
+        data={paginatedData}
+        visibleColumns={visibleColumns}
+        onRowClick={handleRowClick}
+        onDelete={handleDeleteClick}
+        onCustomActions={(row) => {
+          const actions = [];
+
+          if (row.status === "pending") {
+            actions.push(
+              <Tooltip key="approve" title="Valider">
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleApprove(row);
+                  }}
+                >
+                  <CheckCircleIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            );
+            actions.push(
+              <Tooltip key="cancel" title="Refuser">
+                <IconButton
+                  size="small"
+                  color="warning"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancel(row);
+                  }}
+                >
+                  <CancelIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            );
+          }
+
+          if (row.status === "approved") {
+            actions.push(
+              <Tooltip key="tracking" title="Entrer numéro de suivi">
+                <IconButton
+                  size="small"
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTrackingClick(row);
+                  }}
+                >
+                  <LocalShippingIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            );
+          }
+
+          if (row.status === "cancelled" || row.status === "delivered") {
+            actions.push(
+              <Tooltip key="archive" title="Archiver">
+                <IconButton
+                  size="small"
+                  color="info"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchive(row);
+                  }}
+                >
+                  <ArchiveIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            );
+          }
+
+          if (row.status === "cancelled" || row.status === "archived") {
+            actions.push(
+              <Tooltip key="delete" title="Supprimer">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(row);
+                  }}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            );
+          }
+
+          return actions.length > 0 ? actions : null;
+        }}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        totalCount={filteredOrders.length}
+        onPageChange={(e, newPage) => setPage(newPage)}
+        onRowsPerPageChange={(e) => {
+          setRowsPerPage(parseInt(e.target.value, 10));
+          setPage(0);
+        }}
+        orderBy={orderBy}
+        order={order}
+        onSort={(columnId, direction) => {
+          setOrderBy(columnId);
+          setOrder(direction);
+        }}
+        searchValue={searchValue}
+        onSearchChange={handleSearchChange}
+        onExport={handleExport}
+        onToggleColumn={handleToggleColumn}
+        showEditButton={false}
+      />
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        title="Confirmer la suppression"
+        message={`Êtes-vous sûr de vouloir supprimer la commande n°${deleteDialog.order?.id}? Cette action est irréversible.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
+
+      <Dialog
+        open={actionDialog.open}
+        onClose={handleActionCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif" }
+        }}
+      >
+        <DialogTitle>
+          {actionDialog.action === "approve"
+            ? "Valider la commande"
+            : actionDialog.action === "cancel"
+              ? "Refuser la commande"
+              : "Archiver la commande"}
+        </DialogTitle>
+        <DialogContent>
+          {actionDialog.action === "approve"
+            ? `Êtes-vous sûr de vouloir valider la commande n°${actionDialog.order?.id}?`
+            : actionDialog.action === "cancel"
+              ? `Êtes-vous sûr de vouloir refuser la commande n°${actionDialog.order?.id}?`
+              : `Êtes-vous sûr de vouloir archiver la commande n°${actionDialog.order?.id}?`}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleActionCancel}>Annuler</Button>
+          <Button
+            onClick={handleActionConfirm}
+            variant="contained"
+            color={
+              actionDialog.action === "approve"
+                ? "success"
+                : actionDialog.action === "cancel"
+                  ? "error"
+                  : "info"
+            }
+          >
+            {actionDialog.action === "approve"
+              ? "Valider"
+              : actionDialog.action === "cancel"
+                ? "Refuser"
+                : "Archiver"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={trackingDialog.open}
+        onClose={handleTrackingCancel}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: { fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif" }
+        }}
+      >
+        <DialogTitle>Entrer le numéro de suivi</DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <TextField
+            fullWidth
+            label="Numéro de suivi"
+            value={trackingDialog.trackingNumber}
+            onChange={(e) =>
+              setTrackingDialog((prev) => ({
+                ...prev,
+                trackingNumber: e.target.value
+              }))
+            }
+            placeholder="Ex: 1Z999AA10123456784"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleTrackingCancel}>Annuler</Button>
+          <Button
+            onClick={handleTrackingSave}
+            variant="contained"
+            color="success"
+          >
+            Expédier
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

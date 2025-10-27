@@ -4,6 +4,7 @@ import CategoriesPage from "../pages/admin/Categories";
 import CategoryDetails from "../pages/admin/Categories/CategoryDetails";
 import CategoryForm from "../pages/admin/Categories/CategoryForm";
 import OrdersPage from "../pages/admin/Orders";
+import OrderDetails from "../pages/admin/Orders/OrderDetails";
 import ProductsPage from "../pages/admin/Products";
 import ProductDetails from "../pages/admin/Products/ProductDetails";
 import ProductForm from "../pages/admin/Products/ProductForm";
@@ -24,6 +25,7 @@ const AdminRouter = () => {
       <Route path="products/:id" element={<ProductDetails />} />
       <Route path="products/:id/edit" element={<ProductForm />} />
       <Route path="orders" element={<OrdersPage />} />
+      <Route path="orders/:id" element={<OrderDetails />} />
       <Route path="users" element={<UsersPage />} />
       <Route path="users/new" element={<UserForm />} />
       <Route path="users/:id" element={<UserDetails />} />

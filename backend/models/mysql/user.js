@@ -28,6 +28,9 @@ module.exports = (sequelize) => {
       address: {
         type: DataTypes.TEXT,
       },
+      phone_number: {
+        type: DataTypes.STRING(20),
+      },
       gender: {
         type: DataTypes.ENUM("male", "female"),
         allowNull: true,

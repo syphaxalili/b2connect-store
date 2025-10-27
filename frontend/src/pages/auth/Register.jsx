@@ -32,6 +32,7 @@ const Register = () => {
     first_name: "",
     last_name: "",
     gender: "",
+    phone_number: "",
     rue: "",
     codePostal: "",
     ville: ""
@@ -108,6 +109,7 @@ const Register = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
         gender: formData.gender,
+        phone_number: formData.phone_number,
         address: formattedAddress
       });
 
@@ -242,6 +244,19 @@ const Register = () => {
           <MenuItem value="male">Homme</MenuItem>
           <MenuItem value="female">Femme</MenuItem>
         </TextField>
+
+        <TextField
+          fullWidth
+          label="Numéro de téléphone"
+          name="phone_number"
+          value={formData.phone_number}
+          onChange={handleChange}
+          onKeyDown={handleKeyPress}
+          disabled={loading}
+          autoComplete="tel"
+          variant="outlined"
+          placeholder="e.g., +33 1 23 45 67 89"
+        />
 
         <Typography variant="subtitle2" sx={{ mt: 1, mb: -1, fontWeight: 600 }}>
           Adresse (France)
