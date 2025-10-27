@@ -39,3 +39,30 @@ export const USERS_COLUMNS = [
     render: (value) => new Date(value).toLocaleDateString("fr-FR")
   }
 ];
+
+export const PRODUCTS_COLUMNS = [
+  { id: "name", label: "Nom" },
+  {
+    id: "category_id",
+    label: "Catégorie",
+    render: (value) => value?.name || "N/A"
+  },
+  { id: "brand", label: "Marque" },
+  {
+    id: "price",
+    label: "Prix",
+    align: "right",
+    render: (value) => `${value.toFixed(2)} €`
+  },
+  {
+    id: "stock",
+    label: "Stock",
+    align: "center",
+    render: (value) => value
+  },
+  {
+    id: "created_at",
+    label: "Date de création",
+    render: (value) => new Date(value).toLocaleDateString("fr-FR")
+  }
+];
