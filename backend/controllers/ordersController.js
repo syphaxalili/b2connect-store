@@ -130,12 +130,16 @@ const getOrderById = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, tracking_number } = req.body;
     const order = await Order.findByPk(req.params.id);
     if (!order) {
       return res.status(404).json({ error: "Commande non trouvée" });
     }
-    await order.update({ status });
+    const updateData = { status };
+    if (tracking_number) {
+      updateData.tracking_number = tracking_number;
+    }
+    await order.update(updateData);
     res.status(200).json(order);
   } catch (error) {
     console.log(error);

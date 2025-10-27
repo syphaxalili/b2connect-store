@@ -1,6 +1,7 @@
 import {
   ArrowBack as ArrowBackIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Save as SaveIcon
 } from "@mui/icons-material";
 import {
   Alert,
@@ -17,8 +18,10 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -43,6 +46,7 @@ function OrderDetails() {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [status, setStatus] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,6 +56,7 @@ function OrderDetails() {
         const orderData = orderResponse.data;
         setOrder(orderData);
         setStatus(orderData.status);
+        setTrackingNumber(orderData.tracking_number || "");
 
         // Récupérer les produits MongoDB
         const productsResponse = await getProducts();
@@ -70,15 +75,31 @@ function OrderDetails() {
     fetchData();
   }, [id]);
 
-  const handleStatusChange = async (e) => {
-    const newStatus = e.target.value;
-    setStatus(newStatus);
+  const handleStatusChange = (e) => {
+    setStatus(e.target.value);
+  };
+
+  const handleStatusSave = async () => {
+    // Si passage à "shipped", forcer la saisie du numéro de suivi
+    if (status === "shipped" && !trackingNumber.trim()) {
+      showError("Veuillez entrer un numéro de suivi pour expédier la commande");
+      return;
+    }
 
     try {
       setUpdating(true);
-      await updateOrderStatus(id, newStatus);
+      await updateOrderStatus(
+        id,
+        status,
+        status === "shipped" ? trackingNumber : null
+      );
       showSuccess("Statut mis à jour avec succès!");
-      setOrder((prev) => ({ ...prev, status: newStatus }));
+      setOrder((prev) => ({
+        ...prev,
+        status,
+        tracking_number:
+          status === "shipped" ? trackingNumber : prev.tracking_number
+      }));
     } catch (error) {
       showError("Erreur lors de la mise à jour du statut");
       console.error(error);
@@ -170,71 +191,201 @@ function OrderDetails() {
                 Numéro de commande
               </Typography>
               <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-                #{order.id}
+                {order.id}
               </Typography>
             </Paper>
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6 }}>
-            <Paper sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Client
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 0.5 }}>
-                {`${order.User?.first_name || ""} ${order.User?.last_name || ""}`.trim() ||
-                  "N/A"}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {order.User?.email || "N/A"}
-              </Typography>
-            </Paper>
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Paper sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Statut
-              </Typography>
-              <Box sx={{ mb: 1 }}>
-                <FormControl fullWidth size="small" disabled={updating}>
-                  <Select value={status} onChange={handleStatusChange}>
-                    <MenuItem value="pending">En attente</MenuItem>
-                    <MenuItem value="shipped">Expédiée</MenuItem>
-                    <MenuItem value="delivered">Livrée</MenuItem>
-                    <MenuItem value="cancelled">Annulée</MenuItem>
-                  </Select>
-                </FormControl>
+            <Paper
+              sx={{
+                px: 2,
+                py: 1,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Client
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 0.5 }}>
+                  {`${order.User?.first_name || ""} ${order.User?.last_name || ""}`.trim() ||
+                    "N/A"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {order.User?.email || "N/A"}
+                </Typography>
               </Box>
             </Paper>
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6 }}>
-            <Paper sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Montant total
-              </Typography>
-              <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
-                {parseFloat(order.total_amount).toFixed(2)} €
-              </Typography>
+            <Paper
+              sx={{
+                px: 2,
+                py: 1,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                  Statut
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="flex-start">
+                  <FormControl
+                    size="small"
+                    disabled={updating}
+                    sx={{ flex: 1 }}
+                  >
+                    <Select value={status} onChange={handleStatusChange}>
+                      {order.status === "pending" && [
+                        <MenuItem key="pending" value="pending">
+                          En attente
+                        </MenuItem>,
+                        <MenuItem key="approved" value="approved">
+                          Validée
+                        </MenuItem>,
+                        <MenuItem key="cancelled" value="cancelled">
+                          Annulée
+                        </MenuItem>
+                      ]}
+                      {order.status === "approved" && [
+                        <MenuItem key="approved" value="approved">
+                          Validée
+                        </MenuItem>,
+                        <MenuItem key="shipped" value="shipped">
+                          Expédiée
+                        </MenuItem>,
+                        <MenuItem key="cancelled" value="cancelled">
+                          Annulée
+                        </MenuItem>
+                      ]}
+                      {order.status === "shipped" && [
+                        <MenuItem key="shipped" value="shipped">
+                          Expédiée
+                        </MenuItem>,
+                        <MenuItem key="delivered" value="delivered">
+                          Livrée
+                        </MenuItem>
+                      ]}
+                      {order.status === "delivered" && [
+                        <MenuItem key="delivered" value="delivered">
+                          Livrée
+                        </MenuItem>
+                      ]}
+                      {order.status === "cancelled" && [
+                        <MenuItem key="cancelled" value="cancelled">
+                          Annulée
+                        </MenuItem>
+                      ]}
+                    </Select>
+                  </FormControl>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<SaveIcon />}
+                    onClick={handleStatusSave}
+                    disabled={updating || status === order.status}
+                    sx={{ mt: 0.5 }}
+                  >
+                    Enregistrer
+                  </Button>
+                </Stack>
+                {status === "shipped" && order.status === "approved" && (
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Numéro de suivi"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Ex: 1Z999AA10123456784"
+                    sx={{ mt: 2 }}
+                    required
+                  />
+                )}
+              </Box>
             </Paper>
           </Grid>
 
           <Grid size={{ xs: 12, sm: 6 }}>
-            <Paper sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Date de commande
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 1 }}>
-                {new Date(order.created_at).toLocaleDateString("fr-FR", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
-              </Typography>
+            <Paper
+              sx={{
+                px: 2,
+                py: 1,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Montant total
+                </Typography>
+                <Typography variant="h6" color="primary">
+                  {parseFloat(order.total_amount).toFixed(2)} €
+                </Typography>
+              </Box>
             </Paper>
           </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Paper
+              sx={{
+                px: 2,
+                py: 1,
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
+              }}
+            >
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Date de commande
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(order.created_at).toLocaleDateString("fr-FR", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {order.status === "shipped" && (
+            <Grid size={{ xs: 12 }}>
+              <Paper
+                sx={{
+                  px: 2,
+                  py: 1,
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Numéro de suivi
+                  </Typography>
+                  <Typography variant="body1">
+                    {trackingNumber || "Non disponible"}
+                  </Typography>
+                </Box>
+              </Paper>
+            </Grid>
+          )}
 
           {order.OrderItems && order.OrderItems.length > 0 && (
             <Grid size={{ xs: 12 }}>
@@ -242,54 +393,75 @@ function OrderDetails() {
                 <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
                   Articles commandés
                 </Typography>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Produit</TableCell>
-                      <TableCell align="center">Quantité</TableCell>
-                      <TableCell align="right">Prix unitaire</TableCell>
-                      <TableCell align="right">Total</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {order.OrderItems.map((item) => {
-                      const product = products[item.product_id];
-                      return (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            {product?.name || `Produit ${item.product_id}`}
-                          </TableCell>
-                          <TableCell align="center">{item.quantity}</TableCell>
-                          <TableCell align="right">
-                            {parseFloat(item.unit_price).toFixed(2)} €
-                          </TableCell>
-                          <TableCell align="right">
-                            {(
-                              item.quantity * parseFloat(item.unit_price)
-                            ).toFixed(2)}{" "}
-                            €
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    <TableRow>
-                      <TableCell colSpan={3} align="right">
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          Total
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography
-                          variant="subtitle1"
-                          fontWeight={700}
-                          color="primary"
+                <TableContainer sx={{ maxHeight: 400, overflowY: "auto" }}>
+                  <Table stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600, bgcolor: "grey.50" }}>
+                          Produit
+                        </TableCell>
+                        <TableCell
+                          align="center"
+                          sx={{ fontWeight: 600, bgcolor: "grey.50" }}
                         >
-                          {parseFloat(order.total_amount).toFixed(2)} €
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                          Quantité
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{ fontWeight: 600, bgcolor: "grey.50" }}
+                        >
+                          Prix unitaire
+                        </TableCell>
+                        <TableCell
+                          align="right"
+                          sx={{ fontWeight: 600, bgcolor: "grey.50" }}
+                        >
+                          Total
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {order.OrderItems.map((item) => {
+                        const product = products[item.product_id];
+                        return (
+                          <TableRow key={item.id} hover>
+                            <TableCell>
+                              {product?.name || `Produit ${item.product_id}`}
+                            </TableCell>
+                            <TableCell align="center">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell align="right">
+                              {parseFloat(item.unit_price).toFixed(2)} €
+                            </TableCell>
+                            <TableCell align="right">
+                              {(
+                                item.quantity * parseFloat(item.unit_price)
+                              ).toFixed(2)}{" "}
+                              €
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      <TableRow sx={{ bgcolor: "grey.50" }}>
+                        <TableCell colSpan={3} align="right">
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            Total
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight={700}
+                            color="primary"
+                          >
+                            {parseFloat(order.total_amount).toFixed(2)} €
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </Paper>
             </Grid>
           )}

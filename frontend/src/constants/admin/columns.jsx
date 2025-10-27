@@ -72,7 +72,8 @@ export const ORDERS_COLUMNS = [
   {
     id: "User",
     label: "Client",
-    render: (value) => `${value?.first_name || ""} ${value?.last_name || ""}`.trim() || "N/A"
+    render: (value) =>
+      `${value?.first_name || ""} ${value?.last_name || ""}`.trim() || "N/A"
   },
   {
     id: "total_amount",
@@ -87,12 +88,39 @@ export const ORDERS_COLUMNS = [
     render: (value) => {
       const statusMap = {
         pending: "En attente",
+        approved: "Validée",
         shipped: "Expédiée",
         delivered: "Livrée",
         cancelled: "Annulée"
       };
-      return statusMap[value] || value;
+      const colorMap = {
+        pending: "#ff9800",
+        approved: "#2196f3",
+        shipped: "#9c27b0",
+        delivered: "#4caf50",
+        cancelled: "#f44336"
+      };
+      return (
+        <span
+          style={{
+            backgroundColor: colorMap[value] || "#999",
+            color: "white",
+            padding: "4px 12px",
+            borderRadius: "16px",
+            fontSize: "12px",
+            fontWeight: "600",
+            whiteSpace: "nowrap"
+          }}
+        >
+          {statusMap[value] || value}
+        </span>
+      );
     }
+  },
+  {
+    id: "tracking_number",
+    label: "N° Suivi",
+    render: (value) => value || "-"
   },
   {
     id: "created_at",
@@ -100,3 +128,12 @@ export const ORDERS_COLUMNS = [
     render: (value) => new Date(value).toLocaleDateString("fr-FR")
   }
 ];
+
+// Ordre de tri personnalisé pour le statut
+export const STATUS_SORT_ORDER = {
+  pending: 0,
+  approved: 1,
+  shipped: 2,
+  delivered: 3,
+  cancelled: 4
+};

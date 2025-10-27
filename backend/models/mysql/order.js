@@ -18,8 +18,12 @@ module.exports = (sequelize) => {
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM("pending", "shipped", "delivered", "cancelled"),
+        type: DataTypes.ENUM("pending", "approved", "shipped", "delivered", "cancelled"),
         defaultValue: "pending",
+      },
+      tracking_number: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
       created_at: {
         type: DataTypes.DATE,
