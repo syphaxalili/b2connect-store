@@ -10,7 +10,7 @@ const getAllProducts = async (req, res) => {
     if (brand) {
       query.brand = brand;
     }
-    const products = await Product.find(query).populate('category_id', 'name');
+    const products = await Product.find(query);
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -19,7 +19,7 @@ const getAllProducts = async (req, res) => {
 
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category_id', 'name');
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }
