@@ -33,6 +33,7 @@ function UserForm() {
     first_name: "",
     last_name: "",
     gender: "",
+    phone_number: "",
     role: "client",
     rue: "",
     codePostal: "",
@@ -71,6 +72,7 @@ function UserForm() {
             first_name: user.first_name || "",
             last_name: user.last_name || "",
             gender: user.gender || "",
+            phone_number: user.phone_number || "",
             role: user.role || "client",
             rue,
             codePostal,
@@ -137,6 +139,7 @@ function UserForm() {
         first_name: formData.first_name,
         last_name: formData.last_name,
         gender: formData.gender,
+        phone_number: formData.phone_number,
         role: formData.role,
         address: formattedAddress
       };
@@ -277,6 +280,17 @@ function UserForm() {
                 </TextField>
               </Grid>
             </Grid>
+
+            <TextField
+              fullWidth
+              label="Numéro de téléphone"
+              name="phone_number"
+              value={formData.phone_number}
+              onChange={handleChange}
+              disabled={submitting}
+              autoComplete="tel"
+              placeholder="e.g., +33 1 23 45 67 89"
+            />
 
             <Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 600 }}>
               Adresse (France)

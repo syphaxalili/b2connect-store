@@ -136,6 +136,32 @@ function UserDetails() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
+                  ID Utilisateur
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.id}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Rôle
+                </Typography>
+                <Box sx={{ mb: 1 }}>
+                  <Chip
+                    label={user.role === "admin" ? "Administrateur" : "Client"}
+                    color={user.role === "admin" ? "primary" : "default"}
+                    size="small"
+                  />
+                </Box>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
                   Prénom
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
@@ -180,32 +206,6 @@ function UserDetails() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  Rôle
-                </Typography>
-                <Box sx={{ mb: 1 }}>
-                  <Chip
-                    label={user.role === "admin" ? "Administrateur" : "Client"}
-                    color={user.role === "admin" ? "primary" : "default"}
-                    size="small"
-                  />
-                </Box>
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Paper sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Adresse
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  {user.address || "Non renseignée"}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Paper sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
                   Date d'inscription
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
@@ -223,10 +223,21 @@ function UserDetails() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  ID Utilisateur
+                  Adresse
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
-                  {user.id}
+                  {user.address || "Non renseignée"}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Numéro de téléphone
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.phone_number || "Non renseigné"}
                 </Typography>
               </Paper>
             </Grid>

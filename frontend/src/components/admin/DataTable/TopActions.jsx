@@ -1,7 +1,7 @@
 import { Add as AddIcon, Refresh as RefreshIcon } from "@mui/icons-material";
 import { Box, Button, IconButton, Tooltip } from "@mui/material";
 
-function TopActions({ onAdd, onRefresh }) {
+function TopActions({ onAdd, onRefresh, showAddButton = true }) {
   return (
     <Box
       sx={{
@@ -17,14 +17,16 @@ function TopActions({ onAdd, onRefresh }) {
         </IconButton>
       </Tooltip>
 
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={onAdd}
-        size="medium"
-      >
-        Ajouter
-      </Button>
+      {showAddButton && onAdd && (
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={onAdd}
+          size="medium"
+        >
+          Ajouter
+        </Button>
+      )}
     </Box>
   );
 }

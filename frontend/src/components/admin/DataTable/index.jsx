@@ -22,6 +22,7 @@ function DataTable({
   onRowClick,
   onEdit,
   onDelete,
+  onCustomActions,
   page,
   rowsPerPage,
   totalCount,
@@ -33,7 +34,8 @@ function DataTable({
   searchValue,
   onSearchChange,
   onExport,
-  onToggleColumn
+  onToggleColumn,
+  showEditButton = true
 }) {
   const handleSort = (columnId) => {
     const isAsc = orderBy === columnId && order === "asc";
@@ -84,8 +86,11 @@ function DataTable({
                   </TableCell>
                 ))}
               <TableCell
-                align="center"
-                sx={{ fontWeight: 600, bgcolor: "grey.50" }}
+                sx={{
+                  fontWeight: 600,
+                  bgcolor: "grey.50",
+                  textAlign: "right"
+                }}
               >
                 Actions
               </TableCell>
@@ -119,33 +124,39 @@ function DataTable({
                       sx={{
                         display: "flex",
                         gap: 0.5,
-                        justifyContent: "center"
+                        justifyContent: "flex-end",
+                        flexWrap: "wrap"
                       }}
                     >
-                      <Tooltip title="Modifier">
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(row);
-                          }}
-                        >
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Supprimer">
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(row);
-                          }}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
+                      {showEditButton && onEdit && (
+                        <Tooltip title="Modifier">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(row);
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      {onCustomActions && onCustomActions(row)}
+                      {!onCustomActions && (
+                        <Tooltip title="Supprimer">
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(row);
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </Box>
                   </TableCell>
                 </TableRow>

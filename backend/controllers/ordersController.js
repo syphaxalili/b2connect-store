@@ -69,7 +69,7 @@ const getUserOrders = async (req, res) => {
           include: [
             {
               model: Product,
-              as: "product", // Nécessite une association Sequelize-MongoDB
+              as: "product",
               attributes: ["name", "price"],
             },
           ],
@@ -82,7 +82,105 @@ const getUserOrders = async (req, res) => {
   }
 };
 
+const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ["id", "first_name", "last_name", "email"],
+        },
+        {
+          model: OrderItem,
+          attributes: ["id", "product_id", "quantity", "unit_price"],
+        },
+      ],
+      order: [["created_at", "DESC"]],
+    });
+    res.status(200).json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getOrderById = async (req, res) => {
+  try {
+    const order = await Order.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          attributes: [
+            "id",
+            "first_name",
+            "last_name",
+            "email",
+            "address",
+            "phone_number",
+          ],
+        },
+        {
+          model: OrderItem,
+          attributes: ["id", "product_id", "quantity", "unit_price"],
+        },
+      ],
+    });
+    if (!order) {
+      return res.status(404).json({ error: "Commande non trouvée" });
+    }
+    res.status(200).json(order);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { status, tracking_number } = req.body;
+    const order = await Order.findByPk(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Commande non trouvée" });
+    }
+    const updateData = { status };
+    if (tracking_number) {
+      updateData.tracking_number = tracking_number;
+    }
+    await order.update(updateData);
+    res.status(200).json(order);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findByPk(req.params.id);
+    if (!order) {
+      return res.status(404).json({ error: "Commande non trouvée" });
+    }
+    // Vérifier que la commande est annulée ou archivée
+    if (!["cancelled", "archived"].includes(order.status)) {
+      return res.status(400).json({
+        error:
+          "Seules les commandes annulées ou archivées peuvent être supprimées",
+      });
+    }
+    await OrderItem.destroy({ where: { order_id: order.id } });
+    await order.destroy();
+    res.status(200).json({ message: "Commande supprimée" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  deleteOrder,
 };
