@@ -2,10 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const {
-  register,
-  login,
   getCurrentUser,
-  updateCurrentUser,
   getAllUsers,
   getUserById,
   updateUserById,
@@ -13,6 +10,7 @@ const {
   createUser,
 } = require("../controllers/usersController");
 
+// Protected routes (admin only)
 router.get("/", auth, getAllUsers);
 router.get("/me", auth, getCurrentUser);
 router.get("/:id", auth, getUserById);

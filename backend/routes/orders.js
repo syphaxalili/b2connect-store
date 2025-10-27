@@ -10,11 +10,11 @@ const {
   deleteOrder
 } = require('../controllers/ordersController');
 
-// User routes
+// Protected routes - User
 router.get('/my-orders', auth, getUserOrders);
 router.post('/', auth, createOrder);
 
-// Admin routes
+// Protected routes - Admin
 router.get('/', auth, getAllOrders);
 router.get('/:id', auth, getOrderById);
 router.patch('/:id/status', auth, updateOrderStatus);

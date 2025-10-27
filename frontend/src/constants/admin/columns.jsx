@@ -91,14 +91,16 @@ export const ORDERS_COLUMNS = [
         approved: "Validée",
         shipped: "Expédiée",
         delivered: "Livrée",
-        cancelled: "Annulée"
+        cancelled: "Annulée",
+        archived: "Archivée"
       };
       const colorMap = {
         pending: "#ff9800",
         approved: "#2196f3",
         shipped: "#9c27b0",
         delivered: "#4caf50",
-        cancelled: "#f44336"
+        cancelled: "#f44336",
+        archived: "#757575"
       };
       return (
         <span
@@ -135,5 +137,6 @@ export const STATUS_SORT_ORDER = {
   approved: 1,
   shipped: 2,
   delivered: 3,
-  cancelled: 4
+  cancelled: 4,
+  archived: 5
 };

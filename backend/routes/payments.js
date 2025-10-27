@@ -5,6 +5,7 @@ const {
   createPayment
 } = require('../controllers/paymentsController');
 
+// Protected routes (user)
 router.post('/', auth, createPayment);
 
 module.exports = router;

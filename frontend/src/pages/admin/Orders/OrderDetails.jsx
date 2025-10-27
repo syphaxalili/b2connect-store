@@ -223,7 +223,11 @@ function OrderDetails() {
                   {order.User?.email || "N/A"}
                 </Typography>
                 {order.User?.address && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 1 }}
+                  >
                     {order.User.address}
                   </Typography>
                 )}
@@ -251,65 +255,77 @@ function OrderDetails() {
                 <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
                   Statut
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FormControl
-                    size="small"
-                    disabled={updating}
-                    sx={{ flex: 1 }}
-                  >
-                    <Select value={status} onChange={handleStatusChange}>
-                      {order.status === "pending" && [
-                        <MenuItem key="pending" value="pending">
-                          En attente
-                        </MenuItem>,
-                        <MenuItem key="approved" value="approved">
-                          Validée
-                        </MenuItem>,
-                        <MenuItem key="cancelled" value="cancelled">
-                          Annulée
-                        </MenuItem>
-                      ]}
-                      {order.status === "approved" && [
-                        <MenuItem key="approved" value="approved">
-                          Validée
-                        </MenuItem>,
-                        <MenuItem key="shipped" value="shipped">
-                          Expédiée
-                        </MenuItem>,
-                        <MenuItem key="cancelled" value="cancelled">
-                          Annulée
-                        </MenuItem>
-                      ]}
-                      {order.status === "shipped" && [
-                        <MenuItem key="shipped" value="shipped">
-                          Expédiée
-                        </MenuItem>,
-                        <MenuItem key="delivered" value="delivered">
-                          Livrée
-                        </MenuItem>
-                      ]}
-                      {order.status === "delivered" && [
-                        <MenuItem key="delivered" value="delivered">
-                          Livrée
-                        </MenuItem>
-                      ]}
-                      {order.status === "cancelled" && [
-                        <MenuItem key="cancelled" value="cancelled">
-                          Annulée
-                        </MenuItem>
-                      ]}
-                    </Select>
-                  </FormControl>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<SaveIcon />}
-                    onClick={handleStatusSave}
-                    disabled={updating || status === order.status}
-                  >
-                    Enregistrer
-                  </Button>
-                </Stack>
+                {order.status === "archived" ? (
+                  <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                    Archivée
+                  </Typography>
+                ) : (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <FormControl
+                      size="small"
+                      disabled={updating}
+                      sx={{ flex: 1 }}
+                    >
+                      <Select value={status} onChange={handleStatusChange}>
+                        {order.status === "pending" && [
+                          <MenuItem key="pending" value="pending">
+                            En attente
+                          </MenuItem>,
+                          <MenuItem key="approved" value="approved">
+                            Validée
+                          </MenuItem>,
+                          <MenuItem key="cancelled" value="cancelled">
+                            Annulée
+                          </MenuItem>
+                        ]}
+                        {order.status === "approved" && [
+                          <MenuItem key="approved" value="approved">
+                            Validée
+                          </MenuItem>,
+                          <MenuItem key="shipped" value="shipped">
+                            Expédiée
+                          </MenuItem>,
+                          <MenuItem key="cancelled" value="cancelled">
+                            Annulée
+                          </MenuItem>
+                        ]}
+                        {order.status === "shipped" && [
+                          <MenuItem key="shipped" value="shipped">
+                            Expédiée
+                          </MenuItem>,
+                          <MenuItem key="delivered" value="delivered">
+                            Livrée
+                          </MenuItem>
+                        ]}
+                        {order.status === "delivered" && [
+                          <MenuItem key="delivered" value="delivered">
+                            Livrée
+                          </MenuItem>,
+                          <MenuItem key="archived" value="archived">
+                            Archivée
+                          </MenuItem>
+                        ]}
+                        {order.status === "cancelled" && [
+                          <MenuItem key="cancelled" value="cancelled">
+                            Annulée
+                          </MenuItem>,
+                          <MenuItem key="archived" value="archived">
+                            Archivée
+                          </MenuItem>
+                        ]}
+                      </Select>
+                    </FormControl>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<SaveIcon />}
+                      onClick={handleStatusSave}
+                      disabled={updating || status === order.status}
+                    >
+                      Enregistrer
+                    </Button>
+                  </Stack>
+                )}
                 {status === "shipped" && order.status === "approved" && (
                   <TextField
                     fullWidth

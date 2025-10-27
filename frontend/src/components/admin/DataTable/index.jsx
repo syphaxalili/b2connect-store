@@ -86,8 +86,11 @@ function DataTable({
                   </TableCell>
                 ))}
               <TableCell
-                align="center"
-                sx={{ fontWeight: 600, bgcolor: "grey.50" }}
+                sx={{
+                  fontWeight: 600,
+                  bgcolor: "grey.50",
+                  textAlign: "right"
+                }}
               >
                 Actions
               </TableCell>
@@ -121,7 +124,7 @@ function DataTable({
                       sx={{
                         display: "flex",
                         gap: 0.5,
-                        justifyContent: "center",
+                        justifyContent: "flex-end",
                         flexWrap: "wrap"
                       }}
                     >

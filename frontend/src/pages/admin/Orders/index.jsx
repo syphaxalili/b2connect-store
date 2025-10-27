@@ -1,4 +1,5 @@
 import {
+  Archive as ArchiveIcon,
   Cancel as CancelIcon,
   CheckCircle as CheckCircleIcon,
   Delete as DeleteIcon,
@@ -183,12 +184,22 @@ function OrdersPage() {
 
   const handleActionConfirm = async () => {
     try {
-      const newStatus =
-        actionDialog.action === "approve" ? "approved" : "cancelled";
+      let newStatus;
+      let successMessage;
+
+      if (actionDialog.action === "approve") {
+        newStatus = "approved";
+        successMessage = "Commande validée avec succès!";
+      } else if (actionDialog.action === "cancel") {
+        newStatus = "cancelled";
+        successMessage = "Commande annulée avec succès!";
+      } else if (actionDialog.action === "archive") {
+        newStatus = "archived";
+        successMessage = "Commande archivée avec succès!";
+      }
+
       await updateOrderStatus(actionDialog.order.id, newStatus);
-      showSuccess(
-        `Commande ${actionDialog.action === "approve" ? "validée" : "annulée"} avec succès!`
-      );
+      showSuccess(successMessage);
       setActionDialog({ open: false, order: null, action: null });
       fetchOrders();
     } catch (error) {
@@ -232,6 +243,10 @@ function OrdersPage() {
 
   const handleTrackingCancel = () => {
     setTrackingDialog({ open: false, order: null, trackingNumber: "" });
+  };
+
+  const handleArchive = (order) => {
+    setActionDialog({ open: true, order, action: "archive" });
   };
 
   const handleToggleColumn = (columnId) => {
@@ -322,6 +337,7 @@ function OrdersPage() {
         </Typography>
 
         <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <TopActions onRefresh={handleRefresh} showAddButton={false} />
           <FormControl sx={{ minWidth: 200 }} size="small">
             <InputLabel>Filtre par statut</InputLabel>
             <Select
@@ -338,9 +354,9 @@ function OrdersPage() {
               <MenuItem value="shipped">Expédiée</MenuItem>
               <MenuItem value="delivered">Livrée</MenuItem>
               <MenuItem value="cancelled">Annulée</MenuItem>
+              <MenuItem value="archived">Archivée</MenuItem>
             </Select>
           </FormControl>
-          <TopActions onRefresh={handleRefresh} showAddButton={false} />
         </Box>
       </Box>
 
@@ -369,7 +385,7 @@ function OrdersPage() {
               </Tooltip>
             );
             actions.push(
-              <Tooltip key="cancel" title="Annuler">
+              <Tooltip key="cancel" title="Refuser">
                 <IconButton
                   size="small"
                   color="warning"
@@ -401,7 +417,24 @@ function OrdersPage() {
             );
           }
 
-          if (row.status === "cancelled") {
+          if (row.status === "cancelled" || row.status === "delivered") {
+            actions.push(
+              <Tooltip key="archive" title="Archiver">
+                <IconButton
+                  size="small"
+                  color="info"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleArchive(row);
+                  }}
+                >
+                  <ArchiveIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            );
+          }
+
+          if (row.status === "cancelled" || row.status === "archived") {
             actions.push(
               <Tooltip key="delete" title="Supprimer">
                 <IconButton
@@ -454,25 +487,42 @@ function OrdersPage() {
         onClose={handleActionCancel}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: { fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif" }
+        }}
       >
         <DialogTitle>
           {actionDialog.action === "approve"
             ? "Valider la commande"
-            : "Annuler la commande"}
+            : actionDialog.action === "cancel"
+              ? "Refuser la commande"
+              : "Archiver la commande"}
         </DialogTitle>
         <DialogContent>
           {actionDialog.action === "approve"
             ? `Êtes-vous sûr de vouloir valider la commande n°${actionDialog.order?.id}?`
-            : `Êtes-vous sûr de vouloir annuler la commande n°${actionDialog.order?.id}?`}
+            : actionDialog.action === "cancel"
+              ? `Êtes-vous sûr de vouloir refuser la commande n°${actionDialog.order?.id}?`
+              : `Êtes-vous sûr de vouloir archiver la commande n°${actionDialog.order?.id}?`}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleActionCancel}>Annuler</Button>
           <Button
             onClick={handleActionConfirm}
             variant="contained"
-            color={actionDialog.action === "approve" ? "success" : "error"}
+            color={
+              actionDialog.action === "approve"
+                ? "success"
+                : actionDialog.action === "cancel"
+                  ? "error"
+                  : "info"
+            }
           >
-            {actionDialog.action === "approve" ? "Valider" : "Annuler"}
+            {actionDialog.action === "approve"
+              ? "Valider"
+              : actionDialog.action === "cancel"
+                ? "Refuser"
+                : "Archiver"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -482,6 +532,9 @@ function OrdersPage() {
         onClose={handleTrackingCancel}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: { fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif" }
+        }}
       >
         <DialogTitle>Entrer le numéro de suivi</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
