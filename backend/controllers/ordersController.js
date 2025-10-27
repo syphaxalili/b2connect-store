@@ -110,7 +110,7 @@ const getOrderById = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "first_name", "last_name", "email"],
+          attributes: ["id", "first_name", "last_name", "email", "address", "phone_number"],
         },
         {
           model: OrderItem,

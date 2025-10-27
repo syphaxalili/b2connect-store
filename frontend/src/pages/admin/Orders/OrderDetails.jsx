@@ -215,9 +215,23 @@ function OrderDetails() {
                   {`${order.User?.first_name || ""} ${order.User?.last_name || ""}`.trim() ||
                     "N/A"}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
                   {order.User?.email || "N/A"}
                 </Typography>
+                {order.User?.address && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    {order.User.address}
+                  </Typography>
+                )}
+                {order.User?.phone_number && (
+                  <Typography variant="body2" color="text.secondary">
+                    {order.User.phone_number}
+                  </Typography>
+                )}
               </Box>
             </Paper>
           </Grid>
@@ -237,7 +251,7 @@ function OrderDetails() {
                 <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
                   Statut
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="flex-start">
+                <Stack direction="row" spacing={1} alignItems="center">
                   <FormControl
                     size="small"
                     disabled={updating}
@@ -292,7 +306,6 @@ function OrderDetails() {
                     startIcon={<SaveIcon />}
                     onClick={handleStatusSave}
                     disabled={updating || status === order.status}
-                    sx={{ mt: 0.5 }}
                   >
                     Enregistrer
                   </Button>
