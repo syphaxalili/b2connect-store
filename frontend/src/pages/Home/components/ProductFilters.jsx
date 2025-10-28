@@ -1,9 +1,9 @@
 import {
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    Stack
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Stack
 } from "@mui/material";
 import { useState } from "react";
 
@@ -12,7 +12,6 @@ import { useState } from "react";
  * Includes category, brand, price filters and sorting options
  */
 function ProductFilters({ onFilterChange, onSortChange }) {
-
   const [filters, setFilters] = useState({
     category: "all",
     brand: "all",
@@ -91,7 +90,8 @@ function ProductFilters({ onFilterChange, onSortChange }) {
           sx={{
             minWidth: 160,
             "& .MuiOutlinedInput-root": {
-              borderRadius: "50px"
+              borderRadius: "50px",
+              backgroundColor: "background.paper"
             }
           }}
         >
@@ -116,7 +116,8 @@ function ProductFilters({ onFilterChange, onSortChange }) {
           sx={{
             minWidth: 160,
             "& .MuiOutlinedInput-root": {
-              borderRadius: "50px"
+              borderRadius: "50px",
+              backgroundColor: "background.paper"
             }
           }}
         >
@@ -141,7 +142,8 @@ function ProductFilters({ onFilterChange, onSortChange }) {
           sx={{
             minWidth: 160,
             "& .MuiOutlinedInput-root": {
-              borderRadius: "50px"
+              borderRadius: "50px",
+              backgroundColor: "background.paper"
             }
           }}
         >
@@ -167,7 +169,8 @@ function ProductFilters({ onFilterChange, onSortChange }) {
         sx={{
           minWidth: 160,
           "& .MuiOutlinedInput-root": {
-            borderRadius: "50px"
+            borderRadius: "50px",
+            backgroundColor: "background.paper"
           }
         }}
       >

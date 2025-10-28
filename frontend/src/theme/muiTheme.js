@@ -48,7 +48,7 @@ const muiTheme = createTheme({
       disabled: "#999999"
     },
     background: {
-      default: "#f7fbfc",
+      default: "#f6f6f6ff",
       paper: "#ffffff"
     },
     divider: "#e0e0e0"

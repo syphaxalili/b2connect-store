@@ -6,10 +6,10 @@ import {
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { getProducts } from "../api/products";
-import Layout from "../components/public/Layout";
-import ProductFilters from "../components/public/ProductFilters";
-import ProductGrid from "../components/public/ProductGrid";
+import { getProducts } from "../../api/products";
+import HomePageLayout from "../../layouts/public/HomePageLayout";
+import ProductFilters from "./components/ProductFilters";
+import ProductGrid from "./components/ProductGrid";
 
 /**
  * Home page - Product catalog
@@ -109,17 +109,17 @@ function Home() {
   };
 
   return (
-    <Layout>
+    <HomePageLayout>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
         {/* Page Title */}
         <Typography
-          variant="h3"
+          variant="h1"
           component="h1"
           gutterBottom
           sx={{
             fontWeight: 700,
             color: "primary.main",
-            mb: 1
+            mb: 3
           }}
         >
           Explorez notre catalogue
@@ -129,7 +129,7 @@ function Home() {
         <Typography
           variant="body1"
           color="text.secondary"
-          sx={{ mb: 4, maxWidth: "600px" }}
+          sx={{ mb: 5, maxWidth: "800px" }}
         >
           Que vous cherchiez les derniers composants, un PC portable performant
           ou des périphériques fiables, trouvez tout ce dont vous avez besoin
@@ -175,7 +175,7 @@ function Home() {
           </>
         )}
       </Container>
-    </Layout>
+    </HomePageLayout>
   );
 }
 
