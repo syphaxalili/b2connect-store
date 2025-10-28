@@ -20,14 +20,14 @@ import {
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import b2connectLogo from "../../assets/images/logoB2connect.webp";
 
 /**
  * Layout component with Header for public pages
  * Contains navigation and shopping cart icon
  */
-function Layout({ children, cartCount = 0 }) {
+function Layout({ cartCount = 0 }) {
   const navigate = useNavigate();
   const [navMenuAnchor, setNavMenuAnchor] = useState(null);
   const [user, setUser] = useState(null);
@@ -329,7 +329,9 @@ function Layout({ children, cartCount = 0 }) {
         </Menu>
 
         {/* Main Content */}
-        <Box sx={{ flex: 1 }}>{children}</Box>
+        <Box sx={{ flex: 1 }}>
+          <Outlet />
+        </Box>
 
         {/* Footer */}
         <Box

@@ -16,7 +16,6 @@ import {
   Typography
 } from "@mui/material";
 import { useState } from "react";
-import Layout from "../layouts/public/HomePageLayout";
 
 /**
  * Contact page - Get in touch with B2CONNECT
@@ -105,10 +104,9 @@ function Contact() {
   };
 
   return (
-    <Layout>
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        {/* Hero Section */}
-        <Box sx={{ mb: 10, textAlign: "center" }}>
+    <Container maxWidth="lg" sx={{ py: 8 }}>
+      {/* Hero Section */}
+      <Box sx={{ mb: 10, textAlign: "center" }}>
           <Typography
             variant="h2"
             component="h1"
@@ -378,8 +376,7 @@ function Contact() {
             </Card>
           </Grid>
         </Grid>
-      </Container>
-    </Layout>
+    </Container>
   );
 }
 
