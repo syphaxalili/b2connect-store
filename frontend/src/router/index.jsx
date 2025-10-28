@@ -3,10 +3,11 @@ import AdminLayout from "../layouts/admin-layout";
 import HomePageLayout from "../layouts/public/HomePageLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import Cart from "../pages/Cart";
 import Contact from "../pages/Contact";
 import Home from "../pages/Home";
-import WhoAreWe from "../pages/WhoAreWe";
 import ProductDetails from "../pages/ProductDetails";
+import WhoAreWe from "../pages/WhoAreWe";
 import { isAuthenticated } from "../utils/storage";
 import AdminRouter from "./AdminRouter";
 import AdminRoute from "./route-gards/AdminRoute";
@@ -18,6 +19,7 @@ const AppRouter = () => {
       <Route element={<HomePageLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<ProductDetails />} />
+        <Route path="/cart" element={<Cart />} />
         <Route path="/who-are-we" element={<WhoAreWe />} />
         <Route path="/contact" element={<Contact />} />
       </Route>
