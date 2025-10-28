@@ -8,6 +8,7 @@ import Checkout from "../pages/Checkout";
 import Contact from "../pages/Contact";
 import Home from "../pages/Home";
 import ProductDetails from "../pages/ProductDetails";
+import Profile from "../pages/Profile";
 import WhoAreWe from "../pages/WhoAreWe";
 import { isAuthenticated } from "../utils/storage";
 import AdminRouter from "./AdminRouter";
@@ -22,6 +23,7 @@ const AppRouter = () => {
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/who-are-we" element={<WhoAreWe />} />
         <Route path="/contact" element={<Contact />} />
       </Route>
