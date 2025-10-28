@@ -7,7 +7,6 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { getProducts } from "../../api/products";
-import HomePageLayout from "../../layouts/public/HomePageLayout";
 import ProductFilters from "./components/ProductFilters";
 import ProductGrid from "./components/ProductGrid";
 
@@ -109,73 +108,71 @@ function Home() {
   };
 
   return (
-    <HomePageLayout>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
-        {/* Page Title */}
-        <Typography
-          variant="h1"
-          component="h1"
-          gutterBottom
+    <Container maxWidth="lg" sx={{ py: 8 }}>
+      {/* Page Title */}
+      <Typography
+        variant="h1"
+        component="h1"
+        gutterBottom
+        sx={{
+          fontWeight: 700,
+          color: "primary.main",
+          mb: 3
+        }}
+      >
+        Explorez notre catalogue
+      </Typography>
+
+      {/* Page Description */}
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{ mb: 5, maxWidth: "800px" }}
+      >
+        Que vous cherchiez les derniers composants, un PC portable performant ou
+        des périphériques fiables, trouvez tout ce dont vous avez besoin ici.
+        Parcourez nos sélections et nouveautés.
+      </Typography>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Filters */}
+      <ProductFilters
+        onFilterChange={handleFilterChange}
+        onSortChange={handleSortChange}
+      />
+
+      {/* Loading State */}
+      {loading ? (
+        <Box
           sx={{
-            fontWeight: 700,
-            color: "primary.main",
-            mb: 3
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "400px"
           }}
         >
-          Explorez notre catalogue
-        </Typography>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Results Count */}
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {filteredProducts.length} produit
+            {filteredProducts.length !== 1 ? "s" : ""} trouvé
+            {filteredProducts.length !== 1 ? "s" : ""}
+          </Typography>
 
-        {/* Page Description */}
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ mb: 5, maxWidth: "800px" }}
-        >
-          Que vous cherchiez les derniers composants, un PC portable performant
-          ou des périphériques fiables, trouvez tout ce dont vous avez besoin
-          ici. Parcourez nos sélections et nouveautés.
-        </Typography>
-
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Filters */}
-        <ProductFilters
-          onFilterChange={handleFilterChange}
-          onSortChange={handleSortChange}
-        />
-
-        {/* Loading State */}
-        {loading ? (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "400px"
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            {/* Results Count */}
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {filteredProducts.length} produit
-              {filteredProducts.length !== 1 ? "s" : ""} trouvé
-              {filteredProducts.length !== 1 ? "s" : ""}
-            </Typography>
-
-            {/* Product Grid */}
-            <ProductGrid products={filteredProducts} loading={false} />
-          </>
-        )}
-      </Container>
-    </HomePageLayout>
+          {/* Product Grid */}
+          <ProductGrid products={filteredProducts} loading={false} />
+        </>
+      )}
+    </Container>
   );
 }
 

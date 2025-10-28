@@ -135,6 +135,14 @@ const muiTheme = createTheme({
   ],
 
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        html: {
+          scrollbarGutter: "stable"
+        }
+      }
+    },
+
     MuiButton: {
       styleOverrides: {
         root: {
