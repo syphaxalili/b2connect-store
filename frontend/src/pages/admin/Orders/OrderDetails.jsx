@@ -321,6 +321,13 @@ function OrderDetails() {
                       startIcon={<SaveIcon />}
                       onClick={handleStatusSave}
                       disabled={updating || status === order.status}
+                      sx={{
+                        "&.Mui-disabled": {
+                          backgroundColor: "action.disabledBackground",
+                          color: "action.disabled",
+                          opacity: 0.6
+                        }
+                      }}
                     >
                       Enregistrer
                     </Button>

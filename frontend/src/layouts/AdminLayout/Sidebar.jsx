@@ -69,18 +69,14 @@ const Sidebar = ({ user, onLogout, onNavigate }) => {
                   },
                   "& .MuiListItemIcon-root": {
                     color: "white"
+                  },
+                  "& .MuiListItemText-primary": {
+                    color: "white"
                   }
                 }
               }}
             >
-              <ListItemIcon
-                sx={{
-                  color:
-                    location.pathname === item.path ? "white" : "text.secondary"
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
+              <ListItemIcon>{item.icon}</ListItemIcon>
               <ListItemText primary={item.text} />
             </ListItemButton>
           </ListItem>

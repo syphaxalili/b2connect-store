@@ -10,7 +10,8 @@ const Header = ({ onDrawerToggle }) => {
       position="fixed"
       sx={{
         width: "100%",
-        zIndex: theme.zIndex.drawer + 1
+        zIndex: theme.zIndex.drawer + 1,
+        borderRadius: "0 0 12px 12px"
       }}
     >
       <Toolbar>
