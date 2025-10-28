@@ -6,6 +6,7 @@ import Register from "../pages/auth/Register";
 import Contact from "../pages/Contact";
 import Home from "../pages/Home";
 import WhoAreWe from "../pages/WhoAreWe";
+import ProductDetails from "../pages/ProductDetails";
 import { isAuthenticated } from "../utils/storage";
 import AdminRouter from "./AdminRouter";
 import AdminRoute from "./route-gards/AdminRoute";
@@ -16,6 +17,7 @@ const AppRouter = () => {
       {/* Public routes with HomePageLayout */}
       <Route element={<HomePageLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/who-are-we" element={<WhoAreWe />} />
         <Route path="/contact" element={<Contact />} />
       </Route>

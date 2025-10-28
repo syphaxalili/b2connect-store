@@ -63,12 +63,18 @@ function ProductCard({ product }) {
 
       {/* Content */}
       <CardContent
+        onClick={handleViewDetails}
         sx={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           backgroundColor: "background.default",
-          padding: "10px 0 0"
+          padding: "10px 0 0",
+          cursor: "pointer",
+          transition: "all 0.3s ease",
+          "&:hover": {
+            backgroundColor: "#eeeeee"
+          }
         }}
       >
         {/* Product Name */}

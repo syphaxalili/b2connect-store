@@ -38,6 +38,7 @@ function ProductForm() {
     brand: "",
     price: "",
     stock: "",
+    description: "",
     images: [],
     specifications: {}
   });
@@ -70,6 +71,7 @@ function ProductForm() {
             brand: product.brand,
             price: product.price,
             stock: product.stock,
+            description: product.description || "",
             images: product.images || [],
             specifications: product.specifications || {}
           });
@@ -398,6 +400,18 @@ function ProductForm() {
               helperText={errors.brand}
               required
               disabled={submitting}
+            />
+
+            <TextField
+              fullWidth
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              multiline
+              rows={3}
+              disabled={submitting}
+              placeholder="Description détaillée du produit"
             />
 
             <Box sx={{ display: "flex", gap: 2 }}>
