@@ -258,6 +258,7 @@ function Layout({ cartCount = 0 }) {
                     anchorEl={userMenuAnchor}
                     open={Boolean(userMenuAnchor)}
                     onClose={handleUserMenuClose}
+                    disableScrollLock={true}
                   >
                     <Box sx={{ px: 2, py: 1 }}>
                       <Typography
