@@ -79,7 +79,7 @@ function WhoAreWe() {
 
         {/* Mission & Vision Section */}
         <Grid container spacing={4} sx={{ mb: 10 }}>
-          <Grid item size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card
               sx={{
                 height: "100%",
@@ -107,7 +107,7 @@ function WhoAreWe() {
             </Card>
           </Grid>
 
-          <Grid item size={{ xs: 12, md: 6 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Card
               sx={{
                 height: "100%",
@@ -147,7 +147,7 @@ function WhoAreWe() {
           </Typography>
           <Grid container spacing={3}>
             {values.map((value, index) => (
-              <Grid item size={{ xs: 12, sm: 6, md: 3 }} key={index}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }} key={index}>
                 <Card
                   sx={{
                     height: "100%",
