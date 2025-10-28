@@ -37,6 +37,7 @@ function ProductCard({ product }) {
           cursor: "pointer",
           border: "none",
           background: "none",
+          mb: 0.5,
           padding: 0,
           aspectRatio: "1 / 1",
           overflow: "hidden"
@@ -87,12 +88,12 @@ function ProductCard({ product }) {
           {product.name}
         </Typography>
 
-        {/* Product Type/Brand */}
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        {/* Product Description */}
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
           {product.description || "Description non spécifiée"}
         </Typography>
 
-        {/* Price */}
+        {/* Product Price */}
         <Typography
           variant="h5"
           fontWeight="bold"
