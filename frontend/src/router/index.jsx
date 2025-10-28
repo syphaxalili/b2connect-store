@@ -4,6 +4,7 @@ import HomePageLayout from "../layouts/public/HomePageLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import Cart from "../pages/Cart";
+import Checkout from "../pages/Checkout";
 import Contact from "../pages/Contact";
 import Home from "../pages/Home";
 import ProductDetails from "../pages/ProductDetails";
@@ -20,6 +21,7 @@ const AppRouter = () => {
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/who-are-we" element={<WhoAreWe />} />
         <Route path="/contact" element={<Contact />} />
       </Route>
