@@ -20,7 +20,6 @@ import {
   validateRequired
 } from "../../utils/validation";
 import PasswordField from "./components/PasswordField";
-import AuthFormContainer from "./layouts/AuthFormContainer";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -132,7 +131,7 @@ const Register = () => {
   };
 
   return (
-    <AuthFormContainer>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Typography
         variant="h4"
         component="h1"
@@ -344,7 +343,7 @@ const Register = () => {
           </Typography>
         </Box>
       </Box>
-    </AuthFormContainer>
+    </Box>
   );
 };
 

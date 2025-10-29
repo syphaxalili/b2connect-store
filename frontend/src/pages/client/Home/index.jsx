@@ -6,7 +6,7 @@ import {
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { getProducts } from "../../api/products";
+import { getProducts } from "../../../api/products";
 import ProductFilters from "./components/ProductFilters";
 import ProductGrid from "./components/ProductGrid";
 

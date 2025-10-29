@@ -4,7 +4,7 @@ import { createTheme } from "@mui/material/styles";
  * Thème MUI personnalisé pour B2CONNECT
  * Couleurs principales de la marque et configurations des composants
  */
-const muiTheme = createTheme({
+const b2connectTheme = createTheme({
   palette: {
     primary: {
       main: "#1f2d3d", // Bleu foncé B2CONNECT
@@ -241,16 +241,6 @@ const muiTheme = createTheme({
           boxShadow: "0px 2px 8px rgba(31, 45, 61, 0.08)"
         }
       }
-    },
-
-    MuiContainer: {
-      styleOverrides: {
-        root: {
-          "@media (min-width: 1200px)": {
-            maxWidth: "1200px"
-          }
-        }
-      }
     }
   },
 
@@ -273,4 +263,4 @@ const muiTheme = createTheme({
   }
 });
 
-export default muiTheme;
+export default b2connectTheme;

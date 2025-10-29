@@ -1,8 +1,8 @@
 import { Box, Container, Paper } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import logoB2connect from "../../../assets/images/logoB2connect.webp";
+import { Outlet, useNavigate } from "react-router-dom";
+import logoB2connect from "../../assets/images/logoB2connect.webp";
 
-const AuthFormContainer = ({ children, maxWidth = "sm" }) => {
+const AuthFormLayout = ({ maxWidth = "md" }) => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
@@ -47,11 +47,11 @@ const AuthFormContainer = ({ children, maxWidth = "sm" }) => {
               }}
             />
           </Box>
-          {children}
+          <Outlet />
         </Paper>
       </Container>
     </Box>
   );
 };
 
-export default AuthFormContainer;
+export default AuthFormLayout;

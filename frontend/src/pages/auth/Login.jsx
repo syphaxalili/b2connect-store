@@ -17,7 +17,6 @@ import { setAuthToken } from "../../utils/storage";
 import { validateEmail, validatePassword } from "../../utils/validation";
 import PasswordField from "./components/PasswordField";
 import ForgotPasswordDialog from "./dialogs/ForgotPasswordDialog";
-import AuthFormContainer from "./layouts/AuthFormContainer";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -104,7 +103,7 @@ const Login = () => {
   };
 
   return (
-    <AuthFormContainer>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Typography
         variant="h4"
         component="h1"
@@ -220,7 +219,7 @@ const Login = () => {
           onClose={() => setOpenPasswordResetDialog(false)}
         />
       ) : null}
-    </AuthFormContainer>
+    </Box>
   );
 };
 
