@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteOrder, getOrders, updateOrderStatus } from "../../../api/orders";
+import { deleteOrder, getOrders, updateOrderStatus } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import DataTable from "../../../components/admin/DataTable";
 import TopActions from "../../../components/admin/DataTable/TopActions";

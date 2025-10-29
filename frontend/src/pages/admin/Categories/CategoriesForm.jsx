@@ -11,11 +11,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  createCategory,
-  getCategoryById,
-  updateCategory
-} from "../../../api/categories";
+import { createCategory, getCategoryById, updateCategory } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import DynamicFieldsBuilder from "./components/DynamicFieldsBuilder";

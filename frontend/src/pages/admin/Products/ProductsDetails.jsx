@@ -17,8 +17,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getCategoryById } from "../../../api/categories";
-import { deleteProduct, getProductById } from "../../../api/products";
+import { deleteProduct, getCategoryById, getProductById } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";

@@ -1,7 +1,7 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { deleteCategory, getCategories } from "../../../api/categories";
+import { deleteCategory, getCategories } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import DataTable from "../../../components/admin/DataTable";
 import TopActions from "../../../components/admin/DataTable/TopActions";

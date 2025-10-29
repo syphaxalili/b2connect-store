@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { createUser, getUserById, updateUser } from "../../../api/users";
+import { createUser, getUserById, updateUser } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import {

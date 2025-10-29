@@ -10,12 +10,11 @@ import {
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { login } from "../../../api/auth";
+import { login } from "../../../api";
 import ForgotPasswordDialog from "../../../components/auth/ForgotPasswordDialog";
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
-import { setUser } from "../../../store/slices/authSlice";
-import { setAuthToken, setUserData } from "../../../utils/storage";
+import { setCredentials } from "../../../store/slices/authSlice";
 import { validateEmail, validatePassword } from "../../../utils/validation";
 
 const Login = () => {
@@ -69,20 +68,12 @@ const Login = () => {
         email: formData.email,
         password: formData.password
       });
+      const userData = response.data;
 
-      const { token, name, email, role } = response.data;
-
-      const userData = { name, email, role };
-
-      // Sauvegarder les données utilisateur dans Redux et storage
-      dispatch(setUser(userData));
-      setAuthToken(token, rememberMe);
-      setUserData(userData, rememberMe);
-
+      dispatch(setCredentials(userData));
       showSuccess("Connexion réussie!");
 
-      // Rediriger selon le rôle
-      if (role === "admin") {
+      if (userData.role === "admin") {
         navigate("/admin");
       } else {
         navigate("/");

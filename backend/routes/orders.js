@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { protect, requireAdmin } = require('../middleware/auth');
 const {
   createOrder,
   getUserOrders,
@@ -11,13 +11,13 @@ const {
 } = require('../controllers/ordersController');
 
 // Protected routes - User
-router.get('/my-orders', auth, getUserOrders);
-router.post('/', auth, createOrder);
+router.get('/my-orders', protect, getUserOrders);
+router.post('/', protect, createOrder);
 
 // Protected routes - Admin
-router.get('/', auth, getAllOrders);
-router.get('/:id', auth, getOrderById);
-router.patch('/:id/status', auth, updateOrderStatus);
-router.delete('/:id', auth, deleteOrder);
+router.get('/', protect, requireAdmin, getAllOrders);
+router.get('/:id', protect, requireAdmin, getOrderById);
+router.patch('/:id/status', protect, requireAdmin, updateOrderStatus);
+router.delete('/:id', protect, requireAdmin, deleteOrder);
 
 module.exports = router;

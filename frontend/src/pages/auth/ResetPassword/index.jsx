@@ -1,7 +1,7 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { resetPassword, verifyResetToken } from "../../../api/auth";
+import { resetPassword, verifyResetToken } from "../../../api";
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import AuthFormContainer from "../../../layouts/auth";

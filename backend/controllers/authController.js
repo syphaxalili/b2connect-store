@@ -5,8 +5,15 @@ const crypto = require("crypto");
 
 const register = async (req, res) => {
   try {
-    const { email, password, first_name, last_name, address, phone_number, gender } =
-      req.body;
+    const {
+      email,
+      password,
+      first_name,
+      last_name,
+      address,
+      phone_number,
+      gender,
+    } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       email,
@@ -29,7 +36,6 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
 
-    // Bloquer les comptes sans mot de passe défini (créés par admin)
     if (!user || !user.password) {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
@@ -37,16 +43,46 @@ const login = async (req, res) => {
     if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
-    const token = jwt.sign({ user_id: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+
+    // Générer Access Token (courte durée: 15 minutes)
+    const accessToken = jwt.sign(
+      { user_id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    // Générer Refresh Token (longue durée: 7 jours)
+    const refreshToken = crypto.randomBytes(64).toString("hex");
+    const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Stocker le refresh token en BDD (permet la révocation)
+    await user.update({
+      refresh_token: refreshToken,
+      refresh_token_expires_at: refreshTokenExpiry,
     });
+
+    res.cookie("access_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refresh_token", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
-      token,
+      id: user.id,
       name: `${user.first_name} ${user.last_name}`,
       email: user.email,
       role: user.role,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -168,9 +204,118 @@ const verifyResetToken = async (req, res) => {
   }
 };
 
+// Endpoint pour rafraîchir l'access token
+const refresh = async (req, res) => {
+  try {
+    const { refresh_token } = req.cookies;
+
+    if (!refresh_token) {
+      return res.status(401).json({ error: "Refresh token manquant" });
+    }
+
+    // Vérifier que le refresh token existe en BDD et n'est pas expiré
+    const user = await User.findOne({
+      where: { refresh_token },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Refresh token invalide" });
+    }
+
+    // Vérifier l'expiration
+    if (Date.now() > new Date(user.refresh_token_expires_at).getTime()) {
+      // Token expiré, le supprimer de la BDD
+      await user.update({
+        refresh_token: null,
+        refresh_token_expires_at: null,
+      });
+      return res.status(401).json({ error: "Refresh token expiré" });
+    }
+
+    // Générer un nouvel access token
+    const newAccessToken = jwt.sign(
+      { user_id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    res.cookie("access_token", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.status(200).json({ message: "Access token rafraîchi" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    const { refresh_token } = req.cookies;
+
+    if (refresh_token) {
+      await User.update(
+        {
+          refresh_token: null,
+          refresh_token_expires_at: null,
+        },
+        { where: { refresh_token } }
+      );
+    }
+
+    res.cookie("access_token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 0,
+    });
+
+    res.cookie("refresh_token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 0,
+    });
+
+    res.status(200).json({ message: "Déconnexion réussie" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const me = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.user_id, {
+      attributes: ["id", "first_name", "last_name", "email", "role"],
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    res.status(200).json({
+      id: user.id,
+      name: `${user.first_name} ${user.last_name}`,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   register,
   login,
+  refresh,
+  logout,
+  me,
   requestPasswordReset,
   resetPassword,
   verifyResetToken,

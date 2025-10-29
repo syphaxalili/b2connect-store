@@ -8,7 +8,7 @@ import {
   Typography
 } from "@mui/material";
 import { useState } from "react";
-import { requestPasswordReset } from "../../api/auth";
+import { requestPasswordReset } from "../../api";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { validateEmail } from "../../utils/validation";
 

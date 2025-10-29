@@ -48,6 +48,14 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      refresh_token: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+      },
+      refresh_token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
       created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,

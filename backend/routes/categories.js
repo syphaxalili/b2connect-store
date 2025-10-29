@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const router = Router();
-const auth = require('../middleware/auth');
+const { protect, requireAdmin } = require('../middleware/auth');
 const {
   getAllCategories,
   getCategoryById,
@@ -14,8 +14,8 @@ router.get('/', getAllCategories);
 router.get('/:id', getCategoryById);
 
 // Protected routes (admin only)
-router.post('/', auth, createCategory);
-router.put('/:id', auth, updateCategory);
-router.delete('/:id', auth, deleteCategory);
+router.post('/', protect, requireAdmin, createCategory);
+router.put('/:id', protect, requireAdmin, updateCategory);
+router.delete('/:id', protect, requireAdmin, deleteCategory);
 
 module.exports = router;

@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { register } from "../../../api/auth";
+import { register } from "../../../api";
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import {

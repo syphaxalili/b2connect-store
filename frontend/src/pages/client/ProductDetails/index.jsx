@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getProductById } from "../../../api/products";
+import { getProductById } from "../../../api";
 
 const ProductDetails = () => {
   const { id } = useParams();

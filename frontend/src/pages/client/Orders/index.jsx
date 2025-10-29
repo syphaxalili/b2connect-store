@@ -20,13 +20,14 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
 
 /**
  * Orders page - User orders list and details
  */
 function Orders() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
 
   // Données temporaires des commandes (à remplacer par un appel API)
@@ -87,15 +88,11 @@ function Orders() {
   ];
 
   useEffect(() => {
-    // Récupérer les données utilisateur
-    const userData =
-      localStorage.getItem("user") || sessionStorage.getItem("user");
-    if (userData) {
+    // Récupérer les commandes de l'utilisateur
+    if (user) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
         // TODO: Appel API pour récupérer les commandes
-        // fetchOrders(parsedUser.id);
+        // fetchOrders(user.id);
         setOrders(mockOrders);
       } catch (err) {
         console.error("Error parsing user data:", err);

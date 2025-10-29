@@ -18,13 +18,16 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 /**
  * Profile page - User profile information and edit
  */
 function Profile() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
+  const { showSuccess, showError } = useSnackbar();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -37,31 +40,22 @@ function Profile() {
     gender: ""
   });
   const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    // Récupérer les données utilisateur depuis le localStorage/sessionStorage
-    const userData =
-      localStorage.getItem("user") || sessionStorage.getItem("user");
-    if (userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setFormData({
-          first_name: parsedUser.first_name || "",
-          last_name: parsedUser.last_name || "",
-          email: parsedUser.email || "",
-          phone_number: parsedUser.phone_number || "",
-          address: parsedUser.address || "",
-          city: parsedUser.city || "",
-          postal_code: parsedUser.postal_code || "",
-          gender: parsedUser.gender || ""
-        });
-      } catch (err) {
-        console.error("Error parsing user data:", err);
-      }
+    // Initialiser le formulaire avec les données utilisateur depuis Redux
+    if (user) {
+      setFormData({
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        phone_number: user.phone_number || "",
+        address: user.address || "",
+        city: user.city || "",
+        postal_code: user.postal_code || "",
+        gender: user.gender || ""
+      });
     }
-  }, []);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,18 +93,14 @@ function Profile() {
 
     try {
       // TODO: Appel API pour mettre à jour le profil
+      // await updateUserProfile(user.id, formData);
       console.log("Updating profile:", formData);
 
-      // Simuler la mise à jour
-      const updatedUser = { ...user, ...formData };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
       setIsEditing(false);
-      setSuccessMessage("Profil mis à jour avec succès !");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      showSuccess("Profil mis à jour avec succès !");
     } catch (error) {
       console.error("Error updating profile:", error);
-      setErrors({ general: "Erreur lors de la mise à jour du profil" });
+      showError("Erreur lors de la mise à jour du profil");
     }
   };
 
@@ -179,13 +169,6 @@ function Profile() {
           )}
         </Box>
       </Box>
-
-      {/* Success Message */}
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          {successMessage}
-        </Alert>
-      )}
 
       {/* Error Message */}
       {errors.general && (

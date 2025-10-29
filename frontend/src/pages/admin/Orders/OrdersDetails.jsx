@@ -29,9 +29,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   deleteOrder,
   getOrderById,
+  getProducts,
   updateOrderStatus
-} from "../../../api/orders";
-import { getProducts } from "../../../api/products";
+} from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";

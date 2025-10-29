@@ -1,9 +1,12 @@
 import { Box, Container } from "@mui/material";
-import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import Header from "./Header";
+import { useDispatch } from "react-redux";
+import { Outlet, useNavigate } from "react-router-dom";
+import { logout } from "../../api";
+import { useAuth } from "../../hooks/useAuth";
+import { useSnackbar } from "../../hooks/useSnackbar";
+import { clearCredentials } from "../../store/slices/authSlice";
 import Footer from "./Footer";
+import Header from "./Header";
 
 /**
  * Layout component with Header and Footer for public pages
@@ -11,26 +14,22 @@ import Footer from "./Footer";
  */
 function Layout({ cartCount = 0 }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const dispatch = useDispatch();
+  const { user } = useAuth();
+  const { showSuccess, showError } = useSnackbar();
 
-  // Check if user is logged in
-  useEffect(() => {
-    const userData =
-      localStorage.getItem("user") || sessionStorage.getItem("user");
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (err) {
-        console.error("Error parsing user data:", err);
-      }
+  const handleLogout = async () => {
+    try {
+      await logout();
+      dispatch(clearCredentials());
+      showSuccess("Déconnexion réussie");
+      navigate("/");
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+      dispatch(clearCredentials());
+      showError("Erreur lors de la déconnexion");
+      navigate("/");
     }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    setUser(null);
-    navigate("/login");
   };
 
   return (

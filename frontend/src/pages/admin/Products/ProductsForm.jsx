@@ -17,12 +17,12 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getCategories } from "../../../api/categories";
 import {
   createProduct,
+  getCategories,
   getProductById,
   updateProduct
-} from "../../../api/products";
+} from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 
