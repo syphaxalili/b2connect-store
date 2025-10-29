@@ -10,13 +10,13 @@ import {
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { login } from "../../api/auth";
-import { useSnackbar } from "../../hooks/useSnackbar";
-import { setUser } from "../../store/slices/authSlice";
-import { setAuthToken, setUserData } from "../../utils/storage";
-import { validateEmail, validatePassword } from "../../utils/validation";
-import PasswordField from "./components/PasswordField";
-import ForgotPasswordDialog from "./dialogs/ForgotPasswordDialog";
+import { login } from "../../../api/auth";
+import ForgotPasswordDialog from "../../../components/auth/ForgotPasswordDialog";
+import PasswordField from "../../../components/auth/PasswordField";
+import { useSnackbar } from "../../../hooks/useSnackbar";
+import { setUser } from "../../../store/slices/authSlice";
+import { setAuthToken, setUserData } from "../../../utils/storage";
+import { validateEmail, validatePassword } from "../../../utils/validation";
 
 const Login = () => {
   const navigate = useNavigate();

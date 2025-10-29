@@ -5,7 +5,7 @@ import { deleteUser, getUsers } from "../../../api/users";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import DataTable from "../../../components/admin/DataTable";
 import TopActions from "../../../components/admin/DataTable/TopActions";
-import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { USERS_COLUMNS as columns } from "../../../constants/admin/columns";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 

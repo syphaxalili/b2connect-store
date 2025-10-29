@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import GlobalSnackbarProvider from "./components/providers/GlobalSnackbarProvider";
+import GlobalSnackbarProvider from "./components/common/GlobalSnackbarProvider";
 import AppRouter from "./router";
 import { setUser } from "./store/slices/authSlice";
 import { getUserData } from "./utils/storage";

@@ -13,7 +13,7 @@ import {
   TableSortLabel,
   Tooltip
 } from "@mui/material";
-import TableFilters from "./TableFilters";
+import TableFilters from "./Filters";
 
 function DataTable({
   columns,

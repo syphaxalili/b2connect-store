@@ -1,6 +1,6 @@
 import { Navigate, Route } from "react-router-dom";
 
-import { Login, Register } from "../pages/auth";
+import { Login, Register, ResetPassword } from "../pages/auth";
 import { isAuthenticated } from "../utils/storage";
 
 const AuthRouter = () => {
@@ -13,6 +13,10 @@ const AuthRouter = () => {
       <Route
         path="/register"
         element={isAuthenticated() ? <Navigate to="/" /> : <Register />}
+      />
+      <Route
+        path="/reset-password"
+        element={isAuthenticated() ? <Navigate to="/" /> : <ResetPassword />}
       />
     </>
   );

@@ -8,9 +8,9 @@ import {
   Typography
 } from "@mui/material";
 import { useState } from "react";
-import { requestPasswordReset } from "../../../api/auth";
-import { useSnackbar } from "../../../hooks/useSnackbar";
-import { validateEmail } from "../../../utils/validation";
+import { requestPasswordReset } from "../../api/auth";
+import { useSnackbar } from "../../hooks/useSnackbar";
+import { validateEmail } from "../../utils/validation";
 
 function ForgotPasswordDialog({ open, onClose }) {
   const [email, setEmail] = useState("");

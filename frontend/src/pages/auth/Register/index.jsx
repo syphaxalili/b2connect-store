@@ -9,8 +9,9 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { register } from "../../api/auth";
-import { useSnackbar } from "../../hooks/useSnackbar";
+import { register } from "../../../api/auth";
+import PasswordField from "../../../components/auth/PasswordField";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 import {
   validateCity,
   validateConfirmPassword,
@@ -18,8 +19,7 @@ import {
   validatePassword,
   validatePostalCode,
   validateRequired
-} from "../../utils/validation";
-import PasswordField from "./components/PasswordField";
+} from "../../../utils/validation";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -112,12 +112,12 @@ const Register = () => {
         address: formattedAddress
       });
 
-      showSuccess("Registration successful!");
+      showSuccess("Inscription reussie");
 
       navigate("/login");
     } catch (error) {
       showError(
-        error.response.data.error || "Registration failed. Please try again."
+        error.response.data.error || "Inscription echouée. Veuillez reessayer."
       );
 
       setLoading(false);

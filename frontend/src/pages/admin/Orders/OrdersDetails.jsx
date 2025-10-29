@@ -33,7 +33,7 @@ import {
 } from "../../../api/orders";
 import { getProducts } from "../../../api/products";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
-import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 
 function OrderDetails() {

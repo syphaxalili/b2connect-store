@@ -20,7 +20,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCategoryById } from "../../../api/categories";
 import { deleteProduct, getProductById } from "../../../api/products";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
-import ConfirmDialog from "../../../components/dialogs/ConfirmDialog";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 
 function ProductDetails() {
@@ -43,7 +43,9 @@ function ProductDetails() {
 
         // Récupérer la catégorie si elle existe
         if (productData.category_id) {
-          const categoryResponse = await getCategoryById(productData.category_id);
+          const categoryResponse = await getCategoryById(
+            productData.category_id
+          );
           setCategory(categoryResponse.data);
         }
       } catch (error) {
