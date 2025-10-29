@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
       },
       password: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true, // null pour les comptes créés par admin en attente d'activation
       },
       first_name: {
         type: DataTypes.STRING(100),
@@ -39,6 +39,14 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("client", "admin"),
         defaultValue: "client",
         allowNull: false,
+      },
+      reset_token: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      reset_token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
       created_at: {
         type: DataTypes.DATE,

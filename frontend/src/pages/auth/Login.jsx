@@ -13,7 +13,7 @@ import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { login } from "../../api/auth";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { setUser } from "../../store/slices/authSlice";
-import { setAuthToken } from "../../utils/storage";
+import { setAuthToken, setUserData } from "../../utils/storage";
 import { validateEmail, validatePassword } from "../../utils/validation";
 import PasswordField from "./components/PasswordField";
 import ForgotPasswordDialog from "./dialogs/ForgotPasswordDialog";
@@ -72,10 +72,12 @@ const Login = () => {
 
       const { token, name, email, role } = response.data;
 
-      // Sauvegarder les données utilisateur dans Redux
-      dispatch(setUser({ name, email, role }));
+      const userData = { name, email, role };
 
+      // Sauvegarder les données utilisateur dans Redux et storage
+      dispatch(setUser(userData));
       setAuthToken(token, rememberMe);
+      setUserData(userData, rememberMe);
 
       showSuccess("Connexion réussie!");
 

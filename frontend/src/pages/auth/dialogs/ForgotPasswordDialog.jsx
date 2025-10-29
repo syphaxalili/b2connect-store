@@ -7,8 +7,8 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import axios from "axios";
 import { useState } from "react";
+import { requestPasswordReset } from "../../../api/auth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { validateEmail } from "../../../utils/validation";
 
@@ -30,16 +30,18 @@ function ForgotPasswordDialog({ open, onClose }) {
     }
 
     try {
-      await axios.post("/api/users/forgot-password", {
-        email
-      });
-      showSuccess(
-        "Un lien de réinitialisation a été envoyé à votre adresse mail."
-      );
+      const response = await requestPasswordReset({ email });
+      showSuccess(response.data.message);
+      setEmail("");
       onClose();
     } catch (error) {
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message;
+      showError(errorMessage);
+    } finally {
       setLoading(false);
-      showError(error.message);
     }
   };
 
@@ -87,7 +89,7 @@ function ForgotPasswordDialog({ open, onClose }) {
           variant="contained"
           disabled={loading}
         >
-          {loading ? "Envoi en cours..." : "Envoyers"}
+          {loading ? "Envoi en cours..." : "Envoyer"}
         </Button>
       </DialogActions>
     </Dialog>
