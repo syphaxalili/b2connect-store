@@ -1,7 +1,14 @@
 import { Box, Container, Paper } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import logoB2connect from "../../../assets/images/logoB2connect.webp";
 
 const AuthFormContainer = ({ children, maxWidth = "sm" }) => {
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate("/");
+  };
+
   return (
     <Box
       sx={{
@@ -25,7 +32,19 @@ const AuthFormContainer = ({ children, maxWidth = "sm" }) => {
             <img
               src={logoB2connect}
               alt="B2CONNECT Logo"
-              style={{ maxWidth: "200px", height: "auto" }}
+              onClick={handleLogoClick}
+              style={{
+                maxWidth: "200px",
+                height: "auto",
+                cursor: "pointer",
+                transition: "transform 0.2s ease-in-out"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
             />
           </Box>
           {children}
