@@ -9,11 +9,17 @@ const {
   createUser,
 } = require("../controllers/usersController");
 
+// Protected routes
+router.use(protect);
+
+router.put("/:id", updateUserById); // User peut modifier son propre profil
+
 // Protected routes (admin only)
-router.get("/", protect, requireAdmin, getAllUsers);
-router.get("/:id", protect, requireAdmin, getUserById);
-router.post("/", protect, requireAdmin, createUser);
-router.put("/:id", protect, updateUserById); // User peut modifier son propre profil
-router.delete("/:id", protect, requireAdmin, deleteUserById);
+router.use(requireAdmin);
+
+router.get("/", getAllUsers);
+router.get("/:id", getUserById);
+router.post("/", createUser);
+router.delete("/:id", deleteUserById);
 
 module.exports = router;

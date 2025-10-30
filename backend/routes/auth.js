@@ -19,6 +19,8 @@ router.post("/reset-password", resetPassword);
 router.get("/verify-reset-token", verifyResetToken);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
+
+// protected routes
 router.get("/me", protect, me);
 
 module.exports = router;
