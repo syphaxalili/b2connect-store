@@ -23,12 +23,13 @@ const CustomSnackbar = ({
           display: "flex",
           alignItems: "center",
           width: "100%",
-          minWidth: "400px",
+          minWidth: { xs: "auto", sm: "400px" },
+          maxWidth: { xs: "calc(100vw - 32px)", sm: "100%" },
           "& .MuiAlert-icon": {
-            fontSize: "2rem"
+            fontSize: { xs: "1.5rem", sm: "2rem" }
           },
           "& .MuiAlert-message": {
-            fontSize: "1.3rem"
+            fontSize: { xs: "0.95rem", sm: "1.3rem" }
           }
         }}
       >
