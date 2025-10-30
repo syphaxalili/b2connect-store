@@ -135,7 +135,7 @@ function Orders() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Button

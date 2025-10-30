@@ -139,7 +139,7 @@ function Profile() {
 
   if (!user) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 2 }}>
         <Alert severity="warning">
           Vous devez être connecté pour accéder à cette page.
         </Alert>
@@ -155,7 +155,7 @@ function Profile() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Button

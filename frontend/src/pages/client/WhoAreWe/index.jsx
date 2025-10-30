@@ -46,7 +46,7 @@ function WhoAreWe() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Hero Section */}
       <Box sx={{ mb: 10, textAlign: "center" }}>
         <Typography

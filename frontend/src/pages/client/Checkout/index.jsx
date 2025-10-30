@@ -139,7 +139,7 @@ function Checkout() {
   // Page de confirmation
   if (orderPlaced && activeStep === steps.length - 1) {
     return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
+      <Container maxWidth="md" sx={{ py: 2 }}>
         <Paper
           elevation={0}
           sx={{

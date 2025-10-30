@@ -95,7 +95,7 @@ function Home() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Page Title */}
       <Typography
         variant="h1"
