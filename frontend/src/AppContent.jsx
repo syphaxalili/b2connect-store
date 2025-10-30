@@ -19,7 +19,8 @@ const AppContent = () => {
         const response = await getCurrentUser();
         dispatch(setCredentials(response.data));
         // Utilisateur connecté - fusionner le panier invité avec le panier utilisateur
-        dispatch(mergeCartAsync());
+        await dispatch(mergeCartAsync());
+        dispatch(setLoadingComplete());
       } catch {
         dispatch(setLoadingComplete());
         // Utilisateur invité - charger le panier depuis localStorage

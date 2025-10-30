@@ -155,6 +155,7 @@ const cartSlice = createSlice({
       state.isLoading = false;
       state.items = action.payload.items;
       state.total = action.payload.total;
+      state.isGuest = false;
     });
     builder.addCase(addToCartAsync.rejected, (state, action) => {
       state.isLoading = false;
@@ -170,6 +171,7 @@ const cartSlice = createSlice({
       state.isLoading = false;
       state.items = action.payload.items;
       state.total = action.payload.total;
+      state.isGuest = false;
     });
     builder.addCase(updateCartItemAsync.rejected, (state, action) => {
       state.isLoading = false;
@@ -185,6 +187,7 @@ const cartSlice = createSlice({
       state.isLoading = false;
       state.items = action.payload.items;
       state.total = action.payload.total;
+      state.isGuest = false;
     });
     builder.addCase(removeFromCartAsync.rejected, (state, action) => {
       state.isLoading = false;
@@ -200,6 +203,7 @@ const cartSlice = createSlice({
       state.isLoading = false;
       state.items = action.payload.items;
       state.total = action.payload.total;
+      state.isGuest = false;
     });
     builder.addCase(clearCartAsync.rejected, (state, action) => {
       state.isLoading = false;

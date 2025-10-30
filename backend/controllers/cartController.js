@@ -22,7 +22,15 @@ const getCart = async (req, res) => {
     // Si le panier n'existe pas, le créer
     if (!cart) {
       cart = await Cart.create({ user_id: userId });
-      return res.status(200).json({ items: [], total: 0 });
+      cart = await Cart.findOne({
+        where: { user_id: userId },
+        include: [
+          {
+            model: CartItem,
+            as: "CartItems",
+          },
+        ],
+      });
     }
 
     // Récupérer les détails des produits depuis MongoDB

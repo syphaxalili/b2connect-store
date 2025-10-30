@@ -40,7 +40,7 @@ export const useCart = () => {
    */
   const addItem = useCallback(
     (product, quantity = 1) => {
-      if (isAuthenticated && !isGuest) {
+      if (isAuthenticated) {
         // Utilisateur connecté - utiliser l'API
         return dispatch(
           addToCartAsync({
@@ -54,7 +54,7 @@ export const useCart = () => {
         return Promise.resolve();
       }
     },
-    [dispatch, isAuthenticated, isGuest]
+    [dispatch, isAuthenticated]
   );
 
   /**
@@ -62,7 +62,7 @@ export const useCart = () => {
    */
   const updateItem = useCallback(
     (itemOrProductId, quantity) => {
-      if (isAuthenticated && !isGuest) {
+      if (isAuthenticated) {
         // Utilisateur connecté - itemOrProductId est l'ID de CartItem
         return dispatch(
           updateCartItemAsync({
@@ -78,7 +78,7 @@ export const useCart = () => {
         return Promise.resolve();
       }
     },
-    [dispatch, isAuthenticated, isGuest]
+    [dispatch, isAuthenticated]
   );
 
   /**
@@ -86,7 +86,7 @@ export const useCart = () => {
    */
   const removeItem = useCallback(
     (itemOrProductId) => {
-      if (isAuthenticated && !isGuest) {
+      if (isAuthenticated) {
         // Utilisateur connecté - itemOrProductId est l'ID de CartItem
         return dispatch(removeFromCartAsync(itemOrProductId));
       } else {
@@ -95,14 +95,14 @@ export const useCart = () => {
         return Promise.resolve();
       }
     },
-    [dispatch, isAuthenticated, isGuest]
+    [dispatch, isAuthenticated]
   );
 
   /**
    * Vider le panier
    */
   const clearItems = useCallback(() => {
-    if (isAuthenticated && !isGuest) {
+    if (isAuthenticated) {
       // Utilisateur connecté - utiliser l'API
       return dispatch(clearCartAsync());
     } else {
@@ -110,7 +110,7 @@ export const useCart = () => {
       dispatch(clearGuestCart());
       return Promise.resolve();
     }
-  }, [dispatch, isAuthenticated, isGuest]);
+  }, [dispatch, isAuthenticated]);
 
   return {
     items,
