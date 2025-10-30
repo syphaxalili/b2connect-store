@@ -8,7 +8,6 @@ import {
 import {
   AppBar,
   Avatar,
-  Badge,
   Box,
   Button,
   Divider,
@@ -159,20 +158,48 @@ function Header({ user, cartCount = 0, onLogout }) {
           </Box>
 
           {/* Icons (Right) */}
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-            <IconButton
-              color="inherit"
+          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+            {/* Shopping Cart */}
+            <Box
               onClick={() => navigate("/cart")}
               sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                cursor: "pointer",
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                transition: "all 0.2s ease",
                 "&:hover": {
                   backgroundColor: "action.hover"
                 }
               }}
             >
-              <Badge badgeContent={cartCount} color="primary">
+              <IconButton
+                color="inherit"
+                sx={{
+                  p: 0,
+                  "&:hover": {
+                    backgroundColor: "transparent"
+                  }
+                }}
+              >
                 <ShoppingCartOutlinedIcon sx={{ color: "text.primary" }} />
-              </Badge>
-            </IconButton>
+              </IconButton>
+              <Typography
+                variant="body2"
+                sx={{
+                  display: { xs: "none", sm: "block" },
+                  fontWeight: 600,
+                  color: "primary.main",
+                  minWidth: "20px",
+                  textAlign: "center"
+                }}
+              >
+                {`Mon panier (${cartCount})`}
+              </Typography>
+            </Box>
 
             {user ? (
               <>
@@ -269,17 +296,34 @@ function Header({ user, cartCount = 0, onLogout }) {
                 </Menu>
               </>
             ) : (
-              <IconButton
-                color="inherit"
+              <Box
                 onClick={() => navigate("/login")}
                 sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  cursor: "pointer",
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  transition: "all 0.2s ease",
                   "&:hover": {
                     backgroundColor: "action.hover"
                   }
                 }}
               >
                 <AccountCircleOutlinedIcon sx={{ color: "text.primary" }} />
-              </IconButton>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    display: { xs: "none", sm: "block" },
+                    color: "text.primary",
+                    fontWeight: 500
+                  }}
+                >
+                  S'authentifier
+                </Typography>
+              </Box>
             )}
           </Box>
         </Toolbar>
@@ -292,10 +336,7 @@ function Header({ user, cartCount = 0, onLogout }) {
         onClose={handleNavMenuClose}
       >
         {navItems.map((item) => (
-          <MenuItem
-            key={item.label}
-            onClick={() => handleNavClick(item.href)}
-          >
+          <MenuItem key={item.label} onClick={() => handleNavClick(item.href)}>
             {item.label}
           </MenuItem>
         ))}

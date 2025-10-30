@@ -25,6 +25,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../../../api";
+import { useSnackbar } from "../../../hooks/useSnackbar";
+import { getStockStatus } from "../../../utils/stockStatus";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -35,11 +37,11 @@ const ProductDetails = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [zoom, setZoom] = useState(1);
-  const [addedToCart, setAddedToCart] = useState(false);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const thumbnailsRef = useRef(null);
+  const { showSuccess } = useSnackbar();
 
   useEffect(() => {
     fetchProduct();
@@ -105,9 +107,7 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     // TODO: Implémenter l'ajout au panier
-    console.log("Add to cart:", { product, quantity });
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 3000);
+    showSuccess("Produit ajouté au panier avec succès !");
   };
 
   const scrollThumbnails = (direction) => {
@@ -171,12 +171,6 @@ const ProductDetails = () => {
       >
         Retour à la boutique
       </Button>
-
-      {addedToCart && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Produit ajouté au panier avec succès !
-        </Alert>
-      )}
 
       <Grid container spacing={4}>
         {/* Galerie d'images - Gauche */}
@@ -410,21 +404,18 @@ const ProductDetails = () => {
 
             <Divider sx={{ mb: 3 }} />
 
-            {/* Stock */}
+            {/* Stock Status */}
             <Box sx={{ mb: 3 }}>
-              {product.stock > 0 ? (
-                <Chip
-                  label={`${product.stock} en stock`}
-                  color="success"
-                  sx={{ fontWeight: 600 }}
-                />
-              ) : (
-                <Chip
-                  label="Rupture de stock"
-                  color="error"
-                  sx={{ fontWeight: 600 }}
-                />
-              )}
+              {(() => {
+                const stockStatus = getStockStatus(product.stock);
+                return (
+                  <Chip
+                    label={stockStatus.label}
+                    color={stockStatus.color}
+                    sx={{ fontWeight: 600 }}
+                  />
+                );
+              })()}
             </Box>
 
             {/* Sélecteur de quantité */}

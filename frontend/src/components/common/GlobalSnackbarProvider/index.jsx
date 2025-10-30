@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
-import { hideSnackbar } from "../../store/slices/snackbarSlice";
-import CustomSnackbar from "../common/CustomSnackbar";
+import { hideSnackbar } from "../../../store/slices/snackbarSlice";
+import CustomSnackbar from "./CustomSnackbar";
 
 const GlobalSnackbarProvider = () => {
   const dispatch = useDispatch();
