@@ -51,9 +51,11 @@ export {
 // COMMANDES
 // ============================================================================
 export {
+  createOrder,
   deleteOrder,
   getOrderById,
   getOrders,
+  getUserOrders,
   updateOrderStatus
 } from "./modules/orders";
 

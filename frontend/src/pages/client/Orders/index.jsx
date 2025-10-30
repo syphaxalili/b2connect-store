@@ -12,6 +12,7 @@ import {
   Card,
   CardContent,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -20,7 +21,9 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getUserOrders } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 /**
  * Orders page - User orders list and details
@@ -29,76 +32,39 @@ function Orders() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
-
-  // Données temporaires des commandes (à remplacer par un appel API)
-  const mockOrders = [
-    {
-      id: "1",
-      order_number: "ORD-2024-001",
-      status: "delivered",
-      total: 129.97,
-      shipping: 5.99,
-      created_at: "2024-01-15T10:30:00",
-      items: [
-        {
-          name: "Batterie Dell Latitude E6420",
-          quantity: 2,
-          price: 49.99
-        },
-        {
-          name: "Chargeur HP 65W",
-          quantity: 1,
-          price: 29.99
-        }
-      ],
-      tracking_number: "FR123456789"
-    },
-    {
-      id: "2",
-      order_number: "ORD-2024-002",
-      status: "shipped",
-      total: 79.98,
-      shipping: 5.99,
-      created_at: "2024-01-20T14:20:00",
-      items: [
-        {
-          name: "Souris Logitech MX Master 3",
-          quantity: 1,
-          price: 79.98
-        }
-      ],
-      tracking_number: "FR987654321"
-    },
-    {
-      id: "3",
-      order_number: "ORD-2024-003",
-      status: "pending",
-      total: 159.99,
-      shipping: 5.99,
-      created_at: "2024-01-25T09:15:00",
-      items: [
-        {
-          name: "Clavier mécanique RGB",
-          quantity: 1,
-          price: 159.99
-        }
-      ],
-      tracking_number: null
-    }
-  ];
+  const [loading, setLoading] = useState(false);
+  const { showError } = useSnackbar();
 
   useEffect(() => {
     // Récupérer les commandes de l'utilisateur
     if (user) {
-      try {
-        // TODO: Appel API pour récupérer les commandes
-        // fetchOrders(user.id);
-        setOrders(mockOrders);
-      } catch (err) {
-        console.error("Error parsing user data:", err);
-      }
+      fetchOrders();
     }
-  }, []);
+  }, [user]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await getUserOrders();
+      // Transformer les données du backend pour le rendu
+      const transformedOrders = response.data.map((order) => ({
+        id: order.id,
+        order_number: `ORD-${order.id.toString().padStart(6, "0")}`,
+        status: order.status,
+        total_amount: order.total_amount,
+        shipping_fee: order.shipping_fee || 5.99,
+        created_at: order.created_at,
+        items: order.OrderItems || [],
+        tracking_number: order.tracking_number
+      }));
+      setOrders(transformedOrders);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      showError("Erreur lors du chargement des commandes");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusLabel = (status) => {
     const statusMap = {
@@ -153,6 +119,17 @@ function Orders() {
         >
           Se connecter
         </Button>
+      </Container>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <CircularProgress />
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Chargement de vos commandes...
+        </Typography>
       </Container>
     );
   }
@@ -315,7 +292,7 @@ function Orders() {
                         sx={{ fontWeight: 600 }}
                       />
                       <Typography variant="h6" fontWeight={700} color="primary">
-                        {order.total.toFixed(2)} €
+                        {order.total_amount} €
                       </Typography>
                     </Box>
                   </Box>
@@ -347,10 +324,11 @@ function Orders() {
                         }}
                       >
                         <Typography variant="body2">
-                          {item.name} x{item.quantity}
+                          {item.product?.name || "Produit inconnu"} x
+                          {item.quantity}
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
-                          {(item.price * item.quantity).toFixed(2)} €
+                          {item.unit_price * item.quantity} €
                         </Typography>
                       </Box>
                     ))}
@@ -368,7 +346,7 @@ function Orders() {
                           Sous-total
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
-                          {(order.total - order.shipping).toFixed(2)} €
+                          {order.total_amount - order.shipping_fee} €
                         </Typography>
                       </Box>
                       <Box
@@ -379,10 +357,10 @@ function Orders() {
                         }}
                       >
                         <Typography variant="body2" color="text.secondary">
-                          Livraison
+                          Frais de livraison
                         </Typography>
                         <Typography variant="body2" fontWeight={600}>
-                          {order.shipping.toFixed(2)} €
+                          {order.shipping_fee} €
                         </Typography>
                       </Box>
                       <Divider sx={{ my: 1 }} />
@@ -401,7 +379,7 @@ function Orders() {
                           fontWeight={700}
                           color="primary"
                         >
-                          {order.total.toFixed(2)} €
+                          {order.total_amount} €
                         </Typography>
                       </Box>
                     </Box>

@@ -44,7 +44,6 @@ function Profile() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    console.log("user", user);
     if (user) {
       setFormData({
         first_name: user.first_name || "",

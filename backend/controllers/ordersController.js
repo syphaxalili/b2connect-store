@@ -2,7 +2,7 @@ const { Order, OrderItem, User } = require("../models/mysql");
 const Product = require("../models/mongodb/product");
 
 const createOrder = async (req, res) => {
-  const { product_ids, quantities } = req.body;
+  const { product_ids, quantities, shipping_fee = 5.99 } = req.body;
   const user_id = req.user.user_id;
 
   try {
@@ -29,13 +29,16 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // Calculer le total
-    const total_amount = products.reduce((total, product, index) => {
+    // Calculer le sous-total (sans frais de livraison)
+    const subtotal = products.reduce((total, product, index) => {
       return total + product.price * quantities[index];
     }, 0);
 
+    // Calculer le total (avec frais de livraison)
+    const total_amount = subtotal + shipping_fee;
+
     // Créer la commande dans MySQL
-    const order = await Order.create({ user_id, total_amount });
+    const order = await Order.create({ user_id, total_amount, shipping_fee });
 
     // Créer les articles de commande
     const orderItems = product_ids.map((product_id, index) => ({
@@ -53,7 +56,12 @@ const createOrder = async (req, res) => {
       });
     }
 
-    res.status(201).json({ order_id: order.id, total_amount });
+    res.status(201).json({
+      order_id: order.id,
+      total_amount,
+      shipping_fee,
+      subtotal: subtotal,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -61,23 +69,49 @@ const createOrder = async (req, res) => {
 
 const getUserOrders = async (req, res) => {
   try {
+    // Récupérer les commandes avec OrderItems (MySQL)
     const orders = await Order.findAll({
       where: { user_id: req.user.user_id },
       include: [
         {
           model: OrderItem,
-          include: [
-            {
-              model: Product,
-              as: "product",
-              attributes: ["name", "price"],
-            },
-          ],
+          attributes: ["id", "product_id", "quantity", "unit_price"],
         },
       ],
     });
-    res.status(200).json(orders);
+
+    // Extraire les product_ids uniques
+    const productIds = [
+      ...new Set(
+        orders.flatMap((order) =>
+          order.OrderItems.map((item) => item.product_id)
+        )
+      ),
+    ];
+
+    // Récupérer les produits depuis MongoDB
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    // Mapper les produits aux OrderItems
+    const ordersWithProducts = orders.map((order) => {
+      const orderData = order.toJSON();
+      orderData.OrderItems = orderData.OrderItems.map((item) => {
+        const product = products.find(
+          (p) => p._id.toString() === item.product_id
+        );
+        return {
+          ...item,
+          product: product
+            ? { _id: product._id, name: product.name, price: product.price }
+            : null,
+        };
+      });
+      return orderData;
+    });
+
+    res.status(200).json(ordersWithProducts);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
