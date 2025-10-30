@@ -103,7 +103,7 @@ const Sidebar = ({ user, onLogout, onNavigate }) => {
             alt={"Admin avatar"}
             sx={{ width: 40, height: 40 }}
           >
-            {user?.name?.charAt(0) || "A"}
+            {`${user.first_name} ${user.last_name}`.charAt(0) || "A"}
           </Avatar>
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography
@@ -115,7 +115,7 @@ const Sidebar = ({ user, onLogout, onNavigate }) => {
                 whiteSpace: "nowrap"
               }}
             >
-              {user?.name}
+              {`${user.first_name} ${user.last_name}`}
             </Typography>
             <Typography
               variant="caption"

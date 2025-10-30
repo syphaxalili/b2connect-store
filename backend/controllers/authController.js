@@ -297,7 +297,7 @@ const logout = async (req, res) => {
 const me = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.user_id, {
-      attributes: ["id", "first_name", "last_name", "email", "role"],
+      exclude: ["password", "refresh_token", "refresh_token_expires_at"],
     });
 
     if (!user) {
@@ -306,9 +306,14 @@ const me = async (req, res) => {
 
     res.status(200).json({
       id: user.id,
-      name: `${user.first_name} ${user.last_name}`,
       email: user.email,
       role: user.role,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone_number: user.phone_number,
+      address: user.address,
+      gender: user.gender,
+      created_at: user.created_at,
     });
   } catch (error) {
     console.error(error);

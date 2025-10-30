@@ -74,20 +74,46 @@ const updateUserById = async (req, res) => {
       gender,
       role,
     } = req.body;
-    const user = await User.findByPk(req.params.id);
+
+    const userId = parseInt(req.params.id);
+    const currentUserId = req.user.user_id;
+    const isAdmin = req.user.role === "admin";
+
+    // Vérifier que l'utilisateur modifie son propre profil ou est admin
+    if (userId !== currentUserId && !isAdmin) {
+      return res.status(403).json({
+        error: "Vous n'êtes pas autorisé à modifier ce profil",
+      });
+    }
+
+    const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
-    await user.update({
+
+    // Préparer les données à mettre à jour
+    const updateData = {
       email,
       first_name,
       last_name,
       address,
       phone_number,
       gender,
-      role,
+    };
+
+    // Seul un admin peut modifier le rôle
+    if (isAdmin && role) {
+      updateData.role = role;
+    }
+
+    await user.update(updateData);
+
+    // Retourner l'utilisateur sans le mot de passe
+    const updatedUser = await User.findByPk(userId, {
+      attributes: { exclude: ["password"] },
     });
-    res.status(200).json(user);
+
+    res.status(200).json(updatedUser);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

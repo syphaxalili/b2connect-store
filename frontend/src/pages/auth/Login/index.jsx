@@ -10,7 +10,7 @@ import {
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import { login } from "../../../api";
+import { getCurrentUser, login } from "../../../api";
 import ForgotPasswordDialog from "../../../components/auth/ForgotPasswordDialog";
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
@@ -74,6 +74,8 @@ const Login = () => {
 
       dispatch(setCredentials(userData));
 
+      const userResponse = await getCurrentUser();
+      dispatch(setCredentials(userResponse.data));
       // Fusionner le panier invité avec le panier utilisateur
       await dispatch(mergeCartAsync());
 

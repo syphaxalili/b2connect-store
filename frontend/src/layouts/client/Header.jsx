@@ -221,14 +221,16 @@ function Header({ user, cartCount = 0, onLogout }) {
                   }}
                 >
                   <Avatar
-                    alt={user.name}
+                    alt={`${user.first_name} ${user.last_name}`}
                     sx={{
                       width: 32,
                       height: 32,
                       fontSize: "0.875rem"
                     }}
                   >
-                    {user.name?.charAt(0).toUpperCase()}
+                    {`${user.first_name} ${user.last_name}`
+                      ?.charAt(0)
+                      .toUpperCase()}
                   </Avatar>
                   <Typography
                     variant="body2"
@@ -238,7 +240,7 @@ function Header({ user, cartCount = 0, onLogout }) {
                       fontWeight: 500
                     }}
                   >
-                    {user.name}
+                    {`${user.first_name} ${user.last_name}`}
                   </Typography>
                   <ExpandMoreIcon
                     sx={{
@@ -265,7 +267,7 @@ function Header({ user, cartCount = 0, onLogout }) {
                       fontWeight={600}
                       color="text.primary"
                     >
-                      {user.name}
+                      {`${user.first_name} ${user.last_name}`}
                     </Typography>
                   </Box>
                   <Divider />

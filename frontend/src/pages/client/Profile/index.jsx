@@ -14,35 +14,37 @@ import {
   Grid,
   MenuItem,
   TextField,
-  Typography
+  Typography,
+  useTheme
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { requestPasswordReset, updateUser } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { setCredentials } from "../../../store/slices/authSlice";
 
-/**
- * Profile page - User profile information and edit
- */
 function Profile() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const theme = useTheme();
   const { user } = useAuth();
   const { showSuccess, showError } = useSnackbar();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
     email: "",
     phone_number: "",
     address: "",
-    city: "",
-    postal_code: "",
     gender: ""
   });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    // Initialiser le formulaire avec les données utilisateur depuis Redux
+    console.log("user", user);
     if (user) {
       setFormData({
         first_name: user.first_name || "",
@@ -50,8 +52,6 @@ function Profile() {
         email: user.email || "",
         phone_number: user.phone_number || "",
         address: user.address || "",
-        city: user.city || "",
-        postal_code: user.postal_code || "",
         gender: user.gender || ""
       });
     }
@@ -91,16 +91,22 @@ function Profile() {
   const handleSave = async () => {
     if (!validateForm()) return;
 
+    setLoading(true);
     try {
-      // TODO: Appel API pour mettre à jour le profil
-      // await updateUserProfile(user.id, formData);
-      console.log("Updating profile:", formData);
+      const response = await updateUser(user.id, formData);
+
+      dispatch(setCredentials(response.data));
 
       setIsEditing(false);
       showSuccess("Profil mis à jour avec succès !");
     } catch (error) {
       console.error("Error updating profile:", error);
-      showError("Erreur lors de la mise à jour du profil");
+      showError(
+        error.response?.data?.message ||
+          "Erreur lors de la mise à jour du profil"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -112,12 +118,24 @@ function Profile() {
       email: user.email || "",
       phone_number: user.phone_number || "",
       address: user.address || "",
-      city: user.city || "",
-      postal_code: user.postal_code || "",
       gender: user.gender || ""
     });
     setIsEditing(false);
     setErrors({});
+  };
+
+  const handlePasswordReset = async () => {
+    setLoading(true);
+    try {
+      await requestPasswordReset({ email: user.email });
+      showSuccess("Un email de réinitialisation a été envoyé à votre adresse.");
+    } catch (error) {
+      showError(
+        error.response?.data?.message || "Erreur lors de l'envoi de l'email"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!user) {
@@ -200,6 +218,12 @@ function Profile() {
                 helperText={errors.first_name}
                 disabled={!isEditing}
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
               />
             </Grid>
 
@@ -214,6 +238,12 @@ function Profile() {
                 helperText={errors.last_name}
                 disabled={!isEditing}
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
               />
             </Grid>
 
@@ -229,6 +259,12 @@ function Profile() {
                 helperText={errors.email}
                 disabled={!isEditing}
                 required
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
               />
             </Grid>
 
@@ -241,6 +277,12 @@ function Profile() {
                 onChange={handleChange}
                 disabled={!isEditing}
                 placeholder="+33 6 12 34 56 78"
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
               />
             </Grid>
 
@@ -253,58 +295,41 @@ function Profile() {
                 value={formData.gender}
                 onChange={handleChange}
                 disabled={!isEditing}
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
               >
-                <MenuItem value="">Non spécifié</MenuItem>
                 <MenuItem value="male">Homme</MenuItem>
                 <MenuItem value="female">Femme</MenuItem>
-                <MenuItem value="other">Autre</MenuItem>
               </TextField>
             </Grid>
 
             {/* Adresse */}
             <Grid size={12}>
-              <Typography
-                variant="h6"
-                fontWeight={600}
-                gutterBottom
-                sx={{ mt: 2 }}
-              >
+              <Typography variant="h6" fontWeight={600} gutterBottom>
                 Adresse
               </Typography>
-              <Divider sx={{ mb: 3 }} />
+              <Divider />
             </Grid>
 
             <Grid size={12}>
               <TextField
                 fullWidth
-                label="Adresse"
+                label="Adresse complète"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 disabled={!isEditing}
-                placeholder="Numéro et nom de rue"
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Code postal"
-                name="postal_code"
-                value={formData.postal_code}
-                onChange={handleChange}
-                disabled={!isEditing}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label="Ville"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                disabled={!isEditing}
+                placeholder="Numéro et nom de rue&#10;Code postal, Ville&#10;Pays"
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
               />
             </Grid>
 
@@ -318,21 +343,10 @@ function Profile() {
               >
                 Informations du compte
               </Typography>
-              <Divider sx={{ mb: 3 }} />
+              <Divider />
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box>
-                <Typography variant="body2" color="text.secondary">
-                  Rôle
-                </Typography>
-                <Typography variant="body1" fontWeight={600}>
-                  {user.role === "admin" ? "Administrateur" : "Client"}
-                </Typography>
-              </Box>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={12}>
               <Box>
                 <Typography variant="body2" color="text.secondary">
                   Membre depuis
@@ -353,10 +367,15 @@ function Profile() {
                 variant="contained"
                 startIcon={<SaveIcon />}
                 onClick={handleSave}
+                disabled={loading}
               >
-                Enregistrer
+                {loading ? "Enregistrement..." : "Enregistrer"}
               </Button>
-              <Button variant="outlined" onClick={handleCancel}>
+              <Button
+                variant="outlined"
+                onClick={handleCancel}
+                disabled={loading}
+              >
                 Annuler
               </Button>
             </Box>
@@ -368,17 +387,19 @@ function Profile() {
       <Card elevation={0} sx={{ borderRadius: 2, mt: 3 }}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h6" fontWeight={600} gutterBottom>
-            Sécurité
+            Modifier le mot de passe
           </Typography>
           <Divider sx={{ mb: 3 }} />
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Vous souhaitez modifier votre mot de passe ?
+            Pour modifier votre mot de passe, nous vous enverrons un lien de
+            réinitialisation par email.
           </Typography>
           <Button
             variant="outlined"
-            onClick={() => navigate("/reset-password")}
+            onClick={handlePasswordReset}
+            disabled={loading}
           >
-            Changer le mot de passe
+            {loading ? "Envoi en cours..." : "Recevoir le lien par email"}
           </Button>
         </CardContent>
       </Card>
