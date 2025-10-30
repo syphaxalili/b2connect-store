@@ -3,6 +3,8 @@ const User = require("./user")(sequelize);
 const Order = require("./order")(sequelize);
 const OrderItem = require("./orderItem")(sequelize);
 const Payment = require("./payment")(sequelize);
+const Cart = require("./cart")(sequelize);
+const CartItem = require("./cartItem")(sequelize);
 
 // Définir les relations
 User.hasMany(Order, { foreignKey: "user_id", onDelete: "CASCADE" });
@@ -13,6 +15,13 @@ OrderItem.belongsTo(Order, { foreignKey: "order_id" });
 
 Order.hasOne(Payment, { foreignKey: "order_id", onDelete: "CASCADE" });
 Payment.belongsTo(Order, { foreignKey: "order_id" });
+
+// Relations Cart
+User.hasOne(Cart, { foreignKey: "user_id", onDelete: "CASCADE" });
+Cart.belongsTo(User, { foreignKey: "user_id" });
+
+Cart.hasMany(CartItem, { foreignKey: "cart_id", onDelete: "CASCADE" });
+CartItem.belongsTo(Cart, { foreignKey: "cart_id" });
 
 // Synchroniser les modèles avec la base de données
 const initModels = async () => {
@@ -27,4 +36,13 @@ const initModels = async () => {
   }
 };
 
-module.exports = { sequelize, User, Order, OrderItem, Payment, initModels };
+module.exports = {
+  sequelize,
+  User,
+  Order,
+  OrderItem,
+  Payment,
+  Cart,
+  CartItem,
+  initModels,
+};

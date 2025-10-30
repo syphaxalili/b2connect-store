@@ -3,30 +3,35 @@ import { useDispatch } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import { logout } from "../../api";
 import { useAuth } from "../../hooks/useAuth";
+import { useCart } from "../../hooks/useCart";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { clearCredentials } from "../../store/slices/authSlice";
+import { resetCart } from "../../store/slices/cartSlice";
 import Footer from "./Footer";
 import Header from "./Header";
 
 /**
- * Layout component with Header and Footer for public pages
+ * ClientLayout component with Header and Footer for public pages
  * Contains navigation and shopping cart icon
  */
-function Layout({ cartCount = 0 }) {
+function ClientLayout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useAuth();
   const { showSuccess, showError } = useSnackbar();
+  const { itemCount: cartCount } = useCart();
 
   const handleLogout = async () => {
     try {
       await logout();
       dispatch(clearCredentials());
+      dispatch(resetCart()); // Réinitialiser le panier lors de la déconnexion
       showSuccess("Déconnexion réussie");
       navigate("/");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
       dispatch(clearCredentials());
+      dispatch(resetCart());
       showError("Erreur lors de la déconnexion");
       navigate("/");
     }
@@ -57,4 +62,4 @@ function Layout({ cartCount = 0 }) {
   );
 }
 
-export default Layout;
+export default ClientLayout;

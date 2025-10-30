@@ -58,6 +58,18 @@ export {
 } from "./modules/orders";
 
 // ============================================================================
+// PANIER
+// ============================================================================
+export {
+  addToCart,
+  clearCart,
+  getCart,
+  mergeCart,
+  removeFromCart,
+  updateCartItem
+} from "./modules/cart";
+
+// ============================================================================
 // INSTANCES AXIOS (si besoin direct)
 // ============================================================================
 export { default as axiosPrivate } from "./config/axiosPrivate";

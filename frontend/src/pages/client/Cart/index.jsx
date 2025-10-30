@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardContent,
+  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -17,62 +18,69 @@ import {
   TextField,
   Typography
 } from "@mui/material";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "../../../hooks/useCart";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 /**
  * Cart page - Shopping cart with products, quantities, and checkout
  */
 function Cart() {
   const navigate = useNavigate();
+  const {
+    items,
+    total: cartTotal,
+    isLoading,
+    updateItem,
+    removeItem,
+    clearItems,
+    isGuest
+  } = useCart();
+  const { showSuccess, showError } = useSnackbar();
 
-  // Données temporaires du panier (à remplacer par un state global ou context)
-  const [cartItems, setCartItems] = useState([
-    {
-      id: "1",
-      name: "Batterie Dell Latitude E6420",
-      brand: "Dell",
-      price: 49.99,
-      quantity: 2,
-      image: "https://placehold.co/150x150/png",
-      stock: 10
-    },
-    {
-      id: "2",
-      name: "Chargeur HP 65W",
-      brand: "HP",
-      price: 29.99,
-      quantity: 1,
-      image: "https://placehold.co/150x150/png",
-      stock: 15
-    }
-  ]);
-
-  const handleQuantityChange = (itemId, newQuantity) => {
-    const item = cartItems.find((i) => i.id === itemId);
-    if (newQuantity >= 1 && newQuantity <= item.stock) {
-      setCartItems(
-        cartItems.map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
+  const handleQuantityChange = async (item, newQuantity) => {
+    if (newQuantity >= 1 && newQuantity <= item.product.stock) {
+      try {
+        // Pour les invités, utiliser product_id; pour les utilisateurs, utiliser item.id
+        const identifier = isGuest ? item.product_id : item.id;
+        await updateItem(identifier, newQuantity);
+      } catch {
+        showError("Erreur lors de la mise à jour de la quantité");
+      }
     }
   };
 
-  const handleRemoveItem = (itemId) => {
-    setCartItems(cartItems.filter((item) => item.id !== itemId));
+  const handleRemoveItem = async (item) => {
+    try {
+      // Pour les invités, utiliser product_id; pour les utilisateurs, utiliser item.id
+      const identifier = isGuest ? item.product_id : item.id;
+      await removeItem(identifier);
+      showSuccess("Article supprimé du panier");
+    } catch {
+      showError("Erreur lors de la suppression de l'article");
+    }
   };
 
-  const handleClearCart = () => {
-    setCartItems([]);
+  const handleClearCart = async () => {
+    try {
+      await clearItems();
+      showSuccess("Panier vidé");
+    } catch {
+      showError("Erreur lors du vidage du panier");
+    }
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const subtotal = cartTotal;
   const shipping = subtotal > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -82,13 +90,13 @@ function Cart() {
           Mon Panier
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {cartItems.length === 0
+          {items.length === 0
             ? "Votre panier est vide"
-            : `${cartItems.length} article${cartItems.length > 1 ? "s" : ""} dans votre panier`}
+            : `${items.length} article${items.length > 1 ? "s" : ""} dans votre panier`}
         </Typography>
       </Box>
 
-      {cartItems.length === 0 ? (
+      {items.length === 0 ? (
         /* Panier vide */
         <Paper
           elevation={0}
@@ -122,16 +130,19 @@ function Cart() {
           {/* Liste des articles */}
           <Grid size={{ xs: 12, md: 8 }}>
             <Paper elevation={0} sx={{ borderRadius: 2 }}>
-              {cartItems.map((item, index) => (
-                <Box key={item.id}>
+              {items.map((item, index) => (
+                <Box key={item.product_id}>
                   <Box sx={{ p: 3 }}>
                     <Grid container spacing={2} alignItems="center">
                       {/* Image */}
                       <Grid size={{ xs: 3, sm: 2 }}>
                         <Box
                           component="img"
-                          src={item.image}
-                          alt={item.name}
+                          src={
+                            item.product?.images?.[0] ||
+                            "https://placehold.co/150x150/png"
+                          }
+                          alt={item.product?.name || "Produit"}
                           sx={{
                             width: "100%",
                             height: "auto",
@@ -149,14 +160,14 @@ function Cart() {
                           fontWeight={600}
                           sx={{ mb: 0.5 }}
                         >
-                          {item.name}
+                          {item.product?.name || "Produit"}
                         </Typography>
                         <Typography
                           variant="body2"
                           color="text.secondary"
                           sx={{ mb: 1 }}
                         >
-                          Marque: {item.brand}
+                          Marque: {item.product?.brand || "N/A"}
                         </Typography>
                         <Typography
                           variant="h6"
@@ -182,7 +193,7 @@ function Cart() {
                           <IconButton
                             size="small"
                             onClick={() =>
-                              handleQuantityChange(item.id, item.quantity - 1)
+                              handleQuantityChange(item, item.quantity - 1)
                             }
                             disabled={item.quantity <= 1}
                             sx={{
@@ -196,7 +207,7 @@ function Cart() {
                             value={item.quantity}
                             onChange={(e) => {
                               const value = parseInt(e.target.value) || 1;
-                              handleQuantityChange(item.id, value);
+                              handleQuantityChange(item, value);
                             }}
                             size="small"
                             sx={{
@@ -205,15 +216,17 @@ function Cart() {
                             }}
                             inputProps={{
                               min: 1,
-                              max: item.stock
+                              max: item.product?.stock || 99
                             }}
                           />
                           <IconButton
                             size="small"
                             onClick={() =>
-                              handleQuantityChange(item.id, item.quantity + 1)
+                              handleQuantityChange(item, item.quantity + 1)
                             }
-                            disabled={item.quantity >= item.stock}
+                            disabled={
+                              item.quantity >= (item.product?.stock || 0)
+                            }
                             sx={{
                               border: "1px solid #e0e0e0",
                               borderRadius: 1
@@ -240,14 +253,14 @@ function Cart() {
                         <IconButton
                           size="small"
                           color="error"
-                          onClick={() => handleRemoveItem(item.id)}
+                          onClick={() => handleRemoveItem(item)}
                         >
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </Grid>
                     </Grid>
                   </Box>
-                  {index < cartItems.length - 1 && <Divider />}
+                  {index < items.length - 1 && <Divider />}
                 </Box>
               ))}
 

@@ -6,6 +6,7 @@ import { logout } from "../../api";
 import { useAuth } from "../../hooks/useAuth";
 import { useSnackbar } from "../../hooks/useSnackbar";
 import { clearCredentials } from "../../store/slices/authSlice";
+import { resetCart } from "../../store/slices/cartSlice";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -28,11 +29,13 @@ function AdminLayout() {
     try {
       await logout();
       dispatch(clearCredentials());
+      dispatch(resetCart()); // Réinitialiser le panier lors de la déconnexion
       showSuccess("Déconnexion réussie");
       navigate("/login");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
       dispatch(clearCredentials());
+      dispatch(resetCart());
       showError("Erreur lors de la déconnexion");
       navigate("/login");
     }

@@ -491,7 +491,7 @@ const ProductDetails = () => {
         {/* Caractéristiques - Pleine largeur */}
         {product.specifications &&
           Object.keys(product.specifications).length > 0 && (
-            <Grid xs={12} sx={{ mt: 4 }}>
+            <Grid size={{ xs: 12 }} sx={{ mt: 4 }}>
               <Typography
                 variant="h5"
                 gutterBottom

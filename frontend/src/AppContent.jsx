@@ -5,6 +5,10 @@ import { getCurrentUser } from "./api";
 import GlobalSnackbarProvider from "./components/common/GlobalSnackbarProvider";
 import AppRouter from "./router";
 import { setCredentials, setLoadingComplete } from "./store/slices/authSlice";
+import {
+  loadGuestCartFromStorage,
+  mergeCartAsync
+} from "./store/slices/cartSlice";
 
 const AppContent = () => {
   const dispatch = useDispatch();
@@ -14,9 +18,12 @@ const AppContent = () => {
       try {
         const response = await getCurrentUser();
         dispatch(setCredentials(response.data));
+        // Utilisateur connecté - fusionner le panier invité avec le panier utilisateur
+        dispatch(mergeCartAsync());
       } catch {
-        console.log("Utilisateur non authentifié");
         dispatch(setLoadingComplete());
+        // Utilisateur invité - charger le panier depuis localStorage
+        dispatch(loadGuestCartFromStorage());
       }
     };
 
