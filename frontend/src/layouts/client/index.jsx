@@ -19,7 +19,7 @@ function ClientLayout() {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const { showSuccess, showError } = useSnackbar();
-  const { itemCount: cartCount } = useCart();
+  const { itemsCount: cartCount } = useCart();
 
   const handleLogout = async () => {
     try {

@@ -3,6 +3,7 @@ export {
   selectCartIsGuest,
   selectCartIsLoading,
   selectCartItemCount,
+  selectCartItemsCount,
   selectCartItems,
   selectCartTotal
 } from "./cartSelectors";

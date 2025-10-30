@@ -13,6 +13,7 @@ import {
   selectCartIsLoading,
   selectCartItemCount,
   selectCartItems,
+  selectCartItemsCount,
   selectCartTotal,
   updateCartItemAsync,
   updateGuestCartItem
@@ -28,7 +29,8 @@ export const useCart = () => {
   const isGuest = useSelector(selectCartIsGuest);
   const items = useSelector(selectCartItems);
   const total = useSelector(selectCartTotal);
-  const itemCount = useSelector(selectCartItemCount);
+  const itemCount = useSelector(selectCartItemCount); // Nombre total d'unités
+  const itemsCount = useSelector(selectCartItemsCount); // Nombre d'articles distincts
   const isLoading = useSelector(selectCartIsLoading);
   const error = useSelector(selectCartError);
 
@@ -114,6 +116,7 @@ export const useCart = () => {
     items,
     total,
     itemCount,
+    itemsCount,
     isLoading,
     error,
     isGuest,

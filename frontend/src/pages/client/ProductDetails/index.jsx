@@ -25,6 +25,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getProductById } from "../../../api";
+import { useCart } from "../../../hooks/useCart";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { getStockStatus } from "../../../utils/stockStatus";
 
@@ -41,7 +42,8 @@ const ProductDetails = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const thumbnailsRef = useRef(null);
-  const { showSuccess } = useSnackbar();
+  const { showSuccess, showError } = useSnackbar();
+  const { addItem, isLoading: cartLoading } = useCart();
 
   useEffect(() => {
     fetchProduct();
@@ -105,9 +107,30 @@ const ProductDetails = () => {
     setIsDragging(false);
   };
 
-  const handleAddToCart = () => {
-    // TODO: Implémenter l'ajout au panier
-    showSuccess("Produit ajouté au panier avec succès !");
+  const handleAddToCart = async () => {
+    if (!product) {
+      showError("Produit non disponible");
+      return;
+    }
+
+    if (quantity < 1) {
+      showError("La quantité doit être au moins 1");
+      return;
+    }
+
+    if (quantity > product.stock) {
+      showError(`Stock insuffisant. Disponible: ${product.stock}`);
+      return;
+    }
+
+    try {
+      await addItem(product, quantity);
+      showSuccess(`Le produit a été bien ajouté au panier`);
+      // Réinitialiser la quantité après ajout
+      setQuantity(1);
+    } catch (err) {
+      showError(err.message || "Erreur lors de l'ajout au panier");
+    }
   };
 
   const scrollThumbnails = (direction) => {
@@ -475,13 +498,14 @@ const ProductDetails = () => {
                   fullWidth
                   startIcon={<ShoppingCartIcon />}
                   onClick={handleAddToCart}
+                  disabled={cartLoading || quantity > product.stock}
                   sx={{
                     py: 1.5,
                     fontSize: "1.1rem",
                     fontWeight: 600
                   }}
                 >
-                  Ajouter au panier
+                  {cartLoading ? "Ajout en cours..." : "Ajouter au panier"}
                 </Button>
               </>
             )}

@@ -253,6 +253,7 @@ export {
   selectCartIsLoading,
   selectCartItemCount,
   selectCartItems,
+  selectCartItemsCount,
   selectCartTotal
 } from "../selectors/cartSelectors";
 
