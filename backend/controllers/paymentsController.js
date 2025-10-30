@@ -6,7 +6,7 @@ const createPayment = async (req, res) => {
   try {
     // Vérifier que la commande existe et appartient à l'utilisateur
     const order = await Order.findOne({
-      where: { id: order_id, user_id: req.user.id },
+      where: { id: order_id, user_id: req.user.user_id },
     });
     if (!order) {
       return res

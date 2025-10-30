@@ -6,7 +6,7 @@ const Product = require("../models/mongodb/product");
  */
 const getCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.user_id;
 
     // Récupérer ou créer le panier
     let cart = await Cart.findOne({
@@ -82,7 +82,7 @@ const getCart = async (req, res) => {
  */
 const addToCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.user_id;
     const { product_id, quantity = 1 } = req.body;
 
     if (!product_id) {
@@ -166,7 +166,7 @@ const addToCart = async (req, res) => {
  */
 const updateCartItem = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.user_id;
     const { itemId } = req.params;
     const { quantity } = req.body;
 
@@ -188,7 +188,9 @@ const updateCartItem = async (req, res) => {
     });
 
     if (!cartItem) {
-      return res.status(404).json({ message: "Article non trouvé dans le panier" });
+      return res
+        .status(404)
+        .json({ message: "Article non trouvé dans le panier" });
     }
 
     // Vérifier le stock
@@ -236,7 +238,7 @@ const updateCartItem = async (req, res) => {
  */
 const removeFromCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.user_id;
     const { itemId } = req.params;
 
     // Récupérer le panier de l'utilisateur
@@ -251,7 +253,9 @@ const removeFromCart = async (req, res) => {
     });
 
     if (deleted === 0) {
-      return res.status(404).json({ message: "Article non trouvé dans le panier" });
+      return res
+        .status(404)
+        .json({ message: "Article non trouvé dans le panier" });
     }
 
     // Mettre à jour le timestamp du panier
@@ -273,7 +277,7 @@ const removeFromCart = async (req, res) => {
  */
 const clearCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.user_id;
 
     // Récupérer le panier de l'utilisateur
     const cart = await Cart.findOne({ where: { user_id: userId } });
@@ -304,7 +308,7 @@ const clearCart = async (req, res) => {
  */
 const mergeCart = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.user_id;
     const { items } = req.body; // items du localStorage
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -330,7 +334,9 @@ const mergeCart = async (req, res) => {
       // Vérifier que le produit existe
       const product = await Product.findById(product_id);
       if (!product) {
-        console.warn(`Produit ${product_id} non trouvé, ignoré lors de la fusion`);
+        console.warn(
+          `Produit ${product_id} non trouvé, ignoré lors de la fusion`
+        );
         continue;
       }
 

@@ -3,7 +3,7 @@ const Product = require("../models/mongodb/product");
 
 const createOrder = async (req, res) => {
   const { product_ids, quantities } = req.body;
-  const user_id = req.user.id;
+  const user_id = req.user.user_id;
 
   try {
     // Vérifier que l'utilisateur existe (MySQL)
@@ -62,7 +62,7 @@ const createOrder = async (req, res) => {
 const getUserOrders = async (req, res) => {
   try {
     const orders = await Order.findAll({
-      where: { user_id: req.user.id },
+      where: { user_id: req.user.user_id },
       include: [
         {
           model: OrderItem,

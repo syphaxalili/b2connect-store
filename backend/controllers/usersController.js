@@ -108,7 +108,7 @@ const deleteUserById = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
+    const user = await User.findByPk(req.user.user_id, {
       attributes: { exclude: ["password"] },
     });
     if (!user) {
