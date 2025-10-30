@@ -48,11 +48,14 @@ const getCart = async (req, res) => {
         (p) => p._id.toString() === item.product_id
       );
 
+      // Convertir l'instance Sequelize en objet simple
+      const itemData = item.toJSON ? item.toJSON() : item;
+
       return {
-        id: item.id,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price: parseFloat(item.price),
+        id: itemData.id,
+        product_id: itemData.product_id,
+        quantity: itemData.quantity,
+        price: parseFloat(itemData.price),
         product: product
           ? {
               _id: product._id,
@@ -190,10 +193,17 @@ const updateCartItem = async (req, res) => {
       return res.status(404).json({ message: "Panier non trouvé" });
     }
 
-    // Récupérer l'item
-    const cartItem = await CartItem.findOne({
+    // Récupérer l'item (chercher par ID ou product_id pour compatibilité)
+    let cartItem = await CartItem.findOne({
       where: { id: itemId, cart_id: cart.id },
     });
+
+    // Si pas trouvé par ID, essayer par product_id (pour compatibilité)
+    if (!cartItem) {
+      cartItem = await CartItem.findOne({
+        where: { product_id: itemId, cart_id: cart.id },
+      });
+    }
 
     if (!cartItem) {
       return res
@@ -255,10 +265,17 @@ const removeFromCart = async (req, res) => {
       return res.status(404).json({ message: "Panier non trouvé" });
     }
 
-    // Supprimer l'item
-    const deleted = await CartItem.destroy({
+    // Supprimer l'item (chercher par ID ou product_id pour compatibilité)
+    let deleted = await CartItem.destroy({
       where: { id: itemId, cart_id: cart.id },
     });
+
+    // Si pas trouvé par ID, essayer par product_id
+    if (deleted === 0) {
+      deleted = await CartItem.destroy({
+        where: { product_id: itemId, cart_id: cart.id },
+      });
+    }
 
     if (deleted === 0) {
       return res

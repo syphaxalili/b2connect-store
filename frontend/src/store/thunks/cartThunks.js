@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import * as cartAPI from "../../api/modules/cart";
-import { loadGuestCart, clearGuestCartStorage } from "../../utils/cartStorage";
+import { clearGuestCartStorage, loadGuestCart } from "../../utils/cartStorage";
 
 /**
  * Récupérer le panier depuis le backend (utilisateur connecté)

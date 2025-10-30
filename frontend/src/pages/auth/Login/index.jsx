@@ -15,6 +15,7 @@ import ForgotPasswordDialog from "../../../components/auth/ForgotPasswordDialog"
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { setCredentials } from "../../../store/slices/authSlice";
+import { mergeCartAsync } from "../../../store/slices/cartSlice";
 import { validateEmail, validatePassword } from "../../../utils/validation";
 
 const Login = () => {
@@ -72,6 +73,10 @@ const Login = () => {
       const userData = response.data;
 
       dispatch(setCredentials(userData));
+
+      // Fusionner le panier invité avec le panier utilisateur
+      await dispatch(mergeCartAsync());
+
       showSuccess("Connexion réussie!");
 
       if (userData.role === "admin") {
