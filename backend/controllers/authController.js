@@ -33,7 +33,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     const user = await User.findOne({ where: { email } });
 
     if (!user || !user.password) {
@@ -44,18 +44,29 @@ const login = async (req, res) => {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
-    // Générer Access Token (courte durée: 15 minutes)
     const accessToken = jwt.sign(
       { user_id: user.id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
 
-    // Générer Refresh Token (longue durée: 7 jours)
     const refreshToken = crypto.randomBytes(64).toString("hex");
-    const refreshTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // Stocker le refresh token en BDD (permet la révocation)
+    let refreshTokenExpiry;
+    const refreshTokenCookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/api/auth/refresh",
+    };
+
+    if (rememberMe) {
+      refreshTokenExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      refreshTokenCookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000;
+    } else {
+      refreshTokenExpiry = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
+    }
+
     await user.update({
       refresh_token: refreshToken,
       refresh_token_expires_at: refreshTokenExpiry,
@@ -68,12 +79,7 @@ const login = async (req, res) => {
       maxAge: 15 * 60 * 1000,
     });
 
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("refresh_token", refreshToken, refreshTokenCookieOptions);
 
     res.status(200).json({
       id: user.id,

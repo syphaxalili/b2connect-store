@@ -66,7 +66,8 @@ const Login = () => {
     try {
       const response = await login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        rememberMe: rememberMe
       });
       const userData = response.data;
 
