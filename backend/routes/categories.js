@@ -6,10 +6,12 @@ const {
   getCategoryById,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  getCategoriesForFilters
 } = require('../controllers/categoriesController');
 
 // Public routes
+router.get('/filters/list', getCategoriesForFilters);
 router.get('/', getAllCategories);
 router.get('/:id', getCategoryById);
 

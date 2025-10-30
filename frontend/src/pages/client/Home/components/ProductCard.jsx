@@ -1,10 +1,7 @@
 import { Box, Card, CardContent, CardMedia, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import noImageAvailable from "../../../../assets/images/image-no-available.svg";
 
-/**
- * ProductCard component - displays individual product information
- * Shows image, name, type, price and rating
- */
 function ProductCard({ product }) {
   const navigate = useNavigate();
 
@@ -45,7 +42,7 @@ function ProductCard({ product }) {
       >
         <CardMedia
           component="img"
-          image={product.images?.[0] || "https://placehold.co/600x400/png"}
+          image={product.images?.[0] || noImageAvailable}
           alt={product.name}
           sx={{
             width: "100%",

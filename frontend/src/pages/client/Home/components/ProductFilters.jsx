@@ -5,13 +5,12 @@ import {
   Select,
   Stack
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getCategoriesForFilters, getDistinctBrands } from "../../../../api";
+import { useSnackbar } from "../../../../hooks/useSnackbar";
 
-/**
- * ProductFilters component - filtering and sorting controls
- * Includes category, brand, price filters and sorting options
- */
 function ProductFilters({ onFilterChange, onSortChange }) {
+  const { showError } = useSnackbar();
   const [filters, setFilters] = useState({
     category: "all",
     brand: "all",
@@ -19,24 +18,48 @@ function ProductFilters({ onFilterChange, onSortChange }) {
     sort: "new"
   });
 
-  const categories = [
-    { value: "all", label: "Toutes les catégories" },
-    { value: "batteries", label: "Batteries" },
-    { value: "chargers", label: "Chargeurs" },
-    { value: "accessories", label: "Accessoires" },
-    { value: "peripherals", label: "Périphériques" }
-  ];
+  const [categories, setCategories] = useState([
+    { value: "all", label: "Toutes les catégories" }
+  ]);
+  const [brands, setBrands] = useState([
+    { value: "all", label: "Toutes les marques" }
+  ]);
 
-  const brands = [
-    { value: "all", label: "Toutes les marques" },
-    { value: "dell", label: "Dell" },
-    { value: "hp", label: "HP" },
-    { value: "lenovo", label: "Lenovo" },
-    { value: "asus", label: "Asus" },
-    { value: "apple", label: "Apple" },
-    { value: "samsung", label: "Samsung" },
-    { value: "logitech", label: "Logitech" }
-  ];
+  // Charger les catégories et marques au montage du composant
+  useEffect(() => {
+    const loadFilterData = async () => {
+      try {
+        // Charger les catégories
+        const categoriesResponse = await getCategoriesForFilters();
+        const categoriesData = categoriesResponse.data || [];
+        const formattedCategories = [
+          { value: "all", label: "Toutes les catégories" },
+          ...categoriesData.map((cat) => ({
+            value: cat._id,
+            label: cat.name
+          }))
+        ];
+        setCategories(formattedCategories);
+
+        // Charger les marques
+        const brandsResponse = await getDistinctBrands();
+        const brandsData = brandsResponse.data || [];
+        const formattedBrands = [
+          { value: "all", label: "Toutes les marques" },
+          ...brandsData.map((brand) => ({
+            value: brand.toLowerCase(),
+            label: brand
+          }))
+        ];
+        setBrands(formattedBrands);
+      } catch (error) {
+        console.error("Erreur lors du chargement des filtres:", error);
+        showError("Erreur lors du chargement des filtres");
+      }
+    };
+
+    loadFilterData();
+  }, []);
 
   const priceRanges = [
     { value: "all", label: "Tous les prix" },
@@ -49,8 +72,7 @@ function ProductFilters({ onFilterChange, onSortChange }) {
   const sortOptions = [
     { value: "new", label: "Nouveautés" },
     { value: "price_asc", label: "Prix : Croissant" },
-    { value: "price_desc", label: "Prix : Décroissant" },
-    { value: "popular", label: "Populaires" }
+    { value: "price_desc", label: "Prix : Décroissant" }
   ];
 
   const handleFilterChange = (filterName, value) => {

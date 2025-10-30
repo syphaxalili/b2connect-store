@@ -6,10 +6,12 @@ const {
   getProductById,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getDistinctBrands
 } = require('../controllers/productsController');
 
 // Public routes
+router.get('/filters/brands', getDistinctBrands);
 router.get('/', getAllProducts);
 router.get('/:id', getProductById);
 

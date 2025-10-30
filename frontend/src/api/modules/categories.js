@@ -5,6 +5,8 @@ import axiosPublic from "../config/axiosPublic";
 
 export const getCategories = () => axiosPublic.get("/categories");
 
+export const getCategoriesForFilters = () => axiosPublic.get("/categories/filters/list");
+
 export const getCategoryById = (id) => axiosPublic.get(`/categories/${id}`);
 
 // Protected routes

@@ -7,10 +7,6 @@ import {
 } from "@mui/material";
 import ProductCard from "./ProductCard";
 
-/**
- * ProductGrid component - displays products in a responsive grid
- * Handles loading and empty states
- */
 function ProductGrid({ products, loading = false }) {
   if (loading) {
     return (

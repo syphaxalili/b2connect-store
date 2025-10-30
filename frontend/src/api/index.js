@@ -29,6 +29,7 @@ export {
 export {
   createProduct,
   deleteProduct,
+  getDistinctBrands,
   getProductById,
   getProducts,
   updateProduct
@@ -41,6 +42,7 @@ export {
   createCategory,
   deleteCategory,
   getCategories,
+  getCategoriesForFilters,
   getCategoryById,
   updateCategory
 } from "./modules/categories";

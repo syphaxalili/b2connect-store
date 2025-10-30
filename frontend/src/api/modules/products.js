@@ -5,6 +5,8 @@ import axiosPublic from "../config/axiosPublic";
 
 export const getProducts = () => axiosPublic.get("/products");
 
+export const getDistinctBrands = () => axiosPublic.get("/products/filters/brands");
+
 export const getProductById = (id) => axiosPublic.get(`/products/${id}`);
 
 // Protected routes

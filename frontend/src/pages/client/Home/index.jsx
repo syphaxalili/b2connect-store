@@ -1,24 +1,15 @@
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  Container,
-  Typography
-} from "@mui/material";
+import { Box, CircularProgress, Container, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { getProducts } from "../../../api";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 import ProductFilters from "./components/ProductFilters";
 import ProductGrid from "./components/ProductGrid";
 
-/**
- * Home page - Product catalog
- * Main landing page displaying all products with filters and sorting
- */
 function Home() {
+  const { showError } = useSnackbar();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     category: "all",
     brand: "all",
@@ -34,10 +25,9 @@ function Home() {
         const response = await getProducts();
         setProducts(response.data || []);
         setFilteredProducts(response.data || []);
-        setError(null);
       } catch (err) {
         console.error("Error fetching products:", err);
-        setError("Erreur lors du chargement des produits");
+        showError("Erreur lors du chargement des produits");
         setProducts([]);
         setFilteredProducts([]);
       } finally {
@@ -87,9 +77,6 @@ function Home() {
       case "price_desc":
         result.sort((a, b) => b.price - a.price);
         break;
-      case "popular":
-        result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        break;
       case "new":
       default:
         result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -133,13 +120,6 @@ function Home() {
         des périphériques fiables, trouvez tout ce dont vous avez besoin ici.
         Parcourez nos sélections et nouveautés.
       </Typography>
-
-      {/* Error Alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
 
       {/* Filters */}
       <ProductFilters
