@@ -25,7 +25,10 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createOrder } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
+import { useCart } from "../../../hooks/useCart";
+import { useSnackbar } from "../../../hooks/useSnackbar";
 
 /**
  * Checkout page - Order form with shipping info and payment
@@ -33,31 +36,14 @@ import { useAuth } from "../../../hooks/useAuth";
 function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { items: cartItems, total: cartTotal, clearItems } = useCart();
+  const { showSuccess, showError } = useSnackbar();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [activeStep, setActiveStep] = useState(0);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [useMyAddress, setUseMyAddress] = useState(false);
-
-  // Données temporaires du panier (à remplacer par un state global ou context)
-  const cartItems = [
-    {
-      id: "1",
-      name: "Batterie Dell Latitude E6420",
-      brand: "Dell",
-      price: 49.99,
-      quantity: 2,
-      image: "https://placehold.co/150x150/png"
-    },
-    {
-      id: "2",
-      name: "Chargeur HP 65W",
-      brand: "HP",
-      price: 29.99,
-      quantity: 1,
-      image: "https://placehold.co/150x150/png"
-    }
-  ];
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     // Informations personnelles
@@ -107,6 +93,13 @@ function Checkout() {
         city: ""
       }));
     }
+
+    setErrors((prev) => ({
+      ...prev,
+      street: "",
+      postalCode: "",
+      city: ""
+    }));
   };
 
   const [errors, setErrors] = useState({});
@@ -166,28 +159,65 @@ function Checkout() {
     setActiveStep((prev) => prev - 1);
   };
 
-  const handlePlaceOrder = () => {
-    // TODO: Appel API pour créer la commande
-    const orderData = {
-      formData,
-      cartItems,
-      shipping_address: {
+  const handlePlaceOrder = async () => {
+    if (cartItems.length === 0) {
+      showError("Votre panier est vide");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      // Préparer les données de la commande
+      const product_ids = cartItems.map((item) => item.product_id);
+      const quantities = cartItems.map((item) => item.quantity);
+      const shipping_fee = 5.99;
+
+      // Préparer l'adresse de livraison
+      const shipping_address = {
         street: formData.street,
         postal_code: formData.postalCode,
-        city: formData.city
-      }
-    };
-    console.log("Order placed:", orderData);
-    setOrderPlaced(true);
-    setActiveStep(steps.length - 1);
+        city: formData.city,
+        country: formData.country
+      };
+
+      // Créer la commande avec l'adresse de livraison
+      await createOrder(
+        product_ids,
+        quantities,
+        shipping_fee,
+        shipping_address
+      );
+
+      // Vider le panier après succès
+      await clearItems();
+
+      // Afficher la confirmation
+      setOrderPlaced(true);
+      setActiveStep(steps.length - 1);
+      showSuccess("Commande passée avec succès!");
+    } catch (error) {
+      console.error("Erreur lors de la création de la commande:", error);
+      showError(
+        error.response?.data?.error ||
+          "Erreur lors de la création de la commande"
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shipping = 5.99;
+  const subtotal = cartTotal;
+  const shipping = cartItems.length > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
+
+  // Rediriger si le panier est vide
+  useEffect(() => {
+    if (!orderPlaced && cartItems.length === 0) {
+      showError("Votre panier est vide");
+      navigate("/cart");
+    }
+  }, [cartItems, orderPlaced, navigate, showError]);
 
   // Page de confirmation
   if (orderPlaced && activeStep === steps.length - 1) {
@@ -563,7 +593,7 @@ function Checkout() {
               </Typography>
               {cartItems.map((item) => (
                 <Box
-                  key={item.id}
+                  key={item.product_id}
                   sx={{
                     display: "flex",
                     gap: 2,
@@ -575,8 +605,11 @@ function Checkout() {
                 >
                   <Box
                     component="img"
-                    src={item.image}
-                    alt={item.name}
+                    src={
+                      item.product?.images?.[0] ||
+                      "https://placehold.co/150x150/png"
+                    }
+                    alt={item.product?.name || "Produit"}
                     sx={{
                       width: 60,
                       height: 60,
@@ -586,10 +619,10 @@ function Checkout() {
                   />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" fontWeight={600}>
-                      {item.name}
+                      {item.product?.name || "Produit"}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      {item.brand} • Quantité: {item.quantity}
+                      {item.product?.brand || "N/A"} • Quantité: {item.quantity}
                     </Typography>
                   </Box>
                   <Typography variant="body1" fontWeight={600}>
@@ -629,10 +662,13 @@ function Checkout() {
                 onClick={handleNext}
                 fullWidth={{ xs: true, md: false }}
                 sx={{ ml: { xs: 0, md: "auto" } }}
+                disabled={submitting}
               >
-                {activeStep === steps.length - 2
-                  ? "Confirmer la commande"
-                  : "Continuer"}
+                {submitting
+                  ? "Traitement en cours..."
+                  : activeStep === steps.length - 2
+                    ? "Confirmer la commande"
+                    : "Continuer"}
               </Button>
             )}
           </Box>
@@ -660,7 +696,7 @@ function Checkout() {
               <Box sx={{ mb: 2 }}>
                 {cartItems.map((item) => (
                   <Box
-                    key={item.id}
+                    key={item.product_id}
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
@@ -668,7 +704,7 @@ function Checkout() {
                     }}
                   >
                     <Typography variant="body2">
-                      {item.name} x{item.quantity}
+                      {item.product?.name || "Produit"} x{item.quantity}
                     </Typography>
                     <Typography variant="body2" fontWeight={600}>
                       {(item.price * item.quantity).toFixed(2)} €

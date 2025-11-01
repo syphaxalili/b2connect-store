@@ -2,11 +2,17 @@ import axiosPrivate from "../config/axiosPrivate";
 
 // Protected routes
 
-export const createOrder = (product_ids, quantities, shipping_fee = 5.99) =>
+export const createOrder = (
+  product_ids,
+  quantities,
+  shipping_fee = 5.99,
+  shipping_address = null
+) =>
   axiosPrivate.post("/orders", {
     product_ids,
     quantities,
-    shipping_fee
+    shipping_fee,
+    shipping_address
   });
 
 export const getOrders = () => axiosPrivate.get("/orders");

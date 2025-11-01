@@ -1,5 +1,6 @@
 import {
   ArrowBack as ArrowBackIcon,
+  ContentCopy as ContentCopyIcon,
   ExpandMore as ExpandMoreIcon
 } from "@mui/icons-material";
 import {
@@ -16,7 +17,9 @@ import {
   Container,
   Divider,
   Grid,
+  IconButton,
   Paper,
+  Tooltip,
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -33,7 +36,12 @@ function Orders() {
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { showError } = useSnackbar();
+  const { showError, showSuccess } = useSnackbar();
+
+  const handleCopyTrackingNumber = (trackingNumber) => {
+    navigator.clipboard.writeText(trackingNumber);
+    showSuccess("Numéro de suivi copié!");
+  };
 
   useEffect(() => {
     // Récupérer les commandes de l'utilisateur
@@ -68,11 +76,11 @@ function Orders() {
 
   const getStatusLabel = (status) => {
     const statusMap = {
-      pending: "En attente",
-      approved: "Validée",
-      shipped: "Expédiée",
-      delivered: "Livrée",
-      cancelled: "Annulée"
+      pending: "⏳ En attente",
+      approved: "✅ Validée",
+      shipped: "📦 Expédiée",
+      delivered: "🎉 Livrée",
+      cancelled: "❌ Annulée"
     };
     return statusMap[status] || status;
   };
@@ -88,7 +96,7 @@ function Orders() {
     return colorMap[status] || "default";
   };
 
-  // Tri des commandes par statut (ordre de priorité)
+  // Tri des commandes par statut (ordre de priorité) puis par date (récent en haut)
   const sortOrdersByStatus = (orders) => {
     const statusOrder = {
       pending: 1,
@@ -100,7 +108,14 @@ function Orders() {
     return [...orders].sort((a, b) => {
       const orderA = statusOrder[a.status] || 999;
       const orderB = statusOrder[b.status] || 999;
-      return orderA - orderB;
+
+      // Tri par statut d'abord
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+
+      // Si même statut, tri par date (récent en haut)
+      return new Date(b.created_at) - new Date(a.created_at);
     });
   };
 
@@ -259,47 +274,128 @@ function Orders() {
                     }
                   }}
                 >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      width: "100%",
-                      pr: 2,
-                      flexWrap: "wrap",
-                      gap: 2
-                    }}
+                  <Grid
+                    container
+                    spacing={2}
+                    sx={{ width: "100%", pr: 2 }}
+                    alignItems="center"
                   >
-                    <Box>
-                      <Typography variant="h6" fontWeight={600}>
-                        {order.order_number}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(order.created_at).toLocaleDateString(
-                          "fr-FR",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric"
-                          }
-                        )}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    {/* N° Commande et Date */}
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                      <Box>
+                        <Typography variant="h6" fontWeight={600}>
+                          {order.order_number}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {new Date(order.created_at).toLocaleDateString(
+                            "fr-FR",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric"
+                            }
+                          )}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    {/* Statut */}
+                    <Grid
+                      size={{ xs: 12, sm: 6, md: 3 }}
+                      sx={{
+                        display: "flex",
+                        justifyContent: { xs: "flex-start", md: "center" }
+                      }}
+                    >
                       <Chip
                         label={getStatusLabel(order.status)}
                         color={getStatusColor(order.status)}
                         sx={{ fontWeight: 600 }}
                       />
+                    </Grid>
+
+                    {/* Nombre d'articles */}
+                    <Grid
+                      size={{ xs: 12, sm: 6, md: 3 }}
+                      sx={{
+                        display: "flex",
+                        justifyContent: { xs: "flex-start", md: "center" }
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {order.items.length} article
+                        {order.items.length > 1 ? "s" : ""}
+                      </Typography>
+                    </Grid>
+
+                    {/* Total */}
+                    <Grid
+                      size={{ xs: 12, sm: 6, md: 3 }}
+                      sx={{
+                        display: "flex",
+                        justifyContent: { xs: "flex-start", md: "flex-end" }
+                      }}
+                    >
                       <Typography variant="h6" fontWeight={700} color="primary">
                         {order.total_amount} €
                       </Typography>
-                    </Box>
-                  </Box>
+                    </Grid>
+                  </Grid>
                 </AccordionSummary>
 
                 <AccordionDetails sx={{ pt: 0 }}>
                   <Divider sx={{ mb: 2 }} />
+
+                  {/* Numéro de suivi */}
+                  {order.tracking_number && (
+                    <Box
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        backgroundColor: "#e3f2fd",
+                        borderRadius: 1,
+                        border: "1px solid #90caf9"
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-start",
+                          gap: 2
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            Numéro de suivi
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ userSelect: "text" }}
+                          >
+                            {order.tracking_number}
+                          </Typography>
+                        </Box>
+                        <Tooltip title="Copier le numéro">
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              handleCopyTrackingNumber(order.tracking_number)
+                            }
+                            sx={{
+                              color: "primary.main",
+                              "&:hover": {
+                                backgroundColor: "rgba(31, 45, 61, 0.1)"
+                              }
+                            }}
+                          >
+                            <ContentCopyIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  )}
 
                   {/* Articles */}
                   <Box sx={{ mb: 2 }}>
@@ -384,26 +480,6 @@ function Orders() {
                       </Box>
                     </Box>
                   </Box>
-
-                  {/* Numéro de suivi */}
-                  {order.tracking_number && (
-                    <Box
-                      sx={{
-                        mt: 2,
-                        p: 2,
-                        backgroundColor: "#e3f2fd",
-                        borderRadius: 1,
-                        border: "1px solid #90caf9"
-                      }}
-                    >
-                      <Typography variant="body2" fontWeight={600}>
-                        Numéro de suivi
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {order.tracking_number}
-                      </Typography>
-                    </Box>
-                  )}
                 </AccordionDetails>
               </Accordion>
             ))}
