@@ -99,8 +99,6 @@ const Register = () => {
 
     setLoading(true);
 
-    const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
-
     try {
       await register({
         email: formData.email,
@@ -109,7 +107,11 @@ const Register = () => {
         last_name: formData.last_name,
         gender: formData.gender,
         phone_number: formData.phone_number,
-        address: formattedAddress
+        address: {
+          street: formData.rue,
+          postal_code: formData.codePostal,
+          city: formData.ville
+        }
       });
 
       showSuccess("Inscription reussie");

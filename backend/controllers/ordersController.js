@@ -1,8 +1,8 @@
-const { Order, OrderItem, User } = require("../models/mysql");
+const { Order, OrderItem, User, Address } = require("../models/mysql");
 const Product = require("../models/mongodb/product");
 
 const createOrder = async (req, res) => {
-  const { product_ids, quantities, shipping_fee = 5.99 } = req.body;
+  const { product_ids, quantities, shipping_fee = 5.99, shipping_address } = req.body;
   const user_id = req.user.user_id;
 
   try {
@@ -37,8 +37,27 @@ const createOrder = async (req, res) => {
     // Calculer le total (avec frais de livraison)
     const total_amount = subtotal + shipping_fee;
 
+    // Créer l'adresse de livraison si fournie
+    let shippingAddressId = null;
+    if (shipping_address && typeof shipping_address === 'object') {
+      if (shipping_address.street && shipping_address.postal_code && shipping_address.city) {
+        const newShippingAddress = await Address.create({
+          street: shipping_address.street,
+          postal_code: shipping_address.postal_code,
+          city: shipping_address.city,
+          country: shipping_address.country || "France"
+        });
+        shippingAddressId = newShippingAddress.id;
+      }
+    }
+
     // Créer la commande dans MySQL
-    const order = await Order.create({ user_id, total_amount, shipping_fee });
+    const order = await Order.create({ 
+      user_id, 
+      total_amount, 
+      shipping_fee,
+      shipping_address_id: shippingAddressId 
+    });
 
     // Créer les articles de commande
     const orderItems = product_ids.map((product_id, index) => ({
@@ -149,14 +168,25 @@ const getOrderById = async (req, res) => {
             "first_name",
             "last_name",
             "email",
-            "address",
             "phone_number",
           ],
+          include: [
+            {
+              model: Address,
+              as: "address",
+              attributes: ["id", "street", "postal_code", "city", "country"]
+            }
+          ]
         },
         {
           model: OrderItem,
           attributes: ["id", "product_id", "quantity", "unit_price"],
         },
+        {
+          model: Address,
+          as: "shippingAddress",
+          attributes: ["id", "street", "postal_code", "city", "country"]
+        }
       ],
     });
     if (!order) {

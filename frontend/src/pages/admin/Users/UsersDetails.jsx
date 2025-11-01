@@ -136,17 +136,6 @@ function UserDetails() {
             <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
-                  ID Utilisateur
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  {user.id}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Paper sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
                   Rôle
                 </Typography>
                 <Box sx={{ mb: 1 }}>
@@ -156,6 +145,17 @@ function UserDetails() {
                     size="small"
                   />
                 </Box>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  ID Utilisateur
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.id}
+                </Typography>
               </Paper>
             </Grid>
 
@@ -181,13 +181,39 @@ function UserDetails() {
               </Paper>
             </Grid>
 
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Email
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 1 }}>
                   {user.email}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Numéro de téléphone
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.phone_number || "Non renseigné"}
+                </Typography>
+              </Paper>
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Adresse
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  {user.address
+                    ? `${user.address.street || ""}, ${user.address.postal_code || ""} ${user.address.city || ""}`
+                        .replace(/,\s*$/, "")
+                        .trim()
+                    : "Non renseignée"}
                 </Typography>
               </Paper>
             </Grid>
@@ -203,7 +229,7 @@ function UserDetails() {
               </Paper>
             </Grid>
 
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12 }}>
               <Paper sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle1" fontWeight={600}>
                   Date d'inscription
@@ -216,28 +242,6 @@ function UserDetails() {
                     hour: "2-digit",
                     minute: "2-digit"
                   })}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Paper sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Adresse
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  {user.address || "Non renseignée"}
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Paper sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Numéro de téléphone
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 1 }}>
-                  {user.phone_number || "Non renseigné"}
                 </Typography>
               </Paper>
             </Grid>

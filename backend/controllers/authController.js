@@ -1,4 +1,4 @@
-const { User } = require("../models/mysql");
+const { User, Address } = require("../models/mysql");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -15,12 +15,31 @@ const register = async (req, res) => {
       gender,
     } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Créer l'adresse si fournie
+    let addressId = null;
+    if (
+      address &&
+      typeof address === "object" &&
+      address.street &&
+      address.postal_code &&
+      address.city
+    ) {
+      const newAddress = await Address.create({
+        street: address.street,
+        postal_code: address.postal_code,
+        city: address.city,
+        country: address.country || "France",
+      });
+      addressId = newAddress.id;
+    }
+
     const user = await User.create({
       email,
       password: hashedPassword,
       first_name,
       last_name,
-      address,
+      address_id: addressId,
       phone_number,
       gender,
     });
@@ -297,7 +316,20 @@ const logout = async (req, res) => {
 const me = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.user_id, {
-      exclude: ["password", "refresh_token", "refresh_token_expires_at"],
+      exclude: [
+        "password",
+        "reset_token",
+        "reset_token_expires_at",
+        "refresh_token",
+        "refresh_token_expires_at",
+      ],
+      include: [
+        {
+          model: Address,
+          as: "address",
+          attributes: ["id", "street", "postal_code", "city", "country"],
+        },
+      ],
     });
 
     if (!user) {

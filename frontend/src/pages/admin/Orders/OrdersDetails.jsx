@@ -196,49 +196,105 @@ function OrderDetails() {
             </Paper>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <Paper
+          <Grid size={{ xs: 12 }}>
+            <Box
               sx={{
-                px: 2,
-                py: 1,
-                height: "100%",
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between"
+                flexDirection: { xs: "column", md: "row" },
+                gap: 2,
+                width: "100%"
               }}
             >
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Client
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 0.5 }}>
-                  {`${order.User?.first_name || ""} ${order.User?.last_name || ""}`.trim() ||
-                    "N/A"}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1 }}
-                >
-                  {order.User?.email || "N/A"}
-                </Typography>
-                {order.User?.address && (
+              {/* Informations Client */}
+              <Paper
+                sx={{
+                  px: 2,
+                  py: 1,
+                  flex: { xs: 1, md: 0.5 },
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Informations Client
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 0.5 }}>
+                    {`${order.User?.first_name || ""} ${order.User?.last_name || ""}`.trim() ||
+                      "N/A"}
+                  </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ mb: 1 }}
                   >
-                    {order.User.address}
+                    {order.User?.email || "N/A"}
                   </Typography>
-                )}
-                {order.User?.phone_number && (
-                  <Typography variant="body2" color="text.secondary">
-                    {order.User.phone_number}
-                  </Typography>
-                )}
-              </Box>
-            </Paper>
+                  {order.User?.phone_number && (
+                    <Typography variant="body2" color="text.secondary">
+                      {order.User.phone_number}
+                    </Typography>
+                  )}
+                </Box>
+              </Paper>
+
+              {/* Adresse Client */}
+              {order.User?.address && (
+                <Paper
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    flex: { xs: 1, md: 0.5 },
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between"
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      sx={{ mb: 1 }}
+                    >
+                      Adresse du client
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      {order.User.address.street}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {order.User.address.postal_code} {order.User.address.city}
+                    </Typography>
+                  </Box>
+                </Paper>
+              )}
+            </Box>
           </Grid>
+
+          {order.shippingAddress && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                  Adresse de livraison
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 0.5 }}
+                >
+                  {order.shippingAddress.street}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {order.shippingAddress.postal_code}{" "}
+                  {order.shippingAddress.city}
+                </Typography>
+              </Paper>
+            </Grid>
+          )}
 
           <Grid size={{ xs: 12, sm: 6 }}>
             <Paper

@@ -354,7 +354,7 @@ function ProductForm() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, maxWidth: { lg: "1200px" }, mx: "auto" }}>
       <AdminBreadcrumbs />
 
       <Card>

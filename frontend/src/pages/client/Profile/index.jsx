@@ -38,7 +38,9 @@ function Profile() {
     last_name: "",
     email: "",
     phone_number: "",
-    address: "",
+    street: "",
+    postal_code: "",
+    city: "",
     gender: ""
   });
   const [errors, setErrors] = useState({});
@@ -50,7 +52,9 @@ function Profile() {
         last_name: user.last_name || "",
         email: user.email || "",
         phone_number: user.phone_number || "",
-        address: user.address || "",
+        street: user.address?.street || "",
+        postal_code: user.address?.postal_code || "",
+        city: user.address?.city || "",
         gender: user.gender || ""
       });
     }
@@ -92,7 +96,20 @@ function Profile() {
 
     setLoading(true);
     try {
-      const response = await updateUser(user.id, formData);
+      const dataToSend = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone_number: formData.phone_number,
+        gender: formData.gender,
+        address: {
+          street: formData.street,
+          postal_code: formData.postal_code,
+          city: formData.city
+        }
+      };
+
+      const response = await updateUser(user.id, dataToSend);
 
       dispatch(setCredentials(response.data));
 
@@ -116,7 +133,9 @@ function Profile() {
       last_name: user.last_name || "",
       email: user.email || "",
       phone_number: user.phone_number || "",
-      address: user.address || "",
+      street: user.address?.street || "",
+      postal_code: user.address?.postal_code || "",
+      city: user.address?.city || "",
       gender: user.gender || ""
     });
     setIsEditing(false);
@@ -309,7 +328,7 @@ function Profile() {
             {/* Adresse */}
             <Grid size={12}>
               <Typography variant="h6" fontWeight={600} gutterBottom>
-                Adresse
+                Adresse (France)
               </Typography>
               <Divider />
             </Grid>
@@ -317,12 +336,53 @@ function Profile() {
             <Grid size={12}>
               <TextField
                 fullWidth
-                label="Adresse complète"
-                name="address"
-                value={formData.address}
+                label="Rue"
+                name="street"
+                value={formData.street}
                 onChange={handleChange}
                 disabled={!isEditing}
-                placeholder="Numéro et nom de rue&#10;Code postal, Ville&#10;Pays"
+                placeholder="e.g., 111 boulevard Victor Hugo"
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: theme.palette.action.disabled
+                    }
+                }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 5 }}>
+              <TextField
+                fullWidth
+                label="Code Postal"
+                name="postal_code"
+                value={formData.postal_code}
+                onChange={handleChange}
+                disabled={!isEditing}
+                placeholder="e.g., 92230"
+                slotProps={{
+                  input: {
+                    maxLength: 5
+                  }
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
+                    {
+                      borderColor: (theme) => theme.palette.action.disabled
+                    }
+                }}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, sm: 7 }}>
+              <TextField
+                fullWidth
+                label="Ville"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                disabled={!isEditing}
+                placeholder="e.g., Gennevilliers"
                 sx={{
                   "& .MuiOutlinedInput-root.Mui-disabled:hover .MuiOutlinedInput-notchedOutline":
                     {

@@ -8,8 +8,10 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
   Container,
   Divider,
+  FormControlLabel,
   Grid,
   MenuItem,
   Paper,
@@ -17,18 +19,25 @@ import {
   StepLabel,
   Stepper,
   TextField,
-  Typography
+  Typography,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
 
 /**
  * Checkout page - Order form with shipping info and payment
  */
 function Checkout() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [activeStep, setActiveStep] = useState(0);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [useMyAddress, setUseMyAddress] = useState(false);
 
   // Données temporaires du panier (à remplacer par un state global ou context)
   const cartItems = [
@@ -57,13 +66,48 @@ function Checkout() {
     email: "",
     phone: "",
     // Adresse de livraison
-    address: "",
+    street: "",
     city: "",
     postalCode: "",
     country: "France",
     // Notes
     notes: ""
   });
+
+  // Charger les données utilisateur au montage
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email || "",
+        phone: user.phone_number || ""
+      }));
+    }
+  }, [user]);
+
+  // Gérer le changement de la checkbox
+  const handleUseMyAddressChange = (e) => {
+    const checked = e.target.checked;
+    setUseMyAddress(checked);
+
+    if (checked && user?.address) {
+      setFormData((prev) => ({
+        ...prev,
+        street: user.address.street || "",
+        postalCode: user.address.postal_code || "",
+        city: user.address.city || ""
+      }));
+    } else if (!checked) {
+      setFormData((prev) => ({
+        ...prev,
+        street: "",
+        postalCode: "",
+        city: ""
+      }));
+    }
+  };
 
   const [errors, setErrors] = useState({});
 
@@ -97,7 +141,7 @@ function Checkout() {
         newErrors.email = "Email invalide";
       }
       if (!formData.phone.trim()) newErrors.phone = "Le téléphone est requis";
-      if (!formData.address.trim()) newErrors.address = "L'adresse est requise";
+      if (!formData.street.trim()) newErrors.street = "La rue est requise";
       if (!formData.city.trim()) newErrors.city = "La ville est requise";
       if (!formData.postalCode.trim())
         newErrors.postalCode = "Le code postal est requis";
@@ -124,7 +168,16 @@ function Checkout() {
 
   const handlePlaceOrder = () => {
     // TODO: Appel API pour créer la commande
-    console.log("Order placed:", { formData, cartItems });
+    const orderData = {
+      formData,
+      cartItems,
+      shipping_address: {
+        street: formData.street,
+        postal_code: formData.postalCode,
+        city: formData.city
+      }
+    };
+    console.log("Order placed:", orderData);
     setOrderPlaced(true);
     setActiveStep(steps.length - 1);
   };
@@ -172,18 +225,26 @@ function Checkout() {
             <Typography variant="body1">
               {formData.firstName} {formData.lastName}
             </Typography>
-            <Typography variant="body1">{formData.address}</Typography>
+            <Typography variant="body1">{formData.street}</Typography>
             <Typography variant="body1">
               {formData.postalCode} {formData.city}
             </Typography>
             <Typography variant="body1">{formData.country}</Typography>
           </Box>
 
-          <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 2,
+              justifyContent: { xs: "flex-start", md: "center" }
+            }}
+          >
             <Button
               variant="contained"
               size="large"
               onClick={() => navigate("/")}
+              fullWidth={{ xs: true, md: false }}
             >
               Retour à la boutique
             </Button>
@@ -191,6 +252,7 @@ function Checkout() {
               variant="outlined"
               size="large"
               onClick={() => navigate("/orders")}
+              fullWidth={{ xs: true, md: false }}
             >
               Voir mes commandes
             </Button>
@@ -201,7 +263,7 @@ function Checkout() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Button
@@ -217,7 +279,11 @@ function Checkout() {
       </Box>
 
       {/* Stepper */}
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+      <Stepper
+        activeStep={activeStep}
+        orientation={isSmallScreen ? "vertical" : "horizontal"}
+        sx={{ mb: 4 }}
+      >
         {steps.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
@@ -312,17 +378,39 @@ function Checkout() {
                   </Typography>
                 </Grid>
 
+                {user && user.address && (
+                  <Grid size={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={useMyAddress}
+                          onChange={handleUseMyAddressChange}
+                          color="primary"
+                        />
+                      }
+                      label="Utiliser mon adresse pour la livraison"
+                    />
+                  </Grid>
+                )}
+
                 <Grid size={12}>
                   <TextField
                     fullWidth
-                    label="Adresse"
-                    name="address"
-                    value={formData.address}
+                    label="Rue"
+                    name="street"
+                    value={formData.street}
                     onChange={handleChange}
-                    error={!!errors.address}
-                    helperText={errors.address}
+                    error={!!errors.street}
+                    helperText={errors.street}
                     placeholder="Numéro et nom de rue"
                     required
+                    disabled={useMyAddress}
+                    sx={{
+                      "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+                        backgroundColor: "#f5f5f5"
+                      }
+                    }}
                   />
                 </Grid>
 
@@ -336,6 +424,13 @@ function Checkout() {
                     error={!!errors.postalCode}
                     helperText={errors.postalCode}
                     required
+                    disabled={useMyAddress}
+                    sx={{
+                      "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+                        backgroundColor: "#f5f5f5"
+                      }
+                    }}
                   />
                 </Grid>
 
@@ -349,6 +444,13 @@ function Checkout() {
                     error={!!errors.city}
                     helperText={errors.city}
                     required
+                    disabled={useMyAddress}
+                    sx={{
+                      "& .MuiInputBase-input.Mui-disabled": {
+                        WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+                        backgroundColor: "#f5f5f5"
+                      }
+                    }}
                   />
                 </Grid>
 
@@ -395,37 +497,61 @@ function Checkout() {
               </Typography>
               <Divider sx={{ mb: 3 }} />
 
-              {/* Informations de livraison */}
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                  Adresse de livraison
-                </Typography>
-                <Typography variant="body1">
-                  {formData.firstName} {formData.lastName}
-                </Typography>
-                <Typography variant="body1">{formData.email}</Typography>
-                <Typography variant="body1">{formData.phone}</Typography>
-                <Typography variant="body1" sx={{ mt: 1 }}>
-                  {formData.address}
-                </Typography>
-                <Typography variant="body1">
-                  {formData.postalCode} {formData.city}
-                </Typography>
-                <Typography variant="body1">{formData.country}</Typography>
-                {formData.notes && (
-                  <Box
-                    sx={{
-                      mt: 2,
-                      p: 2,
-                      backgroundColor: "#f9f9f9",
-                      borderRadius: 1
-                    }}
-                  >
-                    <Typography variant="body2" fontWeight={600}>
-                      Notes:
+                <Box
+                  sx={{
+                    width: { xs: "100%", sm: "80%" },
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap",
+                    gap: 2
+                  }}
+                >
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      gutterBottom
+                    >
+                      Informations de contact
                     </Typography>
-                    <Typography variant="body2">{formData.notes}</Typography>
+                    <Typography variant="body1">
+                      {formData.firstName} {formData.lastName}
+                    </Typography>
+                    <Typography variant="body1">{formData.email}</Typography>
+                    <Typography variant="body1">{formData.phone}</Typography>
                   </Box>
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={600}
+                      gutterBottom
+                    >
+                      Adresse de livraison
+                    </Typography>
+                    <Typography variant="body1">{formData.street}</Typography>
+                    <Typography variant="body1">
+                      {formData.postalCode} {formData.city}
+                    </Typography>
+                    <Typography variant="body1">{formData.country}</Typography>
+                  </Box>
+                </Box>
+                {formData.notes && (
+                  <>
+                    <Box
+                      sx={{
+                        mt: 3,
+                        p: 2,
+                        backgroundColor: "#f9f9f9",
+                        borderRadius: 1
+                      }}
+                    >
+                      <Typography variant="body2" fontWeight={600}>
+                        Notes:
+                      </Typography>
+                      <Typography variant="body2">{formData.notes}</Typography>
+                    </Box>
+                  </>
                 )}
               </Box>
 
@@ -480,9 +606,20 @@ function Checkout() {
           )}
 
           {/* Boutons de navigation */}
-          <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 2,
+              mt: 3
+            }}
+          >
             {activeStep > 0 && activeStep < steps.length - 1 && (
-              <Button variant="outlined" onClick={handleBack}>
+              <Button
+                variant="outlined"
+                onClick={handleBack}
+                fullWidth={{ xs: true, md: false }}
+              >
                 Retour
               </Button>
             )}
@@ -490,7 +627,8 @@ function Checkout() {
               <Button
                 variant="contained"
                 onClick={handleNext}
-                sx={{ ml: "auto" }}
+                fullWidth={{ xs: true, md: false }}
+                sx={{ ml: { xs: 0, md: "auto" } }}
               >
                 {activeStep === steps.length - 2
                   ? "Confirmer la commande"

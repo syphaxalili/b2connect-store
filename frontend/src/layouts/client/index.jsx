@@ -10,10 +10,6 @@ import { resetCart } from "../../store/slices/cartSlice";
 import Footer from "./Footer";
 import Header from "./Header";
 
-/**
- * ClientLayout component with Header and Footer for public pages
- * Contains navigation and shopping cart icon
- */
 function ClientLayout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -28,8 +24,7 @@ function ClientLayout() {
       dispatch(resetCart()); // Réinitialiser le panier lors de la déconnexion
       showSuccess("Déconnexion réussie");
       navigate("/");
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+    } catch {
       dispatch(clearCredentials());
       dispatch(resetCart());
       showError("Erreur lors de la déconnexion");
@@ -38,7 +33,7 @@ function ClientLayout() {
   };
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="lg" sx={{ padding: "0" }}>
       <Box
         sx={{
           display: "flex",

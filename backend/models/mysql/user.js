@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
       },
       password: {
         type: DataTypes.STRING(255),
-        allowNull: true, // null pour les comptes créés par admin en attente d'activation
+        allowNull: true,
       },
       first_name: {
         type: DataTypes.STRING(100),
@@ -25,8 +25,14 @@ module.exports = (sequelize) => {
       last_name: {
         type: DataTypes.STRING(100),
       },
-      address: {
-        type: DataTypes.TEXT,
+      address_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: "addresses",
+          key: "id",
+        },
+        onDelete: "SET NULL",
       },
       phone_number: {
         type: DataTypes.STRING(20),

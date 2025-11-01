@@ -1,10 +1,17 @@
-const { User } = require("../models/mysql");
+const { User, Address } = require("../models/mysql");
 const crypto = require("crypto");
 
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
       attributes: { exclude: ["password"] },
+      include: [
+        {
+          model: Address,
+          as: "address",
+          attributes: ["id", "street", "postal_code", "city", "country"]
+        }
+      ]
     });
     res.status(200).json(users);
   } catch (error) {
@@ -17,6 +24,13 @@ const getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id, {
       attributes: { exclude: ["password"] },
+      include: [
+        {
+          model: Address,
+          as: "address",
+          attributes: ["id", "street", "postal_code", "city", "country"]
+        }
+      ]
     });
     if (!user) {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
@@ -31,12 +45,25 @@ const createUser = async (req, res) => {
   try {
     const { email, first_name, last_name, address, phone_number, gender } =
       req.body;
+    
+    // Créer l'adresse si fournie
+    let addressId = null;
+    if (address && typeof address === 'object' && address.street && address.postal_code && address.city) {
+      const newAddress = await Address.create({
+        street: address.street,
+        postal_code: address.postal_code,
+        city: address.city,
+        country: address.country || "France"
+      });
+      addressId = newAddress.id;
+    }
+    
     const user = await User.create({
       email,
       password: null, // null jusqu'à ce que l'utilisateur définisse son mot de passe
       first_name,
       last_name,
-      address,
+      address_id: addressId,
       phone_number,
       gender,
     });
@@ -91,12 +118,38 @@ const updateUserById = async (req, res) => {
       return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
 
+    // Gérer l'adresse
+    let addressId = user.address_id;
+    if (address && typeof address === 'object' && address.street && address.postal_code && address.city) {
+      if (addressId) {
+        // Mettre à jour l'adresse existante
+        await Address.update(
+          {
+            street: address.street,
+            postal_code: address.postal_code,
+            city: address.city,
+            country: address.country || "France"
+          },
+          { where: { id: addressId } }
+        );
+      } else {
+        // Créer une nouvelle adresse
+        const newAddress = await Address.create({
+          street: address.street,
+          postal_code: address.postal_code,
+          city: address.city,
+          country: address.country || "France"
+        });
+        addressId = newAddress.id;
+      }
+    }
+    
     // Préparer les données à mettre à jour
     const updateData = {
       email,
       first_name,
       last_name,
-      address,
+      address_id: addressId,
       phone_number,
       gender,
     };
@@ -111,6 +164,13 @@ const updateUserById = async (req, res) => {
     // Retourner l'utilisateur sans le mot de passe
     const updatedUser = await User.findByPk(userId, {
       attributes: { exclude: ["password"] },
+      include: [
+        {
+          model: Address,
+          as: "address",
+          attributes: ["id", "street", "postal_code", "city", "country"]
+        }
+      ]
     });
 
     res.status(200).json(updatedUser);

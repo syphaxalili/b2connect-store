@@ -53,20 +53,6 @@ function UserForm() {
           const response = await getUserById(id);
           const user = response.data;
 
-          // Parser l'adresse si elle existe
-          let rue = "",
-            codePostal = "",
-            ville = "";
-          if (user.address) {
-            const addressParts = user.address.split(",");
-            rue = addressParts[0]?.trim() || "";
-            if (addressParts[1]) {
-              const postalCity = addressParts[1].trim().split(" ");
-              codePostal = postalCity[0] || "";
-              ville = postalCity.slice(1).join(" ") || "";
-            }
-          }
-
           setFormData({
             email: user.email || "",
             first_name: user.first_name || "",
@@ -74,9 +60,9 @@ function UserForm() {
             gender: user.gender || "",
             phone_number: user.phone_number || "",
             role: user.role || "client",
-            rue,
-            codePostal,
-            ville
+            rue: user.address?.street || "",
+            codePostal: user.address?.postal_code || "",
+            ville: user.address?.city || ""
           });
         } catch (error) {
           showError("Erreur lors du chargement de l'utilisateur");
@@ -132,8 +118,6 @@ function UserForm() {
     try {
       setSubmitting(true);
 
-      const formattedAddress = `${formData.rue}, ${formData.codePostal} ${formData.ville}, France`;
-
       const dataToSave = {
         email: formData.email,
         first_name: formData.first_name,
@@ -141,7 +125,11 @@ function UserForm() {
         gender: formData.gender,
         phone_number: formData.phone_number,
         role: formData.role,
-        address: formattedAddress
+        address: {
+          street: formData.rue,
+          postal_code: formData.codePostal,
+          city: formData.ville
+        }
       };
 
       if (isEditMode) {
@@ -181,7 +169,7 @@ function UserForm() {
   }
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, maxWidth: { lg: "1200px" }, mx: "auto" }}>
       <AdminBreadcrumbs />
 
       <Card>
@@ -201,6 +189,24 @@ function UserForm() {
             sx={{ display: "flex", flexDirection: "column", gap: 3 }}
           >
             <Grid container spacing={2}>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Rôle"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  error={!!errors.role}
+                  helperText={errors.role}
+                  required
+                  disabled={submitting}
+                >
+                  <MenuItem value="client">Client</MenuItem>
+                  <MenuItem value="admin">Administrateur</MenuItem>
+                </TextField>
+              </Grid>
+
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
@@ -228,22 +234,35 @@ function UserForm() {
                   disabled={submitting}
                 />
               </Grid>
-            </Grid>
 
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              error={!!errors.email}
-              helperText={errors.email}
-              required
-              disabled={submitting}
-            />
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  required
+                  disabled={submitting}
+                />
+              </Grid>
 
-            <Grid container spacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  label="Numéro de téléphone"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  disabled={submitting}
+                  autoComplete="tel"
+                  placeholder="e.g., +33 1 23 45 67 89"
+                />
+              </Grid>
+
               <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
@@ -262,55 +281,26 @@ function UserForm() {
                 </TextField>
               </Grid>
 
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Rôle"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  error={!!errors.role}
-                  helperText={errors.role}
-                  required
-                  disabled={submitting}
-                >
-                  <MenuItem value="client">Client</MenuItem>
-                  <MenuItem value="admin">Administrateur</MenuItem>
-                </TextField>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 600 }}>
+                  Adresse (France)
+                </Typography>
               </Grid>
-            </Grid>
 
-            <TextField
-              fullWidth
-              label="Numéro de téléphone"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleChange}
-              disabled={submitting}
-              autoComplete="tel"
-              placeholder="e.g., +33 1 23 45 67 89"
-            />
+              <TextField
+                fullWidth
+                label="Rue"
+                name="rue"
+                value={formData.rue}
+                onChange={handleChange}
+                error={!!errors.rue}
+                helperText={errors.rue}
+                required
+                disabled={submitting}
+                placeholder="e.g., 111 boulevard Victor Hugo"
+              />
 
-            <Typography variant="subtitle2" sx={{ mt: 1, fontWeight: 600 }}>
-              Adresse (France)
-            </Typography>
-
-            <TextField
-              fullWidth
-              label="Rue"
-              name="rue"
-              value={formData.rue}
-              onChange={handleChange}
-              error={!!errors.rue}
-              helperText={errors.rue}
-              required
-              disabled={submitting}
-              placeholder="e.g., 111 boulevard Victor Hugo"
-            />
-
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 5 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Code Postal"
@@ -325,7 +315,7 @@ function UserForm() {
                   inputProps={{ maxLength: 5 }}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 7 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <TextField
                   fullWidth
                   label="Ville"
