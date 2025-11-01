@@ -16,7 +16,7 @@ import {
   ListItemText,
   Typography
 } from "@mui/material";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import b2connectLogo from "../../assets/images/logoB2connect.webp";
 
 const menuItems = [
@@ -28,6 +28,11 @@ const menuItems = [
 
 const Sidebar = ({ user, onLogout, onNavigate }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogoClick = () => {
+    navigate("/");
+  };
 
   return (
     <Box
@@ -40,11 +45,17 @@ const Sidebar = ({ user, onLogout, onNavigate }) => {
     >
       {/* Logo */}
       <Box
+        onClick={handleLogoClick}
         sx={{
           p: 3,
           display: { xs: "none", md: "flex" },
           alignItems: "center",
-          justifyContent: "center"
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "opacity 0.2s",
+          "&:hover": {
+            opacity: 0.8
+          }
         }}
       >
         <img src={b2connectLogo} alt="b2connect logo" width={200} />

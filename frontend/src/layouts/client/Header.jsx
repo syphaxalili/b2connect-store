@@ -261,16 +261,19 @@ function Header({ user, cartCount = 0, onLogout }) {
                   onClose={handleUserMenuClose}
                   disableScrollLock={true}
                 >
-                  <Box sx={{ px: 2, py: 1 }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      color="text.primary"
-                    >
-                      {`${user.first_name} ${user.last_name}`}
-                    </Typography>
-                  </Box>
-                  <Divider />
+                  {user?.role === "admin" && (
+                    <>
+                      <MenuItem
+                        onClick={() => {
+                          navigate("/admin");
+                          handleUserMenuClose();
+                        }}
+                      >
+                        Dashboard
+                      </MenuItem>
+                      <Divider />
+                    </>
+                  )}
                   <MenuItem
                     onClick={() => {
                       navigate("/profile");
