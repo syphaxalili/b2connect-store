@@ -6,6 +6,7 @@ import {
   Contact,
   Home,
   Orders,
+  PaymentSuccess,
   ProductDetails,
   Profile,
   WhoAreWe
@@ -18,6 +19,7 @@ const ClientRouter = () => {
       <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/who-are-we" element={<WhoAreWe />} />

@@ -1,7 +1,4 @@
-import {
-  ArrowBack as ArrowBackIcon,
-  CheckCircle as CheckCircleIcon
-} from "@mui/icons-material";
+import { ArrowBack as ArrowBackIcon } from "@mui/icons-material";
 import {
   Alert,
   Box,
@@ -23,9 +20,9 @@ import {
   useMediaQuery,
   useTheme
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { createOrder } from "../../../api";
+import { createCheckoutSession } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
 import { useCart } from "../../../hooks/useCart";
 import { useSnackbar } from "../../../hooks/useSnackbar";
@@ -36,14 +33,14 @@ import { useSnackbar } from "../../../hooks/useSnackbar";
 function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items: cartItems, total: cartTotal, clearItems } = useCart();
-  const { showSuccess, showError } = useSnackbar();
+  const { items: cartItems, total: cartTotal } = useCart();
+  const { showError } = useSnackbar();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [activeStep, setActiveStep] = useState(0);
-  const [orderPlaced, setOrderPlaced] = useState(false);
   const [useMyAddress, setUseMyAddress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const isInitialMount = useRef(true); // Vérifier si c'est le premier chargement
 
   const [formData, setFormData] = useState({
     // Informations personnelles
@@ -171,7 +168,6 @@ function Checkout() {
       // Préparer les données de la commande
       const product_ids = cartItems.map((item) => item.product_id);
       const quantities = cartItems.map((item) => item.quantity);
-      const shipping_fee = 5.99;
 
       // Préparer l'adresse de livraison
       const shipping_address = {
@@ -181,26 +177,27 @@ function Checkout() {
         country: formData.country
       };
 
-      // Créer la commande avec l'adresse de livraison
-      await createOrder(
+      // Créer une session de paiement Stripe
+      const response = await createCheckoutSession(
         product_ids,
         quantities,
-        shipping_fee,
         shipping_address
       );
 
-      // Vider le panier après succès
-      await clearItems();
-
-      // Afficher la confirmation
-      setOrderPlaced(true);
-      setActiveStep(steps.length - 1);
-      showSuccess("Commande passée avec succès!");
+      // Rediriger directement vers l'URL Stripe Checkout
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      } else {
+        showError("Erreur: URL de paiement non reçue");
+      }
     } catch (error) {
-      console.error("Erreur lors de la création de la commande:", error);
+      console.error(
+        "Erreur lors de la création de la session de paiement:",
+        error
+      );
       showError(
         error.response?.data?.error ||
-          "Erreur lors de la création de la commande"
+          "Erreur lors de la création de la session de paiement"
       );
     } finally {
       setSubmitting(false);
@@ -211,86 +208,21 @@ function Checkout() {
   const shipping = cartItems.length > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
 
-  // Rediriger si le panier est vide
+  // Rediriger si le panier est vide (seulement au premier chargement)
   useEffect(() => {
-    if (!orderPlaced && cartItems.length === 0) {
-      showError("Votre panier est vide");
-      navigate("/cart");
+    if (isInitialMount.current && cartItems.length === 0) {
+      // Attendre un peu pour que le panier se charge depuis l'API
+      const timer = setTimeout(() => {
+        if (cartItems.length === 0) {
+          showError("Votre panier est vide");
+          navigate("/cart");
+        }
+        isInitialMount.current = false;
+      }, 500);
+
+      return () => clearTimeout(timer);
     }
-  }, [cartItems, orderPlaced, navigate, showError]);
-
-  // Page de confirmation
-  if (orderPlaced && activeStep === steps.length - 1) {
-    return (
-      <Container maxWidth="md" sx={{ py: 2 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 6,
-            textAlign: "center",
-            backgroundColor: "#f9f9f9",
-            borderRadius: 2
-          }}
-        >
-          <CheckCircleIcon
-            sx={{ fontSize: 100, color: "success.main", mb: 3 }}
-          />
-          <Typography variant="h3" fontWeight={700} gutterBottom>
-            Commande confirmée !
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-            Numéro de commande: <strong>#ORD-{Date.now()}</strong>
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Merci pour votre commande. Vous recevrez un email de confirmation à{" "}
-            <strong>{formData.email}</strong>
-          </Typography>
-
-          <Divider sx={{ my: 3 }} />
-
-          <Box sx={{ textAlign: "left", mb: 4 }}>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Adresse de livraison
-            </Typography>
-            <Typography variant="body1">
-              {formData.firstName} {formData.lastName}
-            </Typography>
-            <Typography variant="body1">{formData.street}</Typography>
-            <Typography variant="body1">
-              {formData.postalCode} {formData.city}
-            </Typography>
-            <Typography variant="body1">{formData.country}</Typography>
-          </Box>
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              gap: 2,
-              justifyContent: { xs: "flex-start", md: "center" }
-            }}
-          >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate("/")}
-              fullWidth={{ xs: true, md: false }}
-            >
-              Retour à la boutique
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              onClick={() => navigate("/orders")}
-              fullWidth={{ xs: true, md: false }}
-            >
-              Voir mes commandes
-            </Button>
-          </Box>
-        </Paper>
-      </Container>
-    );
-  }
+  }, [cartItems, navigate, showError]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 2 }}>
