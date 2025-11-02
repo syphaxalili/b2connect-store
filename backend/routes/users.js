@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../middleware/auth");
+const { protect, requireAdmin } = require("../middleware/auth");
 const {
-  getCurrentUser,
   getAllUsers,
   getUserById,
   updateUserById,
@@ -10,12 +9,17 @@ const {
   createUser,
 } = require("../controllers/usersController");
 
+// Protected routes
+router.use(protect);
+
+router.put("/:id", updateUserById); // User peut modifier son propre profil
+
 // Protected routes (admin only)
-router.get("/", auth, getAllUsers);
-router.get("/me", auth, getCurrentUser);
-router.get("/:id", auth, getUserById);
-router.post("/", auth, createUser);
-router.put("/:id", auth, updateUserById);
-router.delete("/:id", auth, deleteUserById);
+router.use(requireAdmin);
+
+router.get("/", getAllUsers);
+router.get("/:id", getUserById);
+router.post("/", createUser);
+router.delete("/:id", deleteUserById);
 
 module.exports = router;

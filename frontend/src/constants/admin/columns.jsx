@@ -131,7 +131,6 @@ export const ORDERS_COLUMNS = [
   }
 ];
 
-// Ordre de tri personnalisé pour le statut
 export const STATUS_SORT_ORDER = {
   pending: 0,
   approved: 1,

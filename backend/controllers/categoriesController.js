@@ -82,10 +82,21 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+// Récupérer les catégories optimisées pour les filtres (sans product_count)
+const getCategoriesForFilters = async (req, res) => {
+  try {
+    const categories = await Category.find().select("_id name").lean();
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllCategories,
   getCategoryById,
   createCategory,
   updateCategory,
   deleteCategory,
+  getCategoriesForFilters,
 };
