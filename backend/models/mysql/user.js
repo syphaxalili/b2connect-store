@@ -17,7 +17,7 @@ module.exports = (sequelize) => {
       },
       password: {
         type: DataTypes.STRING(255),
-        allowNull: false,
+        allowNull: true,
       },
       first_name: {
         type: DataTypes.STRING(100),
@@ -25,8 +25,14 @@ module.exports = (sequelize) => {
       last_name: {
         type: DataTypes.STRING(100),
       },
-      address: {
-        type: DataTypes.TEXT,
+      address_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: "addresses",
+          key: "id",
+        },
+        onDelete: "SET NULL",
       },
       phone_number: {
         type: DataTypes.STRING(20),
@@ -39,6 +45,22 @@ module.exports = (sequelize) => {
         type: DataTypes.ENUM("client", "admin"),
         defaultValue: "client",
         allowNull: false,
+      },
+      reset_token: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      reset_token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      refresh_token: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+      },
+      refresh_token_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
       },
       created_at: {
         type: DataTypes.DATE,

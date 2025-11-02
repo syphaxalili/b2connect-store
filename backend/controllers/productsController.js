@@ -66,10 +66,22 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Récupérer les marques distinctes pour les filtres
+const getDistinctBrands = async (req, res) => {
+  try {
+    const brands = await Product.distinct('brand');
+    const sortedBrands = brands.filter(brand => brand).sort();
+    res.status(200).json(sortedBrands);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getDistinctBrands
 };

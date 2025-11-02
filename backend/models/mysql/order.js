@@ -17,8 +17,28 @@ module.exports = (sequelize) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },
+      shipping_fee: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
+      shipping_address_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: "addresses",
+          key: "id",
+        },
+        onDelete: "SET NULL",
+      },
       status: {
-        type: DataTypes.ENUM("pending", "approved", "shipped", "delivered", "cancelled", "archived"),
+        type: DataTypes.ENUM(
+          "pending",
+          "approved",
+          "shipped",
+          "delivered",
+          "cancelled",
+          "archived"
+        ),
         defaultValue: "pending",
       },
       tracking_number: {

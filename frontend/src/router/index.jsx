@@ -1,50 +1,23 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import AdminLayout from "../layouts/admin-layout";
-import HomePageLayout from "../layouts/public/HomePageLayout";
-import Login from "../pages/auth/Login";
-import Register from "../pages/auth/Register";
-import Cart from "../pages/Cart";
-import Checkout from "../pages/Checkout";
-import Contact from "../pages/Contact";
-import Home from "../pages/Home";
-import Orders from "../pages/Orders";
-import ProductDetails from "../pages/ProductDetails";
-import Profile from "../pages/Profile";
-import WhoAreWe from "../pages/WhoAreWe";
-import { isAuthenticated } from "../utils/storage";
+import { AdminLayout, AuthFormLayout, ClientLayout } from "../layouts";
 import AdminRouter from "./AdminRouter";
-import AdminRoute from "./route-gards/AdminRoute";
+import AuthRouter from "./AuthRouter";
+import ClientRouter from "./ClientRouter";
+import AdminPrivateRoute from "./route-gards/AdminPrivateRoute";
 
 const AppRouter = () => {
   return (
     <Routes>
-      {/* Public routes with HomePageLayout */}
-      <Route element={<HomePageLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/who-are-we" element={<WhoAreWe />} />
-        <Route path="/contact" element={<Contact />} />
-      </Route>
+      <Route element={<ClientLayout />}>{ClientRouter()}</Route>
 
-      {/* Auth routes without layout */}
-      <Route
-        path="/login"
-        element={isAuthenticated() ? <Navigate to="/" /> : <Login />}
-      />
-      <Route
-        path="/register"
-        element={isAuthenticated() ? <Navigate to="/" /> : <Register />}
-      />
+      <Route element={<AuthFormLayout />}>{AuthRouter()}</Route>
+
       <Route
         path={"/admin/*"}
         element={
-          <AdminRoute>
+          <AdminPrivateRoute>
             <AdminLayout />
-          </AdminRoute>
+          </AdminPrivateRoute>
         }
       >
         {AdminRouter()}
