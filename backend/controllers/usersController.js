@@ -1,5 +1,7 @@
 const { User, Address } = require("../models/mysql");
 const crypto = require("crypto");
+const { sendEmail } = require("../utils/mailService");
+const { getNewUserEmail } = require("../utils/emailTemplates");
 
 const getAllUsers = async (req, res) => {
   try {
@@ -79,9 +81,25 @@ const createUser = async (req, res) => {
       reset_token_expires_at: expiresAt,
     });
 
-    // Envoyer mail: votre compte vient d'etre créé, veuillez activer votre compte en cliquant sur le lien suivant:
-    // const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    // console.log(`[PASSWORD RESET] Lien de réinitialisation: ${resetLink}`);
+    // Construire le lien d'initialisation du mot de passe
+    const initLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    
+    // Envoyer l'email de bienvenue avec le lien d'activation
+    const emailTemplate = getNewUserEmail({
+      initLink,
+      firstName: user.first_name,
+      userEmail: user.email,
+    });
+    
+    // Envoi asynchrone pour ne pas bloquer la réponse
+    sendEmail({
+      to: user.email,
+      subject: emailTemplate.subject,
+      text: emailTemplate.text,
+      html: emailTemplate.html,
+    }).catch(error => {
+      console.error("Erreur lors de l'envoi de l'email de bienvenue:", error);
+    });
 
     res.status(201).json({ id: user.id, email: user.email });
   } catch (error) {

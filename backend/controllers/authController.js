@@ -2,6 +2,8 @@ const { User, Address } = require("../models/mysql");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const { sendEmail } = require("../utils/mailService");
+const { getPasswordResetEmail } = require("../utils/emailTemplates");
 
 const register = async (req, res) => {
   try {
@@ -140,9 +142,24 @@ const requestPasswordReset = async (req, res) => {
       reset_token_expires_at: expiresAt,
     });
 
-    // // Construire le lien de réinitialisation
-    // const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    // console.log(`[PASSWORD RESET] Lien de réinitialisation: ${resetLink}`);
+    // Construire le lien de réinitialisation
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    
+    // Envoyer l'email de réinitialisation de manière asynchrone
+    const emailTemplate = getPasswordResetEmail({
+      resetLink,
+      firstName: user.first_name,
+    });
+    
+    // Envoi asynchrone pour ne pas bloquer la réponse
+    sendEmail({
+      to: user.email,
+      subject: emailTemplate.subject,
+      text: emailTemplate.text,
+      html: emailTemplate.html,
+    }).catch(error => {
+      console.error("Erreur lors de l'envoi de l'email de réinitialisation:", error);
+    });
 
     res.status(200).json({
       message: "Si cet email existe, un lien de réinitialisation a été envoyé",
