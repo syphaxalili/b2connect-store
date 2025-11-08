@@ -15,6 +15,8 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Order, OrderItem, User, Address } = require("../models/mysql");
 const Product = require("../models/mongodb/product");
+const { sendEmail } = require("../utils/mailService");
+const { getOrderConfirmationEmail } = require("../utils/emailTemplates");
 
 /**
  * Créer une session de paiement Stripe Checkout
@@ -187,6 +189,35 @@ const handleWebhook = async (req, res) => {
           $inc: { stock: -parsedQuantities[i] },
         });
       }
+
+      // Envoyer l'email de confirmation de commande
+      const user = await User.findByPk(parseInt(user_id));
+      if (user && user.email) {
+        const emailOrderItems = products.map((product, index) => ({
+          name: product.name,
+          quantity: parsedQuantities[index],
+          price: product.price,
+        }));
+
+        const emailTemplate = getOrderConfirmationEmail({
+          orderId: order.id,
+          firstName: user.first_name,
+          totalAmount: total_amount,
+          shippingFee: shipping_fee,
+          subtotal: subtotal,
+          items: emailOrderItems,
+        });
+
+        // Envoi asynchrone pour ne pas bloquer le webhook
+        sendEmail({
+          to: user.email,
+          subject: emailTemplate.subject,
+          text: emailTemplate.text,
+          html: emailTemplate.html,
+        }).catch(error => {
+          console.error("Erreur lors de l'envoi de l'email de confirmation (webhook):", error);
+        });
+      }
     } catch (error) {
       console.error("Erreur lors de la création de la commande:", error);
       return res.status(500).json({ error: error.message });
@@ -278,6 +309,36 @@ const simulateWebhook = async (req, res) => {
           $inc: { stock: -parsedQuantities[i] },
         });
       }
+
+      // Envoyer l'email de confirmation de commande
+      const user = await User.findByPk(parseInt(user_id));
+      if (user && user.email) {
+        const emailOrderItems = products.map((product, index) => ({
+          name: product.name,
+          quantity: parsedQuantities[index],
+          price: product.price,
+        }));
+
+        const emailTemplate = getOrderConfirmationEmail({
+          orderId: order.id,
+          firstName: user.first_name,
+          totalAmount: total_amount,
+          shippingFee: shipping_fee,
+          subtotal: subtotal,
+          items: emailOrderItems,
+        });
+
+        // Envoi asynchrone pour ne pas bloquer la réponse
+        sendEmail({
+          to: user.email,
+          subject: emailTemplate.subject,
+          text: emailTemplate.text,
+          html: emailTemplate.html,
+        }).catch(error => {
+          console.error("Erreur lors de l'envoi de l'email de confirmation (simulate webhook):", error);
+        });
+      }
+
       return res.json({ success: true, order_id: order.id });
     }
 
