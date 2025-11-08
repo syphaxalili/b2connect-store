@@ -1,5 +1,7 @@
 const { Order, OrderItem, User, Address } = require("../models/mysql");
 const Product = require("../models/mongodb/product");
+const { sendEmail } = require("../utils/mailService");
+const { getOrderConfirmationEmail, getOrderStatusEmail } = require("../utils/emailTemplates");
 
 const createOrder = async (req, res) => {
   const { product_ids, quantities, shipping_fee = 5.99, shipping_address } = req.body;
@@ -74,6 +76,32 @@ const createOrder = async (req, res) => {
         $inc: { stock: -quantities[i] },
       });
     }
+
+    // Préparer les données pour l'email de confirmation
+    const emailOrderItems = products.map((product, index) => ({
+      name: product.name,
+      quantity: quantities[index],
+      price: product.price,
+    }));
+
+    const emailTemplate = getOrderConfirmationEmail({
+      orderId: order.id,
+      firstName: user.first_name,
+      totalAmount: total_amount,
+      shippingFee: shipping_fee,
+      subtotal: subtotal,
+      items: emailOrderItems,
+    });
+
+    // Envoi asynchrone pour ne pas bloquer la réponse
+    sendEmail({
+      to: user.email,
+      subject: emailTemplate.subject,
+      text: emailTemplate.text,
+      html: emailTemplate.html,
+    }).catch(error => {
+      console.error("Erreur lors de l'envoi de l'email de confirmation de commande:", error);
+    });
 
     res.status(201).json({
       order_id: order.id,
@@ -202,7 +230,14 @@ const getOrderById = async (req, res) => {
 const updateOrderStatus = async (req, res) => {
   try {
     const { status, tracking_number } = req.body;
-    const order = await Order.findByPk(req.params.id);
+    const order = await Order.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          attributes: ["id", "first_name", "last_name", "email"],
+        },
+      ],
+    });
     if (!order) {
       return res.status(404).json({ error: "Commande non trouvée" });
     }
@@ -211,6 +246,27 @@ const updateOrderStatus = async (req, res) => {
       updateData.tracking_number = tracking_number;
     }
     await order.update(updateData);
+
+    // Envoyer un email de notification du changement de statut
+    if (order.User) {
+      const emailTemplate = getOrderStatusEmail({
+        orderId: order.id,
+        firstName: order.User.first_name,
+        status,
+        trackingNumber: tracking_number,
+      });
+
+      // Envoi asynchrone pour ne pas bloquer la réponse
+      sendEmail({
+        to: order.User.email,
+        subject: emailTemplate.subject,
+        text: emailTemplate.text,
+        html: emailTemplate.html,
+      }).catch(error => {
+        console.error("Erreur lors de l'envoi de l'email de notification de statut:", error);
+      });
+    }
+
     res.status(200).json(order);
   } catch (error) {
     console.log(error);
