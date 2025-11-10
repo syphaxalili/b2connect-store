@@ -1,5 +1,5 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { Box, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteProduct, getCategories, getProducts } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -8,17 +8,19 @@ import TopActions from "../../../components/admin/DataTable/TopActions";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { PRODUCTS_COLUMNS as columns } from "../../../constants/admin/columns";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import useDebounce from "../../../hooks/useDebounce";
 
 function ProductsPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [productsWithCategories, setProductsWithCategories] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchValue, setSearchValue] = useState("");
+  const debouncedSearchValue = useDebounce(searchValue, 500);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState("_id");
   const [order, setOrder] = useState("asc");
-  const [loading, setLoading] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState(
     columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
   );
@@ -29,14 +31,20 @@ function ProductsPage() {
 
   const fetchData = async () => {
     try {
-      setLoading(true);
       const [productsResponse, categoriesResponse] = await Promise.all([
-        getProducts(),
-        getCategories()
+        getProducts({ 
+          page: page + 1,
+          limit: rowsPerPage,
+          search: debouncedSearchValue || undefined,
+          sortBy: orderBy,
+          sortOrder: order
+        }),
+        getCategories({ limit: 1000 })
       ]);
 
-      const productsData = productsResponse.data;
-      const categoriesData = categoriesResponse.data;
+      const productsData = productsResponse.data.products || [];
+      const paginationData = productsResponse.data.pagination || {};
+      const categoriesData = categoriesResponse.data.categories || [];
 
       const enrichedProducts = productsData.map((product) => {
         const category = categoriesData.find(
@@ -50,65 +58,22 @@ function ProductsPage() {
       });
 
       setProductsWithCategories(enrichedProducts);
-    } catch (error) {
+      setTotalCount(paginationData.total || 0);
+    } catch {
       showError("Erreur lors du chargement des données");
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page, rowsPerPage, debouncedSearchValue, orderBy, order]);
 
-  const filteredProducts = useMemo(() => {
-    let filtered = productsWithCategories.filter(
-      (product) =>
-        product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        product.brand?.toLowerCase().includes(searchValue.toLowerCase()) ||
-        product.category_id?.name
-          ?.toLowerCase()
-          .includes(searchValue.toLowerCase())
-    );
-
-    // Tri
-    filtered.sort((a, b) => {
-      let aVal = a[orderBy];
-      let bVal = b[orderBy];
-
-      // Gestion spéciale pour category_id
-      if (orderBy === "category_id") {
-        aVal = a.category_id?.name || "";
-        bVal = b.category_id?.name || "";
-      }
-
-      if (orderBy === "created_at") {
-        aVal = new Date(aVal);
-        bVal = new Date(bVal);
-        return order === "asc" ? aVal - bVal : bVal - aVal;
-      }
-
-      // Pour les chaînes de caractères
-      if (typeof aVal === "string" && typeof bVal === "string") {
-        const comparison = aVal.localeCompare(bVal, "fr", {
-          sensitivity: "base"
-        });
-        return order === "asc" ? comparison : -comparison;
-      }
-
-      // Pour les nombres
-      if (aVal < bVal) return order === "asc" ? -1 : 1;
-      if (aVal > bVal) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [productsWithCategories, searchValue, orderBy, order]);
+  // Pagination côté serveur - pas besoin de filtrage/tri côté client
+  const displayedProducts = productsWithCategories;
 
   const handleSearchChange = (value) => {
     setSearchValue(value);
-    setPage(0);
+    setPage(0); // Reset à la page 1 lors d'une recherche
   };
 
   const handleRefresh = () => {
@@ -138,8 +103,7 @@ function ProductsPage() {
       showSuccess("Produit supprimé avec succès!");
       setDeleteDialog({ open: false, product: null });
       fetchData();
-    } catch (error) {
-      console.error(error);
+    } catch {
       showError("Erreur lors de la suppression du produit");
     }
   };
@@ -155,47 +119,55 @@ function ProductsPage() {
     }));
   };
 
-  const handleExport = () => {
-    const csv = [
-      columns.map((col) => col.label).join(","),
-      ...filteredProducts.map((product) =>
-        columns
-          .map((col) => {
-            if (col.id === "category_id") {
-              return product.category_id?.name || "";
-            }
-            return product[col.id];
-          })
-          .join(",")
-      )
-    ].join("\n");
+  const handleExport = async () => {
+    try {
+      // Charger TOUS les produits pour l'export
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        getProducts({ limit: 10000 }),
+        getCategories({ limit: 1000 })
+      ]);
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "products.csv";
-    a.click();
-    showSuccess("Export réussi!");
+      const allProducts = productsResponse.data.products || [];
+      const categoriesData = categoriesResponse.data.categories || [];
+
+      const enrichedProducts = allProducts.map((product) => {
+        const category = categoriesData.find(
+          (cat) => cat._id === product.category_id
+        );
+        return {
+          ...product,
+          category_id: category || { _id: product.category_id, name: "N/A" }
+        };
+      });
+
+      const csv = [
+        columns.map((col) => col.label).join(","),
+        ...enrichedProducts.map((product) =>
+          columns
+            .map((col) => {
+              if (col.id === "category_id") {
+                return product.category_id?.name || "";
+              }
+              return product[col.id];
+            })
+            .join(",")
+        )
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "products.csv";
+      a.click();
+      showSuccess("Export réussi!");
+    } catch {
+      showError("Erreur lors de l'export");
+    }
   };
 
-  const paginatedData = filteredProducts.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // Les données sont déjà paginées par le backend
+  const paginatedData = displayedProducts;
 
   return (
     <Box
@@ -245,7 +217,7 @@ function ProductsPage() {
         onDelete={handleDeleteClick}
         page={page}
         rowsPerPage={rowsPerPage}
-        totalCount={filteredProducts.length}
+        totalCount={totalCount}
         onPageChange={(e, newPage) => setPage(newPage)}
         onRowsPerPageChange={(e) => {
           setRowsPerPage(parseInt(e.target.value, 10));
@@ -256,6 +228,7 @@ function ProductsPage() {
         onSort={(columnId, direction) => {
           setOrderBy(columnId);
           setOrder(direction);
+          setPage(0); // Reset à la page 1 lors d'un tri
         }}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}

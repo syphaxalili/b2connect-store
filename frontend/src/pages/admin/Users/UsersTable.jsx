@@ -1,5 +1,5 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { Box, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteUser, getUsers } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -8,17 +8,19 @@ import TopActions from "../../../components/admin/DataTable/TopActions";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { USERS_COLUMNS as columns } from "../../../constants/admin/columns";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import useDebounce from "../../../hooks/useDebounce";
 
 function UsersPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [users, setUsers] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchValue, setSearchValue] = useState("");
+  const debouncedSearchValue = useDebounce(searchValue, 500);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState("id");
   const [order, setOrder] = useState("asc");
-  const [loading, setLoading] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState(
     columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
   );
@@ -30,67 +32,30 @@ function UsersPage() {
   // Charger les utilisateurs depuis l'API
   const fetchUsers = async () => {
     try {
-      setLoading(true);
-      const response = await getUsers();
-      setUsers(response.data);
-    } catch (error) {
+      const response = await getUsers({ 
+        page: page + 1,
+        limit: rowsPerPage,
+        search: debouncedSearchValue || undefined,
+        sortBy: orderBy,
+        sortOrder: order.toUpperCase()
+      });
+      setUsers(response.data.users || []);
+      setTotalCount(response.data.pagination?.total || 0);
+    } catch {
       showError("Erreur lors du chargement des utilisateurs");
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Charger les utilisateurs au montage du composant
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [page, rowsPerPage, debouncedSearchValue, orderBy, order]);
 
-  const filteredUsers = useMemo(() => {
-    let filtered = users.filter(
-      (user) =>
-        user.first_name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-        user.last_name?.toLowerCase().includes(searchValue.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchValue.toLowerCase())
-    );
-
-    // Tri
-    filtered.sort((a, b) => {
-      let aVal = a[orderBy];
-      let bVal = b[orderBy];
-
-      // Pour le nom complet (cas spécial)
-      if (orderBy === "name") {
-        aVal = `${a.first_name} ${a.last_name}`;
-        bVal = `${b.first_name} ${b.last_name}`;
-      }
-
-      if (orderBy === "created_at") {
-        aVal = new Date(aVal);
-        bVal = new Date(bVal);
-        return order === "asc" ? aVal - bVal : bVal - aVal;
-      }
-
-      // Pour les chaînes de caractères, utiliser localeCompare pour gérer les accents
-      if (typeof aVal === "string" && typeof bVal === "string") {
-        const comparison = aVal.localeCompare(bVal, "fr", {
-          sensitivity: "base"
-        });
-        return order === "asc" ? comparison : -comparison;
-      }
-
-      // Pour les nombres
-      if (aVal < bVal) return order === "asc" ? -1 : 1;
-      if (aVal > bVal) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [users, searchValue, orderBy, order]);
+  const paginatedData = users;
 
   const handleSearchChange = (value) => {
     setSearchValue(value);
-    setPage(0);
+    setPage(0); // Reset à la page 1 lors d'une recherche
   };
 
   const handleRefresh = () => {
@@ -120,9 +85,8 @@ function UsersPage() {
       showSuccess("Utilisateur supprimé avec succès!");
       setDeleteDialog({ open: false, user: null });
       fetchUsers(); // Recharger les données
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression de l'utilisateur");
-      console.error(error);
     }
   };
 
@@ -137,47 +101,38 @@ function UsersPage() {
     }));
   };
 
-  const handleExport = () => {
-    const csv = [
-      columns.map((col) => col.label).join(","),
-      ...filteredUsers.map((user) =>
-        columns
-          .map((col) => {
-            if (col.id === "name") {
-              return `${user.first_name} ${user.last_name}`;
-            }
-            return user[col.id];
-          })
-          .join(",")
-      )
-    ].join("\n");
+  const handleExport = async () => {
+    try {
+      const response = await getUsers({ limit: 10000 });
+      const allUsers = response.data.users || [];
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "utilisateurs.csv";
-    a.click();
-    showSuccess("Export réussi!");
+      const csv = [
+        columns.map((col) => col.label).join(","),
+        ...allUsers.map((user) =>
+          columns
+            .map((col) => {
+              if (col.id === "address") {
+                return user.address
+                  ? `${user.address.street}, ${user.address.city}`
+                  : "";
+              }
+              return user[col.id];
+            })
+            .join(",")
+        )
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "users.csv";
+      a.click();
+      showSuccess("Export réussi!");
+    } catch {
+      showError("Erreur lors de l'export");
+    }
   };
-
-  const paginatedData = filteredUsers.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box
@@ -227,7 +182,7 @@ function UsersPage() {
         onDelete={handleDeleteClick}
         page={page}
         rowsPerPage={rowsPerPage}
-        totalCount={filteredUsers.length}
+        totalCount={totalCount}
         onPageChange={(e, newPage) => setPage(newPage)}
         onRowsPerPageChange={(e) => {
           setRowsPerPage(parseInt(e.target.value, 10));
@@ -238,6 +193,7 @@ function UsersPage() {
         onSort={(columnId, direction) => {
           setOrderBy(columnId);
           setOrder(direction);
+          setPage(0); // Reset à la page 1 lors d'un tri
         }}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}

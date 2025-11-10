@@ -1,11 +1,42 @@
 const { User, Address } = require("../models/mysql");
+const { Op } = require("sequelize");
 const crypto = require("crypto");
 const { sendEmail } = require("../utils/mailService");
 const { getNewUserEmail } = require("../utils/emailTemplates");
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.findAll({
+    const { 
+      search,
+      role,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      page = 1, 
+      limit = 20 
+    } = req.query;
+    
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    const where = {};
+    
+    // Filtre par rôle
+    if (role) {
+      where.role = role;
+    }
+
+    // Recherche globale
+    if (search) {
+      where[Op.or] = [
+        { first_name: { [Op.iLike]: `%${search}%` } },
+        { last_name: { [Op.iLike]: `%${search}%` } },
+        { email: { [Op.iLike]: `%${search}%` } }
+      ];
+    }
+
+    const { count, rows: users } = await User.findAndCountAll({
+      where,
       attributes: { exclude: ["password"] },
       include: [
         {
@@ -13,9 +44,21 @@ const getAllUsers = async (req, res) => {
           as: "address",
           attributes: ["id", "street", "postal_code", "city", "country"]
         }
-      ]
+      ],
+      order: [[sortBy, sortOrder]],
+      limit: limitNum,
+      offset: offset,
     });
-    res.status(200).json(users);
+
+    res.status(200).json({
+      users,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: count,
+        pages: Math.ceil(count / limitNum)
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

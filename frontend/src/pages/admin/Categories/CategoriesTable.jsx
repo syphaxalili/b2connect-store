@@ -1,5 +1,5 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { Box, Typography } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteCategory, getCategories } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -8,17 +8,19 @@ import TopActions from "../../../components/admin/DataTable/TopActions";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { CATEGORIES_COLUMNS as columns } from "../../../constants/admin/columns";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import useDebounce from "../../../hooks/useDebounce";
 
 function CategoriesPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [categories, setCategories] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchValue, setSearchValue] = useState("");
+  const debouncedSearchValue = useDebounce(searchValue, 500);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState("_id");
   const [order, setOrder] = useState("asc");
-  const [loading, setLoading] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState(
     columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
   );
@@ -30,60 +32,30 @@ function CategoriesPage() {
   // Charger les catégories depuis l'API
   const fetchCategories = async () => {
     try {
-      setLoading(true);
-      const response = await getCategories();
-      setCategories(response.data);
-    } catch (error) {
+      const response = await getCategories({ 
+        page: page + 1,
+        limit: rowsPerPage,
+        search: debouncedSearchValue || undefined,
+        sortBy: orderBy,
+        sortOrder: order
+      });
+      setCategories(response.data.categories || []);
+      setTotalCount(response.data.pagination?.total || 0);
+    } catch {
       showError("Erreur lors du chargement des catégories");
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Charger les catégories au montage du composant
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [page, rowsPerPage, debouncedSearchValue, orderBy, order]);
 
-  const filteredCategories = useMemo(() => {
-    let filtered = categories.filter(
-      (cat) =>
-        cat.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        cat.description?.toLowerCase().includes(searchValue.toLowerCase())
-    );
-
-    // Tri
-    filtered.sort((a, b) => {
-      let aVal = a[orderBy];
-      let bVal = b[orderBy];
-
-      if (orderBy === "created_at") {
-        aVal = new Date(aVal);
-        bVal = new Date(bVal);
-        return order === "asc" ? aVal - bVal : bVal - aVal;
-      }
-
-      // Pour les chaînes de caractères, utiliser localeCompare pour gérer les accents
-      if (typeof aVal === "string" && typeof bVal === "string") {
-        const comparison = aVal.localeCompare(bVal, "fr", {
-          sensitivity: "base"
-        });
-        return order === "asc" ? comparison : -comparison;
-      }
-
-      // Pour les nombres
-      if (aVal < bVal) return order === "asc" ? -1 : 1;
-      if (aVal > bVal) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [categories, searchValue, orderBy, order]);
+  const displayedCategories = categories;
 
   const handleSearchChange = (value) => {
     setSearchValue(value);
-    setPage(0);
+    setPage(0); // Reset à la page 1 lors d'une recherche
   };
 
   const handleRefresh = () => {
@@ -113,9 +85,8 @@ function CategoriesPage() {
       showSuccess("Catégorie supprimée avec succès!");
       setDeleteDialog({ open: false, category: null });
       fetchCategories(); // Recharger les données
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression de la catégorie");
-      console.error(error);
     }
   };
 
@@ -130,41 +101,31 @@ function CategoriesPage() {
     }));
   };
 
-  const handleExport = () => {
-    // TODO: Implémenter l'export CSV/Excel
-    const csv = [
-      columns.map((col) => col.label).join(","),
-      ...filteredCategories.map((cat) =>
-        columns.map((col) => cat[col.id]).join(",")
-      )
-    ].join("\n");
+  const handleExport = async () => {
+    try {
+      const response = await getCategories({ limit: 10000 });
+      const allCategories = response.data.categories || [];
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "categories.csv";
-    a.click();
-    showSuccess("Export réussi!");
+      const csv = [
+        columns.map((col) => col.label).join(","),
+        ...allCategories.map((cat) =>
+          columns.map((col) => cat[col.id]).join(",")
+        )
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "categories.csv";
+      a.click();
+      showSuccess("Export réussi!");
+    } catch {
+      showError("Erreur lors de l'export");
+    }
   };
 
-  const paginatedData = filteredCategories.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+  const paginatedData = displayedCategories;
 
   return (
     <Box
@@ -214,7 +175,7 @@ function CategoriesPage() {
         onDelete={handleDeleteClick}
         page={page}
         rowsPerPage={rowsPerPage}
-        totalCount={filteredCategories.length}
+        totalCount={totalCount}
         onPageChange={(e, newPage) => setPage(newPage)}
         onRowsPerPageChange={(e) => {
           setRowsPerPage(parseInt(e.target.value, 10));
@@ -225,6 +186,7 @@ function CategoriesPage() {
         onSort={(columnId, direction) => {
           setOrderBy(columnId);
           setOrder(direction);
+          setPage(0); // Reset à la page 1 lors d'un tri
         }}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}

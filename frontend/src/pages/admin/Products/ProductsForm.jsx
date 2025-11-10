@@ -57,8 +57,8 @@ function ProductForm() {
         setLoading(true);
 
         // Charger les catégories
-        const categoriesResponse = await getCategories();
-        setCategories(categoriesResponse.data);
+        const categoriesResponse = await getCategories({ limit: 1000 });
+        setCategories(categoriesResponse.data.categories || []);
 
         // Charger le produit en mode édition
         if (isEditMode) {

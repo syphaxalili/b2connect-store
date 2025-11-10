@@ -3,30 +3,79 @@ const Product = require("../models/mongodb/product");
 
 const getAllCategories = async (req, res) => {
   try {
-    const categoriesWithCount = await Category.aggregate([
-      {
-        // Étape 1 : Joindre les produits correspondants
-        $lookup: {
-          from: 'products', // Le nom de la collection des produits
-          localField: '_id',
-          foreignField: 'category_id',
-          as: 'products'
-        }
-      },
-      {
-        // Étape 2 : Projeter les champs et calculer le nombre de produits
-        $project: {
-          _id: 1,
-          name: 1,
-          description: 1,
-          specifications: 1,
-          created_at: 1,
-          product_count: { $size: '$products' } // Compte la taille du tableau 'products'
-        }
-      }
-    ]);
+    const { 
+      search,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+      page = 1, 
+      limit = 20 
+    } = req.query;
+    
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
 
-    res.status(200).json(categoriesWithCount);
+    const pipeline = [];
+
+    // Recherche
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } }
+          ]
+        }
+      });
+    }
+
+    // Joindre les produits
+    pipeline.push({
+      $lookup: {
+        from: 'products',
+        localField: '_id',
+        foreignField: 'category_id',
+        as: 'products'
+      }
+    });
+
+    // Projeter les champs
+    pipeline.push({
+      $project: {
+        _id: 1,
+        name: 1,
+        description: 1,
+        specifications: 1,
+        created_at: 1,
+        product_count: { $size: '$products' }
+      }
+    });
+
+    // Tri dynamique
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    pipeline.push({ $sort: sortOptions });
+
+    // Compter le total avant pagination
+    const countPipeline = [...pipeline, { $count: 'total' }];
+    const countResult = await Category.aggregate(countPipeline);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
+
+    // Pagination
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+
+    const categoriesWithCount = await Category.aggregate(pipeline);
+
+    res.status(200).json({
+      categories: categoriesWithCount,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

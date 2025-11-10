@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   Paper,
@@ -27,21 +26,16 @@ function UserDetails() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState(false);
 
   // Charger les données de l'utilisateur
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        setLoading(true);
         const response = await getUserById(id);
         setUser(response.data);
-      } catch (error) {
+      } catch {
         showError("Erreur lors du chargement de l'utilisateur");
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchUser();
@@ -112,21 +106,7 @@ function UserDetails() {
         </Typography>
       </Box>
 
-      {loading ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            minHeight: "400px"
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : !user ? (
+      {!user ? (
         <Box sx={{ flexGrow: 1 }}>
           <Alert severity="error">Utilisateur non trouvé</Alert>
         </Box>

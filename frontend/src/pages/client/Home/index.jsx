@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Container, Pagination, Typography } from "@mui/material";
+import { Box, Container, Pagination, Typography } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { getProducts } from "../../../api";
 import { useSnackbar } from "../../../hooks/useSnackbar";
@@ -10,7 +10,6 @@ function Home() {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     category: "all",
     brand: "all",
@@ -21,7 +20,6 @@ function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
         const params = {
           page,
           limit: 20,
@@ -38,8 +36,6 @@ function Home() {
       } catch {
         showError("Erreur lors du chargement des produits");
         setProducts([]);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -94,32 +90,18 @@ function Home() {
         onSortChange={handleSortChange}
       />
 
-      {/* Loading State */}
-      {loading ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "400px"
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          {/* Results Count */}
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {products.length} produit
-            {products.length !== 1 ? "s" : ""} trouvé
-            {products.length !== 1 ? "s" : ""}
-          </Typography>
+      {/* Results Count */}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {products.length} produit
+        {products.length !== 1 ? "s" : ""} trouvé
+        {products.length !== 1 ? "s" : ""}
+      </Typography>
 
-          {/* Product Grid */}
-          <ProductGrid products={products} loading={false} />
+      {/* Product Grid */}
+      <ProductGrid products={products} loading={false} />
 
-          {/* Pagination */}
-          {totalPages > 1 && (
+      {/* Pagination */}
+      {totalPages > 1 && (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
               <Pagination
                 count={totalPages}
@@ -132,8 +114,6 @@ function Home() {
               />
             </Box>
           )}
-        </>
-      )}
     </Container>
   );
 }

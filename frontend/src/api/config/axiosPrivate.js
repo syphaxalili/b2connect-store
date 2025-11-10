@@ -2,6 +2,7 @@ import axios from "axios";
 import store from "../../store";
 import { clearCredentials } from "../../store/slices/authSlice";
 import { resetCart } from "../../store/slices/cartSlice";
+import { startLoading, stopLoading } from "../../store/slices/loadingSlice";
 import axiosPublic from "./axiosPublic";
 
 /**
@@ -54,7 +55,23 @@ const processQueue = (error, token = null) => {
 
 /**
  * ============================================================================
- * INTERCEPTEUR DE RÉPONSE - Refresh Automatique
+ * INTERCEPTEUR DE REQUÊTE - Démarrer le Loading
+ * ============================================================================
+ */
+axiosPrivate.interceptors.request.use(
+  (config) => {
+    store.dispatch(startLoading());
+    return config;
+  },
+  (error) => {
+    store.dispatch(stopLoading());
+    return Promise.reject(error);
+  }
+);
+
+/**
+ * ============================================================================
+ * INTERCEPTEUR DE RÉPONSE - Refresh Automatique + Arrêter le Loading
  * ============================================================================
  * Gère les erreurs 401 en rafraîchissant automatiquement le token
  */
@@ -62,6 +79,7 @@ const processQueue = (error, token = null) => {
 axiosPrivate.interceptors.response.use(
   (response) => {
     // Cas normal : la requête a réussi
+    store.dispatch(stopLoading());
     return response;
   },
   async (error) => {
@@ -70,12 +88,14 @@ axiosPrivate.interceptors.response.use(
     // ❌ Pas une erreur 401? Propager l'erreur.
     // (Ex: 500, 404, 403... ce n'est pas notre problème)
     if (error.response?.status !== 401) {
+      store.dispatch(stopLoading());
       return Promise.reject(error);
     }
 
     // Protection: Si on a déjà essayé de refresh, ne pas boucler
     if (originalRequest._retry) {
       // Déconnexion complète
+      store.dispatch(stopLoading());
       store.dispatch(clearCredentials());
       store.dispatch(resetCart());
       localStorage.removeItem('isLoggedIn');

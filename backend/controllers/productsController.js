@@ -6,12 +6,16 @@ const getAllProducts = async (req, res) => {
       category_id, 
       brand, 
       price,
-      sort,
+      search,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
       page = 1, 
       limit = 20 
     } = req.query;
 
     const query = {};
+    
+    // Filtres spécifiques
     if (category_id) query.category_id = category_id;
     if (brand) query.brand = brand;
     
@@ -26,16 +30,22 @@ const getAllProducts = async (req, res) => {
       }
     }
 
-    let sortOptions = { created_at: -1 }; 
-    if (sort === "price_asc") {
-      sortOptions = { price: 1 };
-    } else if (sort === "price_desc") {
-      sortOptions = { price: -1 };
+    // Recherche globale (nom, marque)
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } }
+      ];
     }
+
+    // Tri dynamique
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
     
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     const skip = (pageNum - 1) * limitNum;
+    
     const products = await Product.find(query)
       .select('name brand price images category_id stock created_at')
       .lean()

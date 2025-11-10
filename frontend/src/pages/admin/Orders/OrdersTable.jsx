@@ -8,7 +8,6 @@ import {
 import {
   Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,7 +21,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteOrder, getOrders, updateOrderStatus } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -30,22 +29,23 @@ import DataTable from "../../../components/admin/DataTable";
 import TopActions from "../../../components/admin/DataTable/TopActions";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import {
-  ORDERS_COLUMNS as columns,
-  STATUS_SORT_ORDER
+  ORDERS_COLUMNS as columns
 } from "../../../constants/admin/columns";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import useDebounce from "../../../hooks/useDebounce";
 
 function OrdersPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [orders, setOrders] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchValue, setSearchValue] = useState("");
+  const debouncedSearchValue = useDebounce(searchValue, 500);
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [orderBy, setOrderBy] = useState("status");
   const [order, setOrder] = useState("asc");
-  const [loading, setLoading] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState(
     columns.reduce((acc, col) => ({ ...acc, [col.id]: true }), {})
   );
@@ -67,80 +67,32 @@ function OrdersPage() {
   // Charger les commandes depuis l'API
   const fetchOrders = async () => {
     try {
-      setLoading(true);
-      const response = await getOrders();
-      setOrders(response.data);
-    } catch (error) {
+      const response = await getOrders({ 
+        page: page + 1,
+        limit: rowsPerPage,
+        search: debouncedSearchValue || undefined,
+        status: statusFilter || undefined,
+        sortBy: orderBy,
+        sortOrder: order.toUpperCase()
+      });
+      setOrders(response.data.orders || []);
+      setTotalCount(response.data.pagination?.total || 0);
+    } catch {
       showError("Erreur lors du chargement des commandes");
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   // Charger les commandes au montage du composant
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [page, rowsPerPage, debouncedSearchValue, statusFilter, orderBy, order]);
 
-  const filteredOrders = useMemo(() => {
-    let filtered = orders.filter((orderItem) => {
-      const fullName =
-        `${orderItem.User?.first_name || ""} ${orderItem.User?.last_name || ""}`.trim();
-      const matchesSearch =
-        orderItem.id.toString().includes(searchValue) ||
-        fullName.toLowerCase().includes(searchValue.toLowerCase()) ||
-        orderItem.User?.email
-          ?.toLowerCase()
-          .includes(searchValue.toLowerCase());
-      const matchesStatus = !statusFilter || orderItem.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-
-    // Tri
-    filtered.sort((a, b) => {
-      let aVal = a[orderBy];
-      let bVal = b[orderBy];
-
-      // Gestion spéciale pour User
-      if (orderBy === "User") {
-        aVal = `${a.User?.first_name || ""} ${a.User?.last_name || ""}`.trim();
-        bVal = `${b.User?.first_name || ""} ${b.User?.last_name || ""}`.trim();
-      }
-
-      // Gestion spéciale pour status (tri personnalisé)
-      if (orderBy === "status") {
-        const aOrder = STATUS_SORT_ORDER[aVal] ?? 999;
-        const bOrder = STATUS_SORT_ORDER[bVal] ?? 999;
-        return order === "asc" ? aOrder - bOrder : bOrder - aOrder;
-      }
-
-      if (orderBy === "created_at") {
-        aVal = new Date(aVal);
-        bVal = new Date(bVal);
-        return order === "asc" ? aVal - bVal : bVal - aVal;
-      }
-
-      // Pour les chaînes de caractères
-      if (typeof aVal === "string" && typeof bVal === "string") {
-        const comparison = aVal.localeCompare(bVal, "fr", {
-          sensitivity: "base"
-        });
-        return order === "asc" ? comparison : -comparison;
-      }
-
-      // Pour les nombres
-      if (aVal < bVal) return order === "asc" ? -1 : 1;
-      if (aVal > bVal) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-
-    return filtered;
-  }, [orders, searchValue, statusFilter, orderBy, order]);
+  // Pas besoin de filtrage/tri côté client - tout est fait côté serveur
+  const displayedOrders = orders;
 
   const handleSearchChange = (value) => {
     setSearchValue(value);
-    setPage(0);
+    setPage(0); // Reset à la page 1 lors d'une recherche
   };
 
   const handleRefresh = () => {
@@ -162,9 +114,8 @@ function OrdersPage() {
       showSuccess("Commande supprimée avec succès!");
       setDeleteDialog({ open: false, order: null });
       fetchOrders();
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression de la commande");
-      console.error(error);
     }
   };
 
@@ -200,9 +151,8 @@ function OrdersPage() {
       showSuccess(successMessage);
       setActionDialog({ open: false, order: null, action: null });
       fetchOrders();
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la mise à jour de la commande");
-      console.error(error);
     }
   };
 
@@ -233,9 +183,8 @@ function OrdersPage() {
       showSuccess("Numéro de suivi enregistré et commande expédiée!");
       setTrackingDialog({ open: false, order: null, trackingNumber: "" });
       fetchOrders();
-    } catch (error) {
+    } catch {
       showError("Erreur lors de l'enregistrement du numéro de suivi");
-      console.error(error);
     }
   };
 
@@ -254,48 +203,41 @@ function OrdersPage() {
     }));
   };
 
-  const handleExport = () => {
-    const csv = [
-      columns.map((col) => col.label).join(","),
-      ...filteredOrders.map((order) =>
-        columns
-          .map((col) => {
-            const value = order[col.id];
-            if (col.render) {
-              return col.render(value, order);
-            }
-            return value;
-          })
-          .join(",")
-      )
-    ].join("\n");
+  const handleExport = async () => {
+    try {
+      // Charger TOUTES les commandes pour l'export
+      const response = await getOrders({ limit: 10000 });
+      const allOrders = response.data.orders || [];
 
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "commandes.csv";
-    a.click();
-    showSuccess("Export réussi!");
+      const csv = [
+        columns.map((col) => col.label).join(","),
+        ...allOrders.map((order) =>
+          columns
+            .map((col) => {
+              const value = order[col.id];
+              if (col.render) {
+                return col.render(value, order);
+              }
+              return value;
+            })
+            .join(",")
+        )
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "commandes.csv";
+      a.click();
+      showSuccess("Export réussi!");
+    } catch {
+      showError("Erreur lors de l'export");
+    }
   };
 
-  const paginatedData = filteredOrders.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
-
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // Les données sont déjà paginées par le backend
+  const paginatedData = displayedOrders;
 
   return (
     <Box
@@ -453,7 +395,7 @@ function OrdersPage() {
         }}
         page={page}
         rowsPerPage={rowsPerPage}
-        totalCount={filteredOrders.length}
+        totalCount={totalCount}
         onPageChange={(e, newPage) => setPage(newPage)}
         onRowsPerPageChange={(e) => {
           setRowsPerPage(parseInt(e.target.value, 10));
@@ -464,6 +406,7 @@ function OrdersPage() {
         onSort={(columnId, direction) => {
           setOrderBy(columnId);
           setOrder(direction);
+          setPage(0); // Reset à la page 1 lors d'un tri
         }}
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
