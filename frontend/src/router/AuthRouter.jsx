@@ -1,7 +1,11 @@
+import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 import LoadingScreen from "../components/common/LoadingScreen";
 import { useAuth } from "../hooks/useAuth";
-import { Login, Register, ResetPassword } from "../pages/auth";
+
+const Login = lazy(() => import("../pages/auth/Login"));
+const Register = lazy(() => import("../pages/auth/Register"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
 
 const AuthRouter = () => {
   const { isAuthenticated, isLoading } = useAuth();
