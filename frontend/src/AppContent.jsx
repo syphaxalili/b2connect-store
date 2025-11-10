@@ -15,21 +15,23 @@ const AppContent = () => {
 
   useEffect(() => {
     const hydrateAuth = async () => {
-      try {
-        const response = await getCurrentUser();
-        dispatch(setCredentials(response.data));
-        // Utilisateur connecté - fusionner le panier invité avec le panier utilisateur
-        await dispatch(mergeCartAsync());
-        dispatch(setLoadingComplete());
-      } catch {
-        dispatch(setLoadingComplete());
-        // Utilisateur invité - charger le panier depuis localStorage
+      if (localStorage.getItem('isLoggedIn') === 'true') {
+        try {
+          const response = await getCurrentUser();
+          dispatch(setCredentials(response.data));
+          await dispatch(mergeCartAsync());
+        } catch {
+          dispatch(loadGuestCartFromStorage());
+          localStorage.removeItem('isLoggedIn');
+        }
+      } else {
         dispatch(loadGuestCartFromStorage());
       }
+      dispatch(setLoadingComplete());
     };
 
     hydrateAuth();
-  }, [dispatch]);
+  }, []);
 
   return (
     <>
