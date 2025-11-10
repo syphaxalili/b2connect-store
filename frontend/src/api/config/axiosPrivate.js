@@ -1,6 +1,7 @@
 import axios from "axios";
 import store from "../../store";
 import { clearCredentials } from "../../store/slices/authSlice";
+import { resetCart } from "../../store/slices/cartSlice";
 import axiosPublic from "./axiosPublic";
 
 /**
@@ -74,7 +75,12 @@ axiosPrivate.interceptors.response.use(
 
     // Protection: Si on a déjà essayé de refresh, ne pas boucler
     if (originalRequest._retry) {
+      // Déconnexion complète
       store.dispatch(clearCredentials());
+      store.dispatch(resetCart());
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('cart');
+      
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
@@ -109,10 +115,17 @@ axiosPrivate.interceptors.response.use(
       processQueue(refreshError, null); // Traiter la file d'attente (échec)
       isRefreshing = false; // Libérer le "verrou"
 
-      // Déconnecter l'utilisateur
+      // 1. Déconnecter l'utilisateur (Redux)
       store.dispatch(clearCredentials());
+      
+      // 2. Nettoyer le panier (Redux)
+      store.dispatch(resetCart());
+      
+      // 3. Nettoyer le localStorage
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('cart'); // Panier invité
 
-      // Forcer la redirection vers le login
+      // 4. Forcer la redirection vers le login
       // C'est une mesure "forte" mais efficace pour nettoyer l'état
       if (typeof window !== "undefined") {
         window.location.href = "/login";
