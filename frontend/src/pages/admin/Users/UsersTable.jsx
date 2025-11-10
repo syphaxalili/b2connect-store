@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteUser, getUsers } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -13,7 +13,6 @@ function UsersPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -47,8 +46,7 @@ function UsersPage() {
     fetchUsers();
   }, []);
 
-  // Filtrer et trier les utilisateurs
-  useEffect(() => {
+  const filteredUsers = useMemo(() => {
     let filtered = users.filter(
       (user) =>
         user.first_name?.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -87,7 +85,7 @@ function UsersPage() {
       return 0;
     });
 
-    setFilteredUsers(filtered);
+    return filtered;
   }, [users, searchValue, orderBy, order]);
 
   const handleSearchChange = (value) => {

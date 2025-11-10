@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteCategory, getCategories } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -13,7 +13,6 @@ function CategoriesPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [categories, setCategories] = useState([]);
-  const [filteredCategories, setFilteredCategories] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -47,8 +46,7 @@ function CategoriesPage() {
     fetchCategories();
   }, []);
 
-  // Filtrer et trier les catégories
-  useEffect(() => {
+  const filteredCategories = useMemo(() => {
     let filtered = categories.filter(
       (cat) =>
         cat.name.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -80,7 +78,7 @@ function CategoriesPage() {
       return 0;
     });
 
-    setFilteredCategories(filtered);
+    return filtered;
   }, [categories, searchValue, orderBy, order]);
 
   const handleSearchChange = (value) => {

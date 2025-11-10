@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteProduct, getCategories, getProducts } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -13,7 +13,6 @@ function ProductsPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [productsWithCategories, setProductsWithCategories] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -63,8 +62,7 @@ function ProductsPage() {
     fetchData();
   }, []);
 
-  // Filtrer et trier les produits
-  useEffect(() => {
+  const filteredProducts = useMemo(() => {
     let filtered = productsWithCategories.filter(
       (product) =>
         product.name.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -105,7 +103,7 @@ function ProductsPage() {
       return 0;
     });
 
-    setFilteredProducts(filtered);
+    return filtered;
   }, [productsWithCategories, searchValue, orderBy, order]);
 
   const handleSearchChange = (value) => {

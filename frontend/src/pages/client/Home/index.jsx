@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Container, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getProducts } from "../../../api";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import ProductFilters from "./components/ProductFilters";
@@ -8,7 +8,6 @@ import ProductGrid from "./components/ProductGrid";
 function Home() {
   const { showError } = useSnackbar();
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     category: "all",
@@ -24,12 +23,10 @@ function Home() {
         setLoading(true);
         const response = await getProducts();
         setProducts(response.data || []);
-        setFilteredProducts(response.data || []);
       } catch (err) {
         console.error("Error fetching products:", err);
         showError("Erreur lors du chargement des produits");
         setProducts([]);
-        setFilteredProducts([]);
       } finally {
         setLoading(false);
       }
@@ -38,8 +35,7 @@ function Home() {
     fetchProducts();
   }, []);
 
-  // Apply filters and sorting
-  useEffect(() => {
+  const filteredProducts = useMemo(() => {
     let result = [...products];
 
     // Apply category filter
@@ -83,7 +79,7 @@ function Home() {
         break;
     }
 
-    setFilteredProducts(result);
+    return result;
   }, [products, filters]);
 
   const handleFilterChange = (newFilters) => {

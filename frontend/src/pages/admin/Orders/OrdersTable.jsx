@@ -22,7 +22,7 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { deleteOrder, getOrders, updateOrderStatus } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
@@ -39,7 +39,6 @@ function OrdersPage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(0);
@@ -84,8 +83,7 @@ function OrdersPage() {
     fetchOrders();
   }, []);
 
-  // Filtrer et trier les commandes
-  useEffect(() => {
+  const filteredOrders = useMemo(() => {
     let filtered = orders.filter((orderItem) => {
       const fullName =
         `${orderItem.User?.first_name || ""} ${orderItem.User?.last_name || ""}`.trim();
@@ -137,7 +135,7 @@ function OrdersPage() {
       return 0;
     });
 
-    setFilteredOrders(filtered);
+    return filtered;
   }, [orders, searchValue, statusFilter, orderBy, order]);
 
   const handleSearchChange = (value) => {
