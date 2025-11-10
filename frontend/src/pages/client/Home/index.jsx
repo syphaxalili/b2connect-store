@@ -1,5 +1,5 @@
 import { Box, CircularProgress, Container, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getProducts } from "../../../api";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import ProductFilters from "./components/ProductFilters";
@@ -82,13 +82,13 @@ function Home() {
     return result;
   }, [products, filters]);
 
-  const handleFilterChange = (newFilters) => {
+  const handleFilterChange = useCallback((newFilters) => {
     setFilters(newFilters);
-  };
+  }, []);
 
-  const handleSortChange = (sortValue) => {
+  const handleSortChange = useCallback((sortValue) => {
     setFilters((prev) => ({ ...prev, sort: sortValue }));
-  };
+  }, []);
 
   return (
     <Container maxWidth="lg" sx={{ py: 2 }}>

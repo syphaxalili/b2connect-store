@@ -5,11 +5,11 @@ import {
   Select,
   Stack
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { getCategoriesForFilters, getDistinctBrands } from "../../../../api";
 import { useSnackbar } from "../../../../hooks/useSnackbar";
 
-function ProductFilters({ onFilterChange, onSortChange }) {
+const ProductFilters = memo(({ onFilterChange, onSortChange }) => {
   const { showError } = useSnackbar();
   const [filters, setFilters] = useState({
     category: "all",
@@ -75,21 +75,21 @@ function ProductFilters({ onFilterChange, onSortChange }) {
     { value: "price_desc", label: "Prix : Décroissant" }
   ];
 
-  const handleFilterChange = (filterName, value) => {
+  const handleFilterChange = useCallback((filterName, value) => {
     const newFilters = { ...filters, [filterName]: value };
     setFilters(newFilters);
     if (onFilterChange) {
       onFilterChange(newFilters);
     }
-  };
+  }, [filters, onFilterChange]);
 
-  const handleSortChange = (value) => {
+  const handleSortChange = useCallback((value) => {
     const newFilters = { ...filters, sort: value };
     setFilters(newFilters);
     if (onSortChange) {
       onSortChange(value);
     }
-  };
+  }, [filters, onSortChange]);
 
   return (
     <Stack
@@ -211,6 +211,8 @@ function ProductFilters({ onFilterChange, onSortChange }) {
       </FormControl>
     </Stack>
   );
-}
+});
+
+ProductFilters.displayName = 'ProductFilters';
 
 export default ProductFilters;
