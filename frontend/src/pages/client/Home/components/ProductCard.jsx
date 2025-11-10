@@ -45,6 +45,7 @@ const ProductCard = memo(({ product }) => {
           component="img"
           image={product.images?.[0] || noImageAvailable}
           alt={product.name}
+          loading="lazy"
           sx={{
             width: "100%",
             height: "100%",

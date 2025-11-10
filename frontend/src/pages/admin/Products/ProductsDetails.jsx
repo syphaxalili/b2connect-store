@@ -259,6 +259,7 @@ function ProductDetails() {
                         component="img"
                         src={image}
                         alt={`${product.name} - ${index + 1}`}
+                        loading="lazy"
                         sx={{
                           width: 150,
                           height: 150,

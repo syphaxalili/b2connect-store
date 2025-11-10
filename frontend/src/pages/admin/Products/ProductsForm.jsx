@@ -483,6 +483,7 @@ function ProductForm() {
                       component="img"
                       src={image}
                       alt={`Image ${index + 1}`}
+                      loading="lazy"
                       sx={{
                         width: "100%",
                         height: "100%",
