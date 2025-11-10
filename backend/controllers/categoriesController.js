@@ -3,19 +3,28 @@ const Product = require("../models/mongodb/product");
 
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
-
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const productCount = await Product.countDocuments({
-          category_id: category._id,
-        });
-        return {
-          ...category.toObject(),
-          product_count: productCount,
-        };
-      })
-    );
+    const categoriesWithCount = await Category.aggregate([
+      {
+        // Étape 1 : Joindre les produits correspondants
+        $lookup: {
+          from: 'products', // Le nom de la collection des produits
+          localField: '_id',
+          foreignField: 'category_id',
+          as: 'products'
+        }
+      },
+      {
+        // Étape 2 : Projeter les champs et calculer le nombre de produits
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          specifications: 1,
+          created_at: 1,
+          product_count: { $size: '$products' } // Compte la taille du tableau 'products'
+        }
+      }
+    ]);
 
     res.status(200).json(categoriesWithCount);
   } catch (error) {

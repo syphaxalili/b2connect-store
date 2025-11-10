@@ -1,5 +1,5 @@
-import { Box, CircularProgress, Container, Typography } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Box, CircularProgress, Container, Pagination, Typography } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { getProducts } from "../../../api";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import ProductFilters from "./components/ProductFilters";
@@ -8,6 +8,8 @@ import ProductGrid from "./components/ProductGrid";
 function Home() {
   const { showError } = useSnackbar();
   const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     category: "all",
@@ -16,15 +18,24 @@ function Home() {
     sort: "new"
   });
 
-  // Fetch products on component mount
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await getProducts();
-        setProducts(response.data || []);
-      } catch (err) {
-        console.error("Error fetching products:", err);
+        const params = {
+          page,
+          limit: 20,
+          category_id: filters.category === "all" ? undefined : filters.category,
+          brand: filters.brand === "all" ? undefined : filters.brand,
+          price: filters.price === "all" ? undefined : filters.price,
+          sort: filters.sort === "new" ? undefined : filters.sort,
+        };
+
+        const response = await getProducts(params);
+        
+        setProducts(response.data.products || []);
+        setTotalPages(response.data.pagination.pages || 1);
+      } catch {
         showError("Erreur lors du chargement des produits");
         setProducts([]);
       } finally {
@@ -33,61 +44,21 @@ function Home() {
     };
 
     fetchProducts();
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    // Apply category filter
-    if (filters.category !== "all") {
-      result = result.filter(
-        (product) =>
-          product.category_id?.toLowerCase() === filters.category.toLowerCase()
-      );
-    }
-
-    // Apply brand filter
-    if (filters.brand !== "all") {
-      result = result.filter(
-        (product) =>
-          product.brand?.toLowerCase() === filters.brand.toLowerCase()
-      );
-    }
-
-    // Apply price filter
-    if (filters.price !== "all") {
-      const [min, max] =
-        filters.price === "500+"
-          ? [500, Infinity]
-          : filters.price.split("-").map(Number);
-      result = result.filter(
-        (product) => product.price >= min && product.price <= max
-      );
-    }
-
-    // Apply sorting
-    switch (filters.sort) {
-      case "price_asc":
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case "price_desc":
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case "new":
-      default:
-        result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        break;
-    }
-
-    return result;
-  }, [products, filters]);
+  }, [page, filters.category, filters.brand, filters.price, filters.sort]);
 
   const handleFilterChange = useCallback((newFilters) => {
     setFilters(newFilters);
+    setPage(1);
   }, []);
 
   const handleSortChange = useCallback((sortValue) => {
     setFilters((prev) => ({ ...prev, sort: sortValue }));
+    setPage(1);
+  }, []);
+
+  const handlePageChange = useCallback((event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   return (
@@ -139,13 +110,28 @@ function Home() {
         <>
           {/* Results Count */}
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {filteredProducts.length} produit
-            {filteredProducts.length !== 1 ? "s" : ""} trouvé
-            {filteredProducts.length !== 1 ? "s" : ""}
+            {products.length} produit
+            {products.length !== 1 ? "s" : ""} trouvé
+            {products.length !== 1 ? "s" : ""}
           </Typography>
 
           {/* Product Grid */}
-          <ProductGrid products={filteredProducts} loading={false} />
+          <ProductGrid products={products} loading={false} />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+              />
+            </Box>
+          )}
         </>
       )}
     </Container>

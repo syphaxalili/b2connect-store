@@ -47,13 +47,12 @@ const ProductFilters = memo(({ onFilterChange, onSortChange }) => {
         const formattedBrands = [
           { value: "all", label: "Toutes les marques" },
           ...brandsData.map((brand) => ({
-            value: brand.toLowerCase(),
+            value: brand,
             label: brand
           }))
         ];
         setBrands(formattedBrands);
-      } catch (error) {
-        console.error("Erreur lors du chargement des filtres:", error);
+      } catch {
         showError("Erreur lors du chargement des filtres");
       }
     };
