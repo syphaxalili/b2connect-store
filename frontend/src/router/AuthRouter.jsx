@@ -21,7 +21,7 @@ const AuthRouter = () => {
       />
       <Route
         path="/reset-password"
-        element={isAuthenticated ? <Navigate to="/" /> : <ResetPassword />}
+        element={<ResetPassword />}
       />
     </>
   );
