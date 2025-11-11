@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   Paper,
@@ -28,14 +27,12 @@ function ProductDetails() {
   const { showSuccess, showError } = useSnackbar();
   const [product, setProduct] = useState(null);
   const [category, setCategory] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState(false);
 
   // Charger les données du produit et sa catégorie
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        setLoading(true);
         const response = await getProductById(id);
         const productData = response.data;
         setProduct(productData);
@@ -47,11 +44,8 @@ function ProductDetails() {
           );
           setCategory(categoryResponse.data);
         }
-      } catch (error) {
+      } catch {
         showError("Erreur lors du chargement du produit");
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchProduct();
@@ -70,9 +64,8 @@ function ProductDetails() {
       await deleteProduct(id);
       showSuccess("Produit supprimé avec succès!");
       navigate("/admin/products");
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression du produit");
-      console.error(error);
     }
   };
 
@@ -135,21 +128,7 @@ function ProductDetails() {
         </Typography>
       </Box>
 
-      {loading ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            minHeight: "400px"
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : !product ? (
+      {!product ? (
         <Box sx={{ flexGrow: 1 }}>
           <Alert severity="error">Produit non trouvé</Alert>
         </Box>
@@ -259,6 +238,7 @@ function ProductDetails() {
                         component="img"
                         src={image}
                         alt={`${product.name} - ${index + 1}`}
+                        loading="lazy"
                         sx={{
                           width: 150,
                           height: 150,

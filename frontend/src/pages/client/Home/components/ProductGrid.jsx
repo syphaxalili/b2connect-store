@@ -5,9 +5,10 @@ import {
   Grid,
   Typography
 } from "@mui/material";
+import { memo } from "react";
 import ProductCard from "./ProductCard";
 
-function ProductGrid({ products, loading = false }) {
+const ProductGrid = memo(({ products, loading = false }) => {
   if (loading) {
     return (
       <Box
@@ -56,6 +57,8 @@ function ProductGrid({ products, loading = false }) {
       ))}
     </Grid>
   );
-}
+});
+
+ProductGrid.displayName = 'ProductGrid';
 
 export default ProductGrid;

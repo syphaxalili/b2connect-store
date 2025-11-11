@@ -83,7 +83,7 @@ const getBaseTemplate = (content) => {
       padding: 12px 30px;
       margin: 20px 0;
       background-color: #0a1f3f;
-      color: white;
+      color: white !important;
       text-decoration: none;
       border-radius: 5px;
       font-weight: bold;

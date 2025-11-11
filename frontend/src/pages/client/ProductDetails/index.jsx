@@ -338,6 +338,7 @@ const ProductDetails = () => {
                       component="img"
                       src={image}
                       alt={`${product.name} - ${index + 1}`}
+                      loading="lazy"
                       onClick={() => {
                         setSelectedImage(index);
                         setZoom(1);

@@ -1,4 +1,5 @@
 const { Order, OrderItem, User, Address } = require("../models/mysql");
+const { Op } = require("sequelize");
 const Product = require("../models/mongodb/product");
 const { sendEmail } = require("../utils/mailService");
 const { getOrderConfirmationEmail, getOrderStatusEmail } = require("../utils/emailTemplates");
@@ -165,20 +166,60 @@ const getUserOrders = async (req, res) => {
 
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.findAll({
+    const { 
+      search,
+      status,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      page = 1, 
+      limit = 20 
+    } = req.query;
+    
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    const where = {};
+    
+    // Filtre par statut
+    if (status) {
+      where.status = status;
+    }
+
+    const { count, rows: orders } = await Order.findAndCountAll({
+      where,
       include: [
         {
           model: User,
           attributes: ["id", "first_name", "last_name", "email"],
+          where: search ? {
+            [Op.or]: [
+              { first_name: { [Op.iLike]: `%${search}%` } },
+              { last_name: { [Op.iLike]: `%${search}%` } },
+              { email: { [Op.iLike]: `%${search}%` } }
+            ]
+          } : undefined,
+          required: search ? true : false
         },
         {
           model: OrderItem,
           attributes: ["id", "product_id", "quantity", "unit_price"],
         },
       ],
-      order: [["created_at", "DESC"]],
+      order: [[sortBy, sortOrder]],
+      limit: limitNum,
+      offset: offset,
     });
-    res.status(200).json(orders);
+
+    res.status(200).json({
+      orders,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: count,
+        pages: Math.ceil(count / limitNum)
+      }
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: error.message });

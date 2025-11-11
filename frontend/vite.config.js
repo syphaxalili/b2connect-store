@@ -12,5 +12,18 @@ export default defineConfig({
         secure: false
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        // Manual chunking pour optimiser le cache et réduire le bundle principal
+        manualChunks: {
+          'mui-core': ['@mui/material'],
+          'mui-icons': ['@mui/icons-material'],
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
+          'redux': ['@reduxjs/toolkit', 'react-redux']
+        }
+      }
+    }
   }
 });

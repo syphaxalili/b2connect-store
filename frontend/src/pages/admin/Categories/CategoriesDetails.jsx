@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Divider,
   Grid,
   Paper,
@@ -33,21 +32,16 @@ function CategoryDetails() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useSnackbar();
   const [category, setCategory] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState(false);
 
   // Charger les données de la catégorie
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        setLoading(true);
         const response = await getCategoryById(id);
         setCategory(response.data);
-      } catch (error) {
+      } catch {
         showError("Erreur lors du chargement de la catégorie");
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchCategory();
@@ -116,21 +110,7 @@ function CategoryDetails() {
         </Typography>
       </Box>
 
-      {loading ? (
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            minHeight: "400px"
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : !category ? (
+      {!category ? (
         <Box sx={{ flexGrow: 1 }}>
           <Alert severity="error">Catégorie non trouvée</Alert>
         </Box>
