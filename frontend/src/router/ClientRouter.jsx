@@ -1,7 +1,6 @@
 import { lazy } from "react";
 import { Route } from "react-router-dom";
-
-
+import AuthRouter from "./AuthRouter";
 const Home = lazy(() => import("../pages/client/Home"));
 const Cart = lazy(() => import("../pages/client/Cart"));
 const Checkout = lazy(() => import("../pages/client/Checkout"));
@@ -24,6 +23,9 @@ const ClientRouter = () => {
       <Route path="/orders" element={<Orders />} />
       <Route path="/who-are-we" element={<WhoAreWe />} />
       <Route path="/contact" element={<Contact />} />
+      
+      {/* Auth Router intégré dans le ClientLayout */}
+      {AuthRouter()}
     </>
   );
 };

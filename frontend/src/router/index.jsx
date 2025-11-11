@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoadingScreen from "../components/common/LoadingScreen";
-import { AdminLayout, AuthFormLayout, ClientLayout } from "../layouts";
+import { AdminLayout, ClientLayout } from "../layouts";
 import AdminRouter from "./AdminRouter";
-import AuthRouter from "./AuthRouter";
 import ClientRouter from "./ClientRouter";
 import AdminPrivateRoute from "./route-gards/AdminPrivateRoute";
 
@@ -12,8 +11,6 @@ const AppRouter = () => {
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route element={<ClientLayout />}>{ClientRouter()}</Route>
-
-        <Route element={<AuthFormLayout />}>{AuthRouter()}</Route>
 
         <Route
           path={"/admin/*"}

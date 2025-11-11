@@ -1,10 +1,9 @@
-import { Box, Button, CircularProgress, Typography } from "@mui/material";
+import { Box, Button, Container, Paper, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPassword, verifyResetToken } from "../../../api";
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
-import AuthFormContainer from "../../../layouts/auth";
 import { validatePassword } from "../../../utils/validation";
 
 const ResetPassword = () => {
@@ -109,74 +108,68 @@ const ResetPassword = () => {
     }
   };
 
-  if (loading) {
+  if (!tokenValid && !loading) {
     return (
-      <AuthFormContainer>
-        <Box
+      <Container maxWidth="sm" sx={{ my: 8 }}>
+        <Paper
+          elevation={3}
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "400px",
-            gap: 2
+            p: { xs: 3, sm: 4 },
+            borderRadius: 2
           }}
         >
-          <CircularProgress />
-          <Typography color="text.secondary">
-            Vérification du lien...
-          </Typography>
-        </Box>
-      </AuthFormContainer>
-    );
-  }
-
-  if (!tokenValid) {
-    return (
-      <AuthFormContainer>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "400px",
-            gap: 2
-          }}
-        >
-          <Typography variant="h6" color="error">
-            Lien invalide ou expiré
-          </Typography>
-          <Typography color="text.secondary" align="center">
-            Redirection vers la page de connexion...
-          </Typography>
-        </Box>
-      </AuthFormContainer>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "200px",
+              gap: 2
+            }}
+          >
+            <Typography variant="h6" color="error">
+              Lien invalide ou expiré
+            </Typography>
+            <Typography color="text.secondary" align="center">
+              Redirection vers la page de connexion...
+            </Typography>
+          </Box>
+        </Paper>
+      </Container>
     );
   }
 
   return (
-    <AuthFormContainer>
-      <Typography
-        variant="h4"
-        component="h1"
-        gutterBottom
-        align="center"
-        sx={{ mb: 3, fontWeight: 600 }}
+    <Container maxWidth="sm" sx={{ my: 8 }}>
+      <Paper
+        elevation={3}
+        sx={{
+          p: { xs: 3, sm: 4 },
+          borderRadius: 2
+        }}
       >
-        Réinitialiser votre mot de passe
-      </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            align="center"
+            sx={{ mb: 3, fontWeight: 600 }}
+          >
+            Réinitialiser votre mot de passe
+          </Typography>
 
-      <Typography
-        variant="body1"
-        align="center"
-        color="text.secondary"
-        sx={{ mb: 4 }}
-      >
-        Entrez votre nouveau mot de passe ci-dessous
-      </Typography>
+          <Typography
+            variant="body1"
+            align="center"
+            color="text.secondary"
+            sx={{ mb: 4 }}
+          >
+            Entrez votre nouveau mot de passe ci-dessous
+          </Typography>
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
         <PasswordField
           label="Nouveau mot de passe"
           name="password"
@@ -215,8 +208,10 @@ const ResetPassword = () => {
         >
           {submitting ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
         </Button>
-      </Box>
-    </AuthFormContainer>
+          </Box>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 
