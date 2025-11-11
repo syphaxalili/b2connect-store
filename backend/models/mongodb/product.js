@@ -12,4 +12,9 @@ const productSchema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now }
 });
 
+productSchema.index({ brand: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ created_at: -1 });
+productSchema.index({ category_id: 1, brand: 1, price: 1 });
+
 module.exports = mongoose.model('Product', productSchema);

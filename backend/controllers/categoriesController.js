@@ -3,21 +3,79 @@ const Product = require("../models/mongodb/product");
 
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const { 
+      search,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
+      page = 1, 
+      limit = 20 
+    } = req.query;
+    
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skip = (pageNum - 1) * limitNum;
 
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const productCount = await Product.countDocuments({
-          category_id: category._id,
-        });
-        return {
-          ...category.toObject(),
-          product_count: productCount,
-        };
-      })
-    );
+    const pipeline = [];
 
-    res.status(200).json(categoriesWithCount);
+    // Recherche
+    if (search) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { description: { $regex: search, $options: 'i' } }
+          ]
+        }
+      });
+    }
+
+    // Joindre les produits
+    pipeline.push({
+      $lookup: {
+        from: 'products',
+        localField: '_id',
+        foreignField: 'category_id',
+        as: 'products'
+      }
+    });
+
+    // Projeter les champs
+    pipeline.push({
+      $project: {
+        _id: 1,
+        name: 1,
+        description: 1,
+        specifications: 1,
+        created_at: 1,
+        product_count: { $size: '$products' }
+      }
+    });
+
+    // Tri dynamique
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+    pipeline.push({ $sort: sortOptions });
+
+    // Compter le total avant pagination
+    const countPipeline = [...pipeline, { $count: 'total' }];
+    const countResult = await Category.aggregate(countPipeline);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
+
+    // Pagination
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: limitNum });
+
+    const categoriesWithCount = await Category.aggregate(pipeline);
+
+    res.status(200).json({
+      categories: categoriesWithCount,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

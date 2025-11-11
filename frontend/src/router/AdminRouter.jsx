@@ -1,18 +1,20 @@
+import { lazy } from "react";
 import { Navigate, Route } from "react-router-dom";
 
-import {
-  CategoriesDetails,
-  CategoriesForm,
-  CategoriesTable,
-  OrdersDetails,
-  OrdersTable,
-  ProductsDetails,
-  ProductsForm,
-  ProductsTable,
-  UsersDetails,
-  UsersForm,
-  UsersTable
-} from "../pages/admin";
+const CategoriesTable = lazy(() => import("../pages/admin/Categories/CategoriesTable"));
+const CategoriesDetails = lazy(() => import("../pages/admin/Categories/CategoriesDetails"));
+const CategoriesForm = lazy(() => import("../pages/admin/Categories/CategoriesForm"));
+
+const OrdersTable = lazy(() => import("../pages/admin/Orders/OrdersTable"));
+const OrdersDetails = lazy(() => import("../pages/admin/Orders/OrdersDetails"));
+
+const ProductsTable = lazy(() => import("../pages/admin/Products/ProductsTable"));
+const ProductsDetails = lazy(() => import("../pages/admin/Products/ProductsDetails"));
+const ProductsForm = lazy(() => import("../pages/admin/Products/ProductsForm"));
+
+const UsersTable = lazy(() => import("../pages/admin/Users/UsersTable"));
+const UsersDetails = lazy(() => import("../pages/admin/Users/UsersDetails"));
+const UsersForm = lazy(() => import("../pages/admin/Users/UsersForm"));
 
 const AdminRouter = () => {
   return (

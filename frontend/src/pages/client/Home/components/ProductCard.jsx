@@ -1,13 +1,14 @@
 import { Box, Card, CardContent, CardMedia, Typography } from "@mui/material";
+import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import noImageAvailable from "../../../../assets/images/image-no-available.svg";
 
-function ProductCard({ product }) {
+const ProductCard = memo(({ product }) => {
   const navigate = useNavigate();
 
-  const handleViewDetails = () => {
+  const handleViewDetails = useCallback(() => {
     navigate(`/product/${product._id}`);
-  };
+  }, [navigate, product._id]);
 
   return (
     <Card
@@ -44,6 +45,7 @@ function ProductCard({ product }) {
           component="img"
           image={product.images?.[0] || noImageAvailable}
           alt={product.name}
+          loading="lazy"
           sx={{
             width: "100%",
             height: "100%",
@@ -110,6 +112,8 @@ function ProductCard({ product }) {
       </CardContent>
     </Card>
   );
-}
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;

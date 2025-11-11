@@ -542,6 +542,7 @@ function Checkout() {
                       "https://placehold.co/150x150/png"
                     }
                     alt={item.product?.name || "Produit"}
+                    loading="lazy"
                     sx={{
                       width: 60,
                       height: 60,

@@ -15,12 +15,14 @@ const authSlice = createSlice({
       state.user = action.payload;
       state.isAuthenticated = true;
       state.isLoading = false;
+      localStorage.setItem('isLoggedIn', 'true');
     },
     // Effacer les credentials lors du logout
     clearCredentials: (state) => {
       state.user = null;
       state.isAuthenticated = false;
       state.isLoading = false;
+      localStorage.removeItem('isLoggedIn');
     },
     // Terminer le chargement initial (hydratation échouée)
     setLoadingComplete: (state) => {

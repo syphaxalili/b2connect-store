@@ -3,7 +3,7 @@ import axiosPublic from "../config/axiosPublic";
 
 // Public routes
 
-export const getProducts = () => axiosPublic.get("/products");
+export const getProducts = (params = {}) => axiosPublic.get("/products", { params });
 
 export const getDistinctBrands = () => axiosPublic.get("/products/filters/brands");
 

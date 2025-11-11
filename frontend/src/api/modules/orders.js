@@ -15,7 +15,7 @@ export const createOrder = (
     shipping_address
   });
 
-export const getOrders = () => axiosPrivate.get("/orders");
+export const getOrders = (params = {}) => axiosPrivate.get("/orders", { params });
 
 export const getUserOrders = () => axiosPrivate.get("/orders/my-orders");
 

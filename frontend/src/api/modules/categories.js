@@ -3,7 +3,7 @@ import axiosPublic from "../config/axiosPublic";
 
 // Public routes
 
-export const getCategories = () => axiosPublic.get("/categories");
+export const getCategories = (params = {}) => axiosPublic.get("/categories", { params });
 
 export const getCategoriesForFilters = () => axiosPublic.get("/categories/filters/list");
 

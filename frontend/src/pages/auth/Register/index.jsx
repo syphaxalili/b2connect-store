@@ -133,13 +133,13 @@ const Register = () => {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+    <Box sx={{ maxWidth: "600px", mx: "auto", padding: 2, display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Typography
         variant="h4"
         component="h1"
         gutterBottom
         align="center"
-        sx={{ mb: 3, fontWeight: 600 }}
+        sx={{ fontWeight: 600 }}
       >
         Rejoignez nous maintenant!
       </Typography>
