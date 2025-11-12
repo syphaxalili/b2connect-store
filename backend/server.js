@@ -1,5 +1,7 @@
+const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config({ quiet: true });
+
+dotenv.config({ path: path.resolve(__dirname, "../.env"), quiet: true });
 
 const express = require("express");
 const cors = require("cors");
@@ -11,7 +13,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
