@@ -68,6 +68,9 @@ jobs:
             
             # Mettre à jour le 'docker-compose.yml'
             git pull
+
+            # Se connecter à GHCR en utilisant les mêmes secrets
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             
             # Télécharger les nouvelles images depuis GHCR
             docker-compose pull
