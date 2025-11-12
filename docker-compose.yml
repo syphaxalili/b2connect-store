@@ -8,7 +8,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
-    image: b2connect-store/frontend-prod
+    image: ghcr.io/syphaxalili/b2connect-store-frontend:latest
     ports:
       - "8080:80"
     restart: always
@@ -20,7 +20,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: b2connect-store/backend-prod
+    image: ghcr.io/syphaxalili/b2connect-store-backend:latest
     ports:
       - "3000:3000"
     environment:
