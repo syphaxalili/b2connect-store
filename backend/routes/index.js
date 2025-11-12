@@ -10,6 +10,10 @@ const authRoutes = require("./auth");
 const cartRoutes = require("./cart");
 const stripeRoutes = require("./stripe");
 
+router.get("/health", (req, res) => {
+  res.status(200).json({ message: "Backend is healthy" });
+});
+
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
 router.use("/categories", categoryRoutes);
