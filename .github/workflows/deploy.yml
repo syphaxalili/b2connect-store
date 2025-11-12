@@ -1,0 +1,80 @@
+# DANS : .github/workflows/deploy.yml
+
+name: CI/CD Pipeline - Déploiement Production
+
+# Déclencheur : Se lance à chaque push sur la branche 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # ------ PARTIE 1 : BUILD & PUSH (CI) ------
+  build-and-push:
+    name: Construire et Pousser les images Docker
+    runs-on: ubuntu-latest # Ce job tourne sur un serveur de GitHub
+
+    steps:
+      - name: 1. Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: 2. Se connecter au GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: 3. Construire et Pousser l'image Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend # Chemin vers le Dockerfile
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/syphaxalili/b2connect-store-backend:latest # Adaptez le nom
+          
+      - name: 4. Construire et Pousser l'image Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend # Chemin vers le Dockerfile
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ghcr.io/syphaxalili/b2connect-store-frontend:latest # Adaptez le nom
+          # Passe les ARGS du .env au build
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+            VITE_STRIPE_PUBLISHABLE_KEY=${{ vars.VITE_STRIPE_PUBLISHABLE_KEY }}
+            
+  # ------ PARTIE 2 : DEPLOY (CD) ------
+  deploy:
+    name: Déployer sur le VPS
+    runs-on: ubuntu-latest
+    needs: build-and-push # Ne se lance que si le build réussit
+
+    steps:
+      - name: 1. Configurer la clé SSH privée
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }} # Le secret de la clé privée
+
+      - name: 2. Se connecter au VPS et déployer
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }} # Le secret de l'IP
+          username: ${{ secrets.VPS_USER }} # Le secret de l'utilisateur
+          key: ${{ secrets.VPS_SSH_KEY }} # La clé privée à nouveau
+          script: |
+            # Aller dans le dossier du projet
+            cd /var/www/b2connect-store
+            
+            # Mettre à jour le 'docker-compose.yml'
+            git pull
+            
+            # Télécharger les nouvelles images depuis GHCR
+            docker-compose pull
+            
+            # Relancer les conteneurs (en arrière-plan)
+            # Docker Compose ne relancera que les services dont l'image a changé
+            docker-compose up -d --no-build
+            
+            # Nettoyer les anciennes images
+            docker image prune -f
