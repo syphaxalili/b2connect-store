@@ -16,10 +16,8 @@ const getCivility = (gender) => {
  * Template de base pour tous les emails
  */
 const getBaseTemplate = (content) => {
-  // Si vous avez une URL publique pour votre logo, remplacez cette ligne
-  // Exemple: const logoUrl = "https://votre-domaine.com/logo.png";
-  const logoUrl = process.env.LOGO_URL || null;
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const logoUrl = "https://i.ibb.co/Pszvd1gQ/logo-B2connect.webp";
+  const frontendUrl = process.env.FRONTEND_URL;
   
   return `
 <!DOCTYPE html>

@@ -16,7 +16,7 @@ import axiosPublic from "./axiosPublic";
  * - Déconnecte l'utilisateur si le refresh échoue
  */
 const axiosPrivate = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "/api",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     "Content-Type": "application/json"
   },
