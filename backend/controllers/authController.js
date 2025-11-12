@@ -76,7 +76,7 @@ const login = async (req, res) => {
     let refreshTokenExpiry;
     const refreshTokenCookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.FRONTEND_URL.startsWith("https"),
       sameSite: "lax",
       path: "/",
     };
@@ -95,7 +95,7 @@ const login = async (req, res) => {
 
     res.cookie("access_token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.FRONTEND_URL.startsWith("https"),
       sameSite: "lax",
       path: "/",
       maxAge: 15 * 60 * 1000,
@@ -284,7 +284,7 @@ const refresh = async (req, res) => {
 
     res.cookie("access_token", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.FRONTEND_URL.startsWith("https"),
       sameSite: "lax",
       path: "/",
       maxAge: 15 * 60 * 1000,
@@ -313,7 +313,7 @@ const logout = async (req, res) => {
 
     res.cookie("access_token", "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.FRONTEND_URL.startsWith("https"),
       sameSite: "lax",
       path: "/",
       maxAge: 0,
@@ -321,7 +321,7 @@ const logout = async (req, res) => {
 
     res.cookie("refresh_token", "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.FRONTEND_URL.startsWith("https"),
       sameSite: "lax",
       path: "/",
       maxAge: 0,
