@@ -67,11 +67,12 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             
             # Télécharger les nouvelles images depuis GHCR
-            docker-compose pull
+            docker compose pull
+
             
             # Relancer les conteneurs (en arrière-plan)
             # Docker Compose ne relancera que les services dont l'image a changé
-            docker-compose up -d --no-build
+            docker compose up -d --no-build
             
             # Nettoyer les anciennes images
             docker image prune -f
