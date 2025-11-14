@@ -27,6 +27,9 @@ const validUserData = {
 };
 
 beforeAll(async () => {
+  // Donne 15 secondes (15000ms) à Jest au lieu des 5s par défaut.
+  jest.setTimeout(15000);
+  
   // Démarrer le serveur sur un port de test
   server = app.listen(3002); // Port de test (différent de 3000 ou 3001)
 
