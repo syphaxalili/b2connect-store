@@ -5,9 +5,60 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # ------ TEST ------
+  test:
+    name: Lancer les Tests Backend
+    runs-on: ubuntu-latest
+
+    # Démarrer une BDD MySQL temporaire juste pour ce job
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password_test # Un mot de passe simple pour le test
+          MYSQL_DATABASE: b2connect_db_test
+        ports:
+          - 3306:3306 # Le runner parlera au conteneur sur le port 3306
+        # Attendre que la BDD soit prête avant de lancer les tests
+        options: --health-cmd="mysqladmin ping -h localhost -u root -proot_password_test" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: 1. Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: 2. Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Installer les dépendances du Backend
+        run: |
+          cd backend
+          npm install
+
+      - name: 4. Lancer les tests Jest
+        run: |
+          cd backend
+          # --ci: Optimisé pour les pipelines
+          # --runInBand: Teste un fichier après l'autre
+          # --detectOpenHandles: Aide à trouver les connexions BDD non fermées
+          npm test -- --ci --runInBand --detectOpenHandles
+        env:
+          NODE_ENV: test
+          JWT_SECRET: "un_secret_de_test_123"
+          MYSQL_HOST: 127.0.0.1 # Le service est mappé sur le localhost du Runner
+          MYSQL_PORT: 3306
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root_password_test
+          MYSQL_DATABASE: b2connect_db_test
+          
+          FRONTEND_URL: http://localhost:3000
+
+  # ------ BUILD ------
   build-and-push:
     name: Construire et Pousser les images Docker
     runs-on: ubuntu-latest
+    needs: test
 
     steps:
       - name: 1. Récupérer le code
@@ -39,10 +90,11 @@ jobs:
             VITE_API_URL=${{ vars.VITE_API_URL }}
             VITE_STRIPE_PUBLISHABLE_KEY=${{ vars.VITE_STRIPE_PUBLISHABLE_KEY }}
             
+  # ------ DEPLOY ------
   deploy:
     name: Déployer sur le VPS
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [build-and-push, test]
 
     steps:
       - name: 1. Configurer la clé SSH privée
@@ -57,22 +109,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Aller dans le dossier du projet
             cd /var/www/b2connect-store
-            
-            # Mettre à jour le 'docker-compose.yml'
             git pull
-
-            # Se connecter à GHCR
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
-            
-            # Télécharger les nouvelles images depuis GHCR
             docker compose pull
-
-            
-            # Relancer les conteneurs (en arrière-plan)
-            # Docker Compose ne relancera que les services dont l'image a changé
             docker compose up -d --no-build
-            
-            # Nettoyer les anciennes images
             docker image prune -f
