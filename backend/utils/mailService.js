@@ -53,12 +53,9 @@ const sendEmail = async ({ to, subject, text, html }) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email envoyé avec succès à ${to}: ${info.messageId}`);
-    
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error(`❌ Erreur lors de l'envoi de l'email à ${to}:`, error.message);
-    // On ne lance pas d'erreur pour ne pas bloquer le processus principal
     return { success: false, error: error.message };
   }
 };

@@ -7,13 +7,11 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Alert,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Container,
   Divider,
   Grid,
@@ -23,10 +21,11 @@ import {
   Typography
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { getUserOrders } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 /**
  * Orders page - User orders list and details
@@ -35,8 +34,8 @@ function Orders() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(false);
   const { showError, showSuccess } = useSnackbar();
+  let loading = useSelector((state) => state.loading.requestCount > 0);
 
   const handleCopyTrackingNumber = (trackingNumber) => {
     navigator.clipboard.writeText(trackingNumber);
@@ -51,7 +50,6 @@ function Orders() {
   }, [user]);
 
   const fetchOrders = async () => {
-    setLoading(true);
     try {
       const response = await getUserOrders();
       // Transformer les données du backend pour le rendu
@@ -66,11 +64,8 @@ function Orders() {
         tracking_number: order.tracking_number
       }));
       setOrders(transformedOrders);
-    } catch (err) {
-      console.error("Error fetching orders:", err);
+    } catch {
       showError("Erreur lors du chargement des commandes");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -122,34 +117,13 @@ function Orders() {
   const sortedOrders = sortOrdersByStatus(orders);
 
   if (!user) {
+    showError("Vous devez être connecté pour accéder à vos commandes");
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="warning">
-          Vous devez être connecté pour accéder à vos commandes.
-        </Alert>
-        <Button
-          variant="contained"
-          onClick={() => navigate("/login")}
-          sx={{ mt: 2 }}
-        >
-          Se connecter
-        </Button>
-      </Container>
+      <Navigate to="/login" />
     );
   }
 
-  if (loading) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
-        <CircularProgress />
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          Chargement de vos commandes...
-        </Typography>
-      </Container>
-    );
-  }
-
-  return (
+  return !loading && (
     <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>

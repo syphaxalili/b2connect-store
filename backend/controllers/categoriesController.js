@@ -47,7 +47,8 @@ const getAllCategories = async (req, res) => {
         description: 1,
         specifications: 1,
         created_at: 1,
-        product_count: { $size: '$products' }
+        product_count: { $size: '$products' },
+        specs: 1
       }
     });
 
@@ -140,7 +141,6 @@ const deleteCategory = async (req, res) => {
   }
 };
 
-// Récupérer les catégories optimisées pour les filtres (sans product_count)
 const getCategoriesForFilters = async (req, res) => {
   try {
     const categories = await Category.find().select("_id name").lean();

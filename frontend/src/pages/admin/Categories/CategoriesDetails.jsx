@@ -26,6 +26,7 @@ import { deleteCategory, getCategoryById } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 function CategoryDetails() {
   const { id } = useParams();
@@ -33,6 +34,7 @@ function CategoryDetails() {
   const { showSuccess, showError } = useSnackbar();
   const [category, setCategory] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   // Charger les données de la catégorie
   useEffect(() => {
@@ -60,9 +62,8 @@ function CategoryDetails() {
       await deleteCategory(id);
       showSuccess("Catégorie supprimée avec succès!");
       navigate("/admin/categories");
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression de la catégorie");
-      console.error(error);
     }
   };
 
@@ -74,7 +75,7 @@ function CategoryDetails() {
     navigate("/admin/categories");
   };
 
-  return (
+  return !loading && (
     <Box
       sx={{
         width: "100%",

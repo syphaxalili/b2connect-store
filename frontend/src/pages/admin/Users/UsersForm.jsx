@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createUser, getUserById, updateUser } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 import {
   validateCity,
   validateEmail,
@@ -41,15 +42,14 @@ function UserForm() {
   });
 
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   // Charger les données en mode édition
   useEffect(() => {
     if (isEditMode) {
       const fetchUser = async () => {
         try {
-          setLoading(true);
           const response = await getUserById(id);
           const user = response.data;
 
@@ -64,11 +64,8 @@ function UserForm() {
             codePostal: user.address?.postal_code || "",
             ville: user.address?.city || ""
           });
-        } catch (error) {
+        } catch {
           showError("Erreur lors du chargement de l'utilisateur");
-          console.error(error);
-        } finally {
-          setLoading(false);
         }
       };
       fetchUser();
@@ -145,7 +142,6 @@ function UserForm() {
         error.response?.data?.error ||
           "Erreur lors de l'enregistrement de l'utilisateur"
       );
-      console.error(error);
     } finally {
       setSubmitting(false);
     }
@@ -155,20 +151,7 @@ function UserForm() {
     navigate("/admin/users");
   };
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
+  return !loading && (
     <Box sx={{ p: 2, maxWidth: { lg: "1200px" }, mx: "auto" }}>
       <AdminBreadcrumbs />
 

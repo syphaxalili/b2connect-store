@@ -20,6 +20,7 @@ import { deleteProduct, getCategoryById, getProductById } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 function ProductDetails() {
   const { id } = useParams();
@@ -28,6 +29,7 @@ function ProductDetails() {
   const [product, setProduct] = useState(null);
   const [category, setCategory] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   // Charger les données du produit et sa catégorie
   useEffect(() => {
@@ -92,7 +94,7 @@ function ProductDetails() {
     }
   };
 
-  return (
+  return !loading && (
     <Box
       sx={{
         width: "100%",
