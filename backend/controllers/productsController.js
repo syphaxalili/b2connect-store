@@ -47,7 +47,7 @@ const getAllProducts = async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
     
     const products = await Product.find(query)
-      .select('name brand price images category_id stock created_at')
+      .select('name brand description price images category_id stock created_at')
       .lean()
       .limit(limitNum)
       .skip(skip)
