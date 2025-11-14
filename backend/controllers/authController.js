@@ -6,6 +6,8 @@ const { sendEmail } = require("../utils/mailService");
 const { getPasswordResetEmail } = require("../utils/emailTemplates");
 
 const register = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
     const {
       email,
@@ -16,37 +18,58 @@ const register = async (req, res) => {
       phone_number,
       gender,
     } = req.body;
+
+    if (!email || !password || !first_name || !last_name) {
+      return res
+        .status(400)
+        .json({ error: "Email, mot de passe et nom sont requis" });
+    }
+
+    if (
+      !address ||
+      typeof address !== "object" ||
+      !address.street ||
+      !address.postal_code ||
+      !address.city
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Une adresse complète est requise pour l'inscription" });
+    }
+    
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "Un utilisateur avec cet email existe déjà" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Créer l'adresse si fournie
-    let addressId = null;
-    if (
-      address &&
-      typeof address === "object" &&
-      address.street &&
-      address.postal_code &&
-      address.city
-    ) {
-      const newAddress = await Address.create({
-        street: address.street,
-        postal_code: address.postal_code,
-        city: address.city,
-        country: address.country || "France",
-      });
-      addressId = newAddress.id;
-    }
+    const newAddress = await Address.create({
+      street: address.street,
+      postal_code: address.postal_code,
+      city: address.city,
+      country: address.country || "France",
+    }, { transaction: t });
 
     const user = await User.create({
       email,
       password: hashedPassword,
       first_name,
       last_name,
-      address_id: addressId,
+      address_id: newAddress.id,
       phone_number,
       gender,
-    });
+    }, { transaction: t });
+
+    await t.commit();
+
     res.status(201).json({ user_id: user.id, email: user.email });
+
   } catch (error) {
+    await t.rollback();
+
     console.error(error);
     res.status(400).json({ error: error.message });
   }
