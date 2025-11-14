@@ -42,10 +42,8 @@ beforeAll(async () => {
 
 // Après chaque test, on nettoie les tables
 beforeEach(async () => {
-  // On supprime les Users, les Adresses seront supprimées en cascade
-  // (ou supprimez-les manuellement SI la cascade n'est pas configurée)
-  await User.destroy({ where: {}, truncate: true, cascade: true });
-  await Address.destroy({ where: {}, truncate: true, cascade: true });
+  await User.destroy({ where: {} });
+  await Address.destroy({ where: {} });
 });
 
 // À la toute fin, on ferme la connexion BDD et le serveur
