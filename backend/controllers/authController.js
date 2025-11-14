@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { sendEmail } = require("../utils/mailService");
 const { getPasswordResetEmail } = require("../utils/emailTemplates");
+const { sequelize } = require("../config/db");
 
 const register = async (req, res) => {
   const t = await sequelize.transaction();
