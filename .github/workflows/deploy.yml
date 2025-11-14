@@ -46,6 +46,10 @@ jobs:
         env:
           NODE_ENV: test
           JWT_SECRET: "un_secret_de_test_123"
+
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: "un_secret_de_test_webhook" # (Placeholder)
+
           MYSQL_HOST: 127.0.0.1 # Le service est mappé sur le localhost du Runner
           MYSQL_PORT: 3306
           MYSQL_USER: root
