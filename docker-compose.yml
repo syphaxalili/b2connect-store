@@ -39,7 +39,6 @@ services:
       EMAIL_USER: ${EMAIL_USER}
       EMAIL_PASS: ${EMAIL_PASS}
       EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
-      POSTMARK_API_KEY: ${POSTMARK_API_KEY}
     depends_on:
       mysql:
         condition: service_healthy
