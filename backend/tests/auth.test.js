@@ -26,8 +26,6 @@ const validUserData = {
   }
 };
 
-// Donne 15 secondes (15000ms) à Jest au lieu des 5s par défaut.
-jest.setTimeout(15000);
 
 beforeAll(async () => {
 
