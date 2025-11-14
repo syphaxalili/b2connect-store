@@ -25,6 +25,7 @@ import {
 } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 function ProductForm() {
   const { id } = useParams();
@@ -46,16 +47,14 @@ function ProductForm() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [imageInput, setImageInput] = useState("");
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   // Charger les catégories et les données du produit (en mode édition)
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-
         // Charger les catégories
         const categoriesResponse = await getCategories({ limit: 1000 });
         setCategories(categoriesResponse.data.categories || []);
@@ -78,17 +77,17 @@ function ProductForm() {
 
           // Trouver la catégorie sélectionnée
           if (product.category_id) {
-            const category = categoriesResponse.data.find(
+            console.log('categoriesResponse', categoriesResponse);
+            console.log('product', product);
+            
+            const category = categoriesResponse.data.categories.find(
               (cat) => cat._id === product.category_id
             );
             setSelectedCategory(category || null);
           }
         }
-      } catch (error) {
+      } catch {
         showError("Erreur lors du chargement des données");
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -213,7 +212,6 @@ function ProductForm() {
         error.response?.data?.error ||
           "Erreur lors de l'enregistrement du produit"
       );
-      console.error(error);
     } finally {
       setSubmitting(false);
     }
@@ -340,20 +338,7 @@ function ProductForm() {
     }
   };
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
+  return !loading && (
     <Box sx={{ p: 2, maxWidth: { lg: "1200px" }, mx: "auto" }}>
       <AdminBreadcrumbs />
 

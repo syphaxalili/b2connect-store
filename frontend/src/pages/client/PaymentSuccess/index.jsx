@@ -2,16 +2,16 @@ import { CheckCircle as CheckCircleIcon } from "@mui/icons-material";
 import {
   Box,
   Button,
-  CircularProgress,
   Container,
   Paper,
   Typography
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { axiosPublic } from "../../../api";
 import { useCart } from "../../../hooks/useCart";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 /**
  * Payment Success page - Displayed after successful Stripe payment
@@ -21,7 +21,7 @@ function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const { clearItems } = useCart();
   const { showSuccess, showError } = useSnackbar();
-  const [loading, setLoading] = useState(true);
+  let loading = useSelector((state) => state.loading.requestCount > 0);
   const hasProcessed = useRef(false); // Protection contre les doubles appels
 
   const sessionId = searchParams.get("session_id");
@@ -49,29 +49,15 @@ function PaymentSuccess() {
         // Vider le panier
         await clearItems();
         showSuccess("Paiement réussi! Votre commande a été confirmée.");
-      } catch (error) {
-        console.error("Erreur lors du traitement du paiement:", error);
+      } catch {
         showError("Erreur lors de la création de la commande");
-      } finally {
-        setLoading(false);
       }
     };
 
     processPaymentSuccess();
   }, []); // S'exécute une seule fois au montage
 
-  if (loading) {
-    return (
-      <Container maxWidth="md" sx={{ py: 4, textAlign: "center" }}>
-        <CircularProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Traitement de votre paiement...
-        </Typography>
-      </Container>
-    );
-  }
-
-  return (
+  return !loading && (
     <Container maxWidth="md" sx={{ py: 2 }}>
       <Paper
         elevation={0}

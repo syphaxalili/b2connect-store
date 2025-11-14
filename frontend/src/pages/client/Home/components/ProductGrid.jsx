@@ -1,6 +1,5 @@
 import {
   Box,
-  CircularProgress,
   Container,
   Grid,
   Typography
@@ -9,23 +8,8 @@ import { memo } from "react";
 import ProductCard from "./ProductCard";
 
 const ProductGrid = memo(({ products, loading = false }) => {
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px"
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!products || products.length === 0) {
-    return (
+  return !loading && (
+      (!products || products.length === 0) ?
       <Container maxWidth="lg">
         <Box
           sx={{
@@ -45,10 +29,7 @@ const ProductGrid = memo(({ products, loading = false }) => {
           </Typography>
         </Box>
       </Container>
-    );
-  }
-
-  return (
+    : (
     <Grid container spacing={3}>
       {products.map((product) => (
         <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={product._id}>
@@ -56,6 +37,7 @@ const ProductGrid = memo(({ products, loading = false }) => {
         </Grid>
       ))}
     </Grid>
+    )
   );
 });
 

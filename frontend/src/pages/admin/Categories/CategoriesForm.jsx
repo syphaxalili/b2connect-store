@@ -14,6 +14,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { createCategory, getCategoryById, updateCategory } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 import DynamicFieldsBuilder from "./components/DynamicFieldsBuilder";
 
 function CategoryForm() {
@@ -29,15 +30,14 @@ function CategoryForm() {
   });
 
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   // Charger les données en mode édition
   useEffect(() => {
     if (isEditMode) {
       const fetchCategory = async () => {
         try {
-          setLoading(true);
           const response = await getCategoryById(id);
           const category = response.data;
           setFormData({
@@ -49,11 +49,8 @@ function CategoryForm() {
                 id: Date.now() + index
               })) || []
           });
-        } catch (error) {
+        } catch {
           showError("Erreur lors du chargement de la catégorie");
-          console.error(error);
-        } finally {
-          setLoading(false);
         }
       };
       fetchCategory();
@@ -102,7 +99,6 @@ function CategoryForm() {
         error.response?.data?.error ||
           "Erreur lors de l'enregistrement de la catégorie"
       );
-      console.error(error);
     } finally {
       setSubmitting(false);
     }
@@ -112,20 +108,7 @@ function CategoryForm() {
     navigate("/admin/categories");
   };
 
-  if (loading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="400px"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  return (
+  return !loading && (
     <Box sx={{ p: 2 }}>
       <AdminBreadcrumbs />
 

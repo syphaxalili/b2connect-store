@@ -9,7 +9,6 @@ import {
   ZoomOut as ZoomOutIcon
 } from "@mui/icons-material";
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -18,7 +17,6 @@ import {
   Grid,
   IconButton,
   Paper,
-  Skeleton,
   TextField,
   Typography
 } from "@mui/material";
@@ -28,13 +26,12 @@ import { getProductById } from "../../../api";
 import { useCart } from "../../../hooks/useCart";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { getStockStatus } from "../../../utils/stockStatus";
+import { useSelector } from "react-redux";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [zoom, setZoom] = useState(1);
@@ -44,6 +41,7 @@ const ProductDetails = () => {
   const thumbnailsRef = useRef(null);
   const { showSuccess, showError } = useSnackbar();
   const { addItem, isLoading: cartLoading } = useCart();
+  let loading = useSelector((state) => state.loading.requestCount > 0);
 
   useEffect(() => {
     fetchProduct();
@@ -51,15 +49,11 @@ const ProductDetails = () => {
 
   const fetchProduct = async () => {
     try {
-      setLoading(true);
       const response = await getProductById(id);
       setProduct(response.data);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching product:", err);
-      setError("Impossible de charger le produit");
-    } finally {
-      setLoading(false);
+    } catch {
+      showError("Impossible de charger le produit");
+      navigate("/");
     }
   };
 
@@ -118,16 +112,15 @@ const ProductDetails = () => {
       return;
     }
 
-    if (quantity > product.stock) {
-      showError(`Stock insuffisant. Disponible: ${product.stock}`);
+    if (quantity > product?.stock) {
+      showError(`Stock insuffisant. Disponible: ${product?.stock}`);
       return;
     }
 
     try {
       await addItem(product, quantity);
       showSuccess(`Le produit a été bien ajouté au panier`);
-      // Réinitialiser la quantité après ajout
-      setQuantity(1);
+      navigate("/");
     } catch (err) {
       showError(err.message || "Erreur lors de l'ajout au panier");
     }
@@ -143,50 +136,13 @@ const ProductDetails = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 2 }}>
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Skeleton
-              variant="rectangular"
-              height={500}
-              sx={{ borderRadius: 2 }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Skeleton variant="text" height={60} />
-            <Skeleton variant="text" height={40} width="60%" />
-            <Skeleton variant="rectangular" height={200} sx={{ mt: 2 }} />
-          </Grid>
-        </Grid>
-      </Container>
-    );
-  }
-
-  if (error || !product) {
-    return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">{error || "Produit non trouvé"}</Alert>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate("/")}
-          sx={{ mt: 2 }}
-        >
-          Retour à la boutique
-        </Button>
-      </Container>
-    );
-  }
-
   const images =
-    product.images && product.images.length > 0
-      ? product.images
-      : ["/placeholder-product.jpg"];
+    product?.images && product?.images.length > 0
+      ? product?.images
+      : ["/placeholder-product?.jpg"];
 
-  return (
+  return !loading && (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Bouton retour */}
       <Button
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate("/")}
@@ -227,7 +183,7 @@ const ProductDetails = () => {
               <Box
                 component="img"
                 src={images[selectedImage]}
-                alt={product.name}
+                alt={product?.name}
                 onMouseDown={handleMouseDown}
                 sx={{
                   maxWidth: "100%",
@@ -337,7 +293,7 @@ const ProductDetails = () => {
                       key={index}
                       component="img"
                       src={image}
-                      alt={`${product.name} - ${index + 1}`}
+                      alt={`${product?.name} - ${index + 1}`}
                       loading="lazy"
                       onClick={() => {
                         setSelectedImage(index);
@@ -387,17 +343,17 @@ const ProductDetails = () => {
           <Box>
             {/* Titre */}
             <Typography variant="h3" gutterBottom sx={{ fontWeight: 700 }}>
-              {product.name}
+              {product?.name}
             </Typography>
 
             {/* Marque */}
-            {product.brand && (
+            {product?.brand && (
               <Typography
                 variant="h6"
                 color="primary"
                 sx={{ fontWeight: 400, mb: 2 }}
               >
-                Marque: {product.brand}
+                Marque: {product?.brand}
               </Typography>
             )}
 
@@ -407,7 +363,7 @@ const ProductDetails = () => {
               color="primary"
               sx={{ fontWeight: 700, mb: 3 }}
             >
-              {product.price.toFixed(2)} €
+              {product?.price.toFixed(2)} €
             </Typography>
 
             <Divider sx={{ mb: 3 }} />
@@ -422,7 +378,7 @@ const ProductDetails = () => {
                 color="text.secondary"
                 sx={{ lineHeight: 1.8 }}
               >
-                {product.description || "Aucune description disponible."}
+                {product?.description || "Aucune description disponible."}
               </Typography>
             </Box>
 
@@ -431,7 +387,7 @@ const ProductDetails = () => {
             {/* Stock Status */}
             <Box sx={{ mb: 3 }}>
               {(() => {
-                const stockStatus = getStockStatus(product.stock);
+                const stockStatus = getStockStatus(product?.stock);
                 return (
                   <Chip
                     label={stockStatus.label}
@@ -443,7 +399,7 @@ const ProductDetails = () => {
             </Box>
 
             {/* Sélecteur de quantité */}
-            {product.stock > 0 && (
+            {product?.stock > 0 && (
               <>
                 <Box sx={{ mb: 3 }}>
                   <Typography
@@ -468,20 +424,20 @@ const ProductDetails = () => {
                       value={quantity}
                       onChange={(e) => {
                         const val = parseInt(e.target.value);
-                        if (!isNaN(val) && val >= 1 && val <= product.stock) {
+                        if (!isNaN(val) && val >= 1 && val <= product?.stock) {
                           setQuantity(val);
                         }
                       }}
                       inputProps={{
                         min: 1,
-                        max: product.stock,
+                        max: product?.stock,
                         style: { textAlign: "center" }
                       }}
                       sx={{ width: 80 }}
                     />
                     <IconButton
                       onClick={() => handleQuantityChange(1)}
-                      disabled={quantity >= product.stock}
+                      disabled={quantity >= product?.stock}
                       sx={{
                         border: "2px solid #e0e0e0",
                         "&:hover": { borderColor: "#1f2d3d" }
@@ -499,7 +455,7 @@ const ProductDetails = () => {
                   fullWidth
                   startIcon={<ShoppingCartIcon />}
                   onClick={handleAddToCart}
-                  disabled={cartLoading || quantity > product.stock}
+                  disabled={cartLoading || quantity > product?.stock}
                   sx={{
                     py: 1.5,
                     fontSize: "1.1rem",
@@ -514,8 +470,8 @@ const ProductDetails = () => {
         </Grid>
 
         {/* Caractéristiques - Pleine largeur */}
-        {product.specifications &&
-          Object.keys(product.specifications).length > 0 && (
+        {product?.specifications &&
+          Object.keys(product?.specifications).length > 0 && (
             <Grid size={{ xs: 12 }} sx={{ mt: 4 }}>
               <Typography
                 variant="h5"
@@ -532,7 +488,7 @@ const ProductDetails = () => {
                   listStyle: "none"
                 }}
               >
-                {Object.entries(product.specifications).map(([key, value]) => (
+                {Object.entries(product?.specifications).map(([key, value]) => (
                   <Box
                     component="li"
                     key={key}
