@@ -39,10 +39,7 @@ jobs:
       - name: 4. Lancer les tests Jest
         run: |
           cd backend
-          # --ci: Optimisé pour les pipelines
-          # --runInBand: Teste un fichier après l'autre
-          # --detectOpenHandles: Aide à trouver les connexions BDD non fermées
-          npm test -- --ci --runInBand --detectOpenHandles
+          npm test
         env:
           # --- Variables de Test ---
           NODE_ENV: test
