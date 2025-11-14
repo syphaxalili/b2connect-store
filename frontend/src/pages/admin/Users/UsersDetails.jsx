@@ -20,6 +20,7 @@ import { deleteUser, getUserById } from "../../../api";
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 function UserDetails() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ function UserDetails() {
   const { showSuccess, showError } = useSnackbar();
   const [user, setUser] = useState(null);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   // Charger les données de l'utilisateur
   useEffect(() => {
@@ -54,9 +56,8 @@ function UserDetails() {
       await deleteUser(id);
       showSuccess("Utilisateur supprimé avec succès!");
       navigate("/admin/users");
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression de l'utilisateur");
-      console.error(error);
     }
   };
 
@@ -68,7 +69,7 @@ function UserDetails() {
     navigate("/admin/users");
   };
 
-  return (
+  return !loading && (
     <Box
       sx={{
         width: "100%",
