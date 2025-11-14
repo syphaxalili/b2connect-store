@@ -7,7 +7,6 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Divider,
   FormControl,
   Grid,
@@ -35,6 +34,7 @@ import {
 import AdminBreadcrumbs from "../../../components/admin/AdminBreadcrumbs";
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 import { useSnackbar } from "../../../hooks/useSnackbar";
+import { useSelector } from "react-redux";
 
 function OrderDetails() {
   const { id } = useParams();
@@ -42,34 +42,28 @@ function OrderDetails() {
   const { showSuccess, showError } = useSnackbar();
   const [order, setOrder] = useState(null);
   const [products, setProducts] = useState({});
-  const [loading, setLoading] = useState(true);
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [status, setStatus] = useState("");
   const [updating, setUpdating] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState("");
+  const loading = useSelector((state) => state.loading.requestCount > 0);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
         const orderResponse = await getOrderById(id);
         const orderData = orderResponse.data;
         setOrder(orderData);
         setStatus(orderData.status);
         setTrackingNumber(orderData.tracking_number || "");
-
-        // Récupérer les produits MongoDB
         const productsResponse = await getProducts();
         const productsMap = {};
-        productsResponse.data.forEach((product) => {
+        productsResponse.data.products.forEach((product) => {
           productsMap[product._id] = product;
         });
         setProducts(productsMap);
-      } catch (error) {
+      } catch {
         showError("Erreur lors du chargement de la commande");
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchData();
@@ -80,7 +74,6 @@ function OrderDetails() {
   };
 
   const handleStatusSave = async () => {
-    // Si passage à "shipped", forcer la saisie du numéro de suivi
     if (status === "shipped" && !trackingNumber.trim()) {
       showError("Veuillez entrer un numéro de suivi pour expédier la commande");
       return;
@@ -100,9 +93,8 @@ function OrderDetails() {
         tracking_number:
           status === "shipped" ? trackingNumber : prev.tracking_number
       }));
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la mise à jour du statut");
-      console.error(error);
       setStatus(order.status);
     } finally {
       setUpdating(false);
@@ -118,9 +110,8 @@ function OrderDetails() {
       await deleteOrder(id);
       showSuccess("Commande supprimée avec succès!");
       navigate("/admin/orders");
-    } catch (error) {
+    } catch {
       showError("Erreur lors de la suppression de la commande");
-      console.error(error);
     }
   };
 
@@ -132,41 +123,7 @@ function OrderDetails() {
     navigate("/admin/orders");
   };
 
-  // const getStatusLabel = (status) => {
-  //   const labels = {
-  //     pending: "En attente",
-  //     shipped: "Expédiée",
-  //     delivered: "Livrée",
-  //     cancelled: "Annulée"
-  //   };
-  //   return labels[status] || status;
-  // };
-
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px"
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (!order) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <AdminBreadcrumbs />
-        <Alert severity="error">Commande non trouvée</Alert>
-      </Box>
-    );
-  }
-
-  return (
+  return !loading && (
     <Box
       sx={{
         width: "100%",
@@ -183,20 +140,25 @@ function OrderDetails() {
     >
       <AdminBreadcrumbs />
 
-      <Box sx={{ flexGrow: 1, width: "100%" }}>
-        <Grid container spacing={2} sx={{ width: "100%" }}>
-          <Grid size={{ xs: 12 }}>
-            <Paper sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Numéro de commande
-              </Typography>
-              <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
-                {order.id}
-              </Typography>
-            </Paper>
-          </Grid>
+      {!order ? (
+        <Box sx={{ flexGrow: 1 }}>
+          <Alert severity="error">Commande non trouvée</Alert>
+        </Box>
+      ) : (
+        <Box sx={{ flexGrow: 1, width: "100%" }}>
+          <Grid container spacing={2} sx={{ width: "100%" }}>
+            <Grid size={{ xs: 12 }}>
+              <Paper sx={{ px: 2, py: 1 }}>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Numéro de commande
+                </Typography>
+                <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
+                  {order.id}
+                </Typography>
+              </Paper>
+            </Grid>
 
-          <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12 }}>
             <Box
               sx={{
                 display: "flex",
@@ -584,12 +546,13 @@ function OrderDetails() {
             </Button>
           )}
         </Stack>
-      </Box>
+        </Box>
+      )}
 
       <ConfirmDialog
         open={deleteDialog}
         title="Confirmer la suppression"
-        message={`Êtes-vous sûr de vouloir supprimer la commande n°${order.id} ? Cette action est irréversible.`}
+        message={`Êtes-vous sûr de vouloir supprimer la commande n°${order?.id} ? Cette action est irréversible.`}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
