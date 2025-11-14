@@ -48,8 +48,16 @@ beforeEach(async () => {
 
 // À la toute fin, on ferme la connexion BDD et le serveur
 afterAll(async () => {
+  await new Promise((resolve, reject) => {
+    server.close((err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+
   await sequelize.close();
-  server.close();
 });
 
 
