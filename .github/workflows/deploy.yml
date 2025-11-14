@@ -44,19 +44,31 @@ jobs:
           # --detectOpenHandles: Aide à trouver les connexions BDD non fermées
           npm test -- --ci --runInBand --detectOpenHandles
         env:
+          # --- Variables de Test ---
           NODE_ENV: test
-          JWT_SECRET: "un_secret_de_test_123"
-
+          FRONTEND_URL: http://localhost:3000
+          
+          # --- Secrets de Sécurité (lus depuis GitHub Secrets) ---
+          JWT_SECRET: "un_secret_de_test_123_pour_jest"
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_WEBHOOK_SECRET: "un_secret_de_test_webhook" # (Placeholder)
+          STRIPE_WEBHOOK_SECRET: "whsec_un_secret_de_test_webhook"
 
-          MYSQL_HOST: 127.0.0.1 # Le service est mappé sur le localhost du Runner
+          # --- Base de Données MongoDB (lue depuis GitHub Secrets) ---
+          MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
+
+          # --- Base de Données MySQL (gérée par le "service") ---
+          MYSQL_HOST: 127.0.0.1
           MYSQL_PORT: 3306
           MYSQL_USER: root
           MYSQL_PASSWORD: root_password_test
           MYSQL_DATABASE: b2connect_db_test
           
-          FRONTEND_URL: http://localhost:3000
+          # --- Configuration Email (Secrets + Placeholders) ---
+          EMAIL_HOST: smtp.gmail.com
+          EMAIL_PORT: 587
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_FROM_NAME: "B2CONNECT STORE (Test)"
 
   # ------ BUILD ------
   build-and-push:
