@@ -1,0 +1,24 @@
+services:
+  backend_test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile    
+    
+    command: sh -c "npm install && npm test"
+
+    env_file: .env.test 
+    depends_on:
+      mysql_test:
+        condition: service_healthy
+
+  mysql_test:
+    image: mysql:8.0
+    container_name: b2connect_mysql_test
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
