@@ -9,8 +9,6 @@ jest.mock('../utils/mailService', () => ({
   sendEmail: jest.fn().mockResolvedValue(true),
 }));
 
-let server;
-
 // Données de test réutilisables
 const validUserData = {
   email: 'test@example.com',
@@ -28,10 +26,6 @@ const validUserData = {
 
 
 beforeAll(async () => {
-
-  // Démarrer le serveur sur un port de test
-  server = app.listen(3002); // Port de test (différent de 3000 ou 3001)
-
   try {
     await sequelize.authenticate();
     // 'sync({ force: true })' va SUPPRIMER et recréer vos tables
@@ -50,15 +44,6 @@ beforeEach(async () => {
 
 // À la toute fin, on ferme la connexion BDD et le serveur
 afterAll(async () => {
-  await new Promise((resolve, reject) => {
-    server.close((err) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
-    });
-  });
-
   await sequelize.close();
 });
 
