@@ -12,16 +12,24 @@
  * Webhook crée la commande → Frontend redirigé vers /payment-success
  */
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { Order, OrderItem, User, Address } = require("../models/mysql");
 const Product = require("../models/mongodb/product");
 const { sendEmail } = require("../utils/mailService");
 const { getOrderConfirmationEmail } = require("../utils/emailTemplates");
+let stripeClient = null;
+
+const getStripeClient = () => {
+  if (!stripeClient) {
+    stripeClient = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  }
+  return stripeClient;
+};
 
 /**
  * Créer une session de paiement Stripe Checkout
  */
 const createCheckoutSession = async (req, res) => {
+  const stripe = getStripeClient();
   const { product_ids, quantities, shipping_address } = req.body;
   const user_id = req.user.user_id;
 
@@ -113,6 +121,7 @@ const createCheckoutSession = async (req, res) => {
 const handleWebhook = async (req, res) => {
   const sig = req.headers["stripe-signature"];
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const stripe = getStripeClient();
 
   let event;
 
@@ -237,6 +246,7 @@ const handleWebhook = async (req, res) => {
  */
 const simulateWebhook = async (req, res) => {
   const { session_id } = req.body;
+  const stripe = getStripeClient();
 
   try {
     // Récupérer la session depuis Stripe
