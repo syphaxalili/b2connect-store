@@ -1,4 +1,5 @@
 const request = require('supertest');
+const mongoose = require('mongoose');
 const app = require('../server');
 const { sequelize } = require('../config/db');
 const { User, Address } = require('../models/mysql');
@@ -45,6 +46,7 @@ beforeEach(async () => {
 // À la toute fin, on ferme la connexion BDD et le serveur
 afterAll(async () => {
   await sequelize.close();
+  await mongoose.disconnect();
 });
 
 
