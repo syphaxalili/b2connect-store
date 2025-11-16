@@ -177,11 +177,23 @@ function Checkout() {
         country: formData.country
       };
 
+      // Préparer les détails de l'invité si l'utilisateur n'est pas connecté
+      let guestDetails = null;
+      if (!user) {
+        guestDetails = {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone
+        };
+      }
+
       // Créer une session de paiement Stripe
       const response = await createCheckoutSession(
         product_ids,
         quantities,
-        shipping_address
+        shipping_address,
+        guestDetails
       );
 
       // Rediriger directement vers l'URL Stripe Checkout
