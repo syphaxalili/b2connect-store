@@ -4,10 +4,10 @@ const {
   createCheckoutSession,
   simulateWebhook,
 } = require("../controllers/stripeController");
-const { optionalAuth } = require("../middleware/auth");
+const { protect } = require("../middleware/auth");
 
-// Route pour créer une session de paiement (accepte utilisateurs connectés et invités)
-router.post("/create-checkout-session", optionalAuth, createCheckoutSession);
+// Route pour créer une session de paiement (protégée)
+router.post("/create-checkout-session", protect, createCheckoutSession);
 
 /**
  * Route de test pour simuler le webhook en développement

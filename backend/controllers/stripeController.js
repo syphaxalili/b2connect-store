@@ -27,32 +27,17 @@ const getStripeClient = () => {
 
 /**
  * Créer une session de paiement Stripe Checkout
- * Supporte à la fois les utilisateurs connectés et les invités
  */
 const createCheckoutSession = async (req, res) => {
   const stripe = getStripeClient();
-  const { product_ids, quantities, shipping_address, guestDetails } = req.body;
+  const { product_ids, quantities, shipping_address } = req.body;
+  const user_id = req.user.user_id;
 
   try {
-    // --- Déterminer si c'est un utilisateur connecté ou un invité ---
-    let customer_email;
-    let user_id_for_metadata = null;
-
-    if (req.user) {
-      // --- CAS 1 : UTILISATEUR CONNECTÉ ---
-      const user = await User.findByPk(req.user.user_id);
-      if (!user) {
-        return res.status(404).json({ error: "Utilisateur non trouvé" });
-      }
-      customer_email = user.email;
-      user_id_for_metadata = user.id;
-    } else {
-      // --- CAS 2 : INVITÉ ---
-      if (!guestDetails || !guestDetails.email) {
-        return res.status(400).json({ error: "Détails de l'invité manquants (email requis)" });
-      }
-      customer_email = guestDetails.email;
-      // user_id_for_metadata reste null
+    // Vérifier que l'utilisateur existe
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
     }
 
     // Récupérer les produits depuis MongoDB
@@ -114,18 +99,12 @@ const createCheckoutSession = async (req, res) => {
       mode: "payment",
       success_url: `${process.env.FRONTEND_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/checkout`,
-      customer_email: customer_email,
+      customer_email: user.email,
       metadata: {
-        user_id: user_id_for_metadata ? user_id_for_metadata.toString() : null,
+        user_id: user_id.toString(),
         product_ids: JSON.stringify(product_ids),
         quantities: JSON.stringify(quantities),
         shipping_address: JSON.stringify(shipping_address),
-        // Sauvegarder l'email pour les invités (utilisé dans le webhook)
-        guest_email: customer_email,
-        // Optionnel : sauvegarder les autres infos invité pour référence
-        guest_first_name: guestDetails?.firstName || null,
-        guest_last_name: guestDetails?.lastName || null,
-        guest_phone: guestDetails?.phone || null,
       },
     });
 
@@ -165,7 +144,7 @@ const handleWebhook = async (req, res) => {
 
     try {
       // Récupérer les métadonnées
-      const { user_id, product_ids, quantities, shipping_address, guest_email, guest_first_name } =
+      const { user_id, product_ids, quantities, shipping_address } =
         session.metadata;
 
       const parsedProductIds = JSON.parse(product_ids);
@@ -195,9 +174,9 @@ const handleWebhook = async (req, res) => {
         shippingAddressId = newShippingAddress.id;
       }
 
-      // Créer la commande (user_id peut être null pour les invités)
+      // Créer la commande
       const order = await Order.create({
-        user_id: user_id ? parseInt(user_id) : null,
+        user_id: parseInt(user_id),
         total_amount,
         shipping_fee,
         shipping_address_id: shippingAddressId,
@@ -221,23 +200,8 @@ const handleWebhook = async (req, res) => {
       }
 
       // Envoyer l'email de confirmation de commande
-      let recipientEmail = null;
-      let recipientFirstName = "Client";
-
-      if (user_id) {
-        // Utilisateur connecté
-        const user = await User.findByPk(parseInt(user_id));
-        if (user && user.email) {
-          recipientEmail = user.email;
-          recipientFirstName = user.first_name || "Client";
-        }
-      } else {
-        // Invité
-        recipientEmail = guest_email;
-        recipientFirstName = guest_first_name || "Client";
-      }
-
-      if (recipientEmail) {
+      const user = await User.findByPk(parseInt(user_id));
+      if (user && user.email) {
         const emailOrderItems = products.map((product, index) => ({
           name: product.name,
           quantity: parsedQuantities[index],
@@ -246,7 +210,7 @@ const handleWebhook = async (req, res) => {
 
         const emailTemplate = getOrderConfirmationEmail({
           orderId: order.id,
-          firstName: recipientFirstName,
+          firstName: user.first_name,
           totalAmount: total_amount,
           shippingFee: shipping_fee,
           subtotal: subtotal,
@@ -255,7 +219,7 @@ const handleWebhook = async (req, res) => {
 
         // Envoi asynchrone pour ne pas bloquer le webhook
         sendEmail({
-          to: recipientEmail,
+          to: user.email,
           subject: emailTemplate.subject,
           text: emailTemplate.text,
           html: emailTemplate.html,
@@ -301,7 +265,7 @@ const simulateWebhook = async (req, res) => {
       const sessionData = event.data.object;
 
       // Récupérer les métadonnées
-      const { user_id, product_ids, quantities, shipping_address, guest_email, guest_first_name } =
+      const { user_id, product_ids, quantities, shipping_address } =
         sessionData.metadata;
 
       const parsedProductIds = JSON.parse(product_ids);
@@ -331,9 +295,9 @@ const simulateWebhook = async (req, res) => {
         shippingAddressId = newShippingAddress.id;
       }
 
-      // Créer la commande (user_id peut être null pour les invités)
+      // Créer la commande
       const order = await Order.create({
-        user_id: user_id ? parseInt(user_id) : null,
+        user_id: parseInt(user_id),
         total_amount,
         shipping_fee,
         shipping_address_id: shippingAddressId,
@@ -357,23 +321,8 @@ const simulateWebhook = async (req, res) => {
       }
 
       // Envoyer l'email de confirmation de commande
-      let recipientEmail = null;
-      let recipientFirstName = "Client";
-
-      if (user_id) {
-        // Utilisateur connecté
-        const user = await User.findByPk(parseInt(user_id));
-        if (user && user.email) {
-          recipientEmail = user.email;
-          recipientFirstName = user.first_name || "Client";
-        }
-      } else {
-        // Invité
-        recipientEmail = guest_email;
-        recipientFirstName = guest_first_name || "Client";
-      }
-
-      if (recipientEmail) {
+      const user = await User.findByPk(parseInt(user_id));
+      if (user && user.email) {
         const emailOrderItems = products.map((product, index) => ({
           name: product.name,
           quantity: parsedQuantities[index],
@@ -382,7 +331,7 @@ const simulateWebhook = async (req, res) => {
 
         const emailTemplate = getOrderConfirmationEmail({
           orderId: order.id,
-          firstName: recipientFirstName,
+          firstName: user.first_name,
           totalAmount: total_amount,
           shippingFee: shipping_fee,
           subtotal: subtotal,
@@ -391,7 +340,7 @@ const simulateWebhook = async (req, res) => {
 
         // Envoi asynchrone pour ne pas bloquer la réponse
         sendEmail({
-          to: recipientEmail,
+          to: user.email,
           subject: emailTemplate.subject,
           text: emailTemplate.text,
           html: emailTemplate.html,

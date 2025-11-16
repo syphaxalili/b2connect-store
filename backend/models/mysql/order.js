@@ -11,7 +11,7 @@ module.exports = (sequelize) => {
       },
       user_id: {
         type: DataTypes.INTEGER,
-        allowNull: true, // Permet les commandes invités (guest checkout)
+        allowNull: false,
       },
       total_amount: {
         type: DataTypes.DECIMAL(10, 2),
