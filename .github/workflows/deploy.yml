@@ -6,72 +6,89 @@ on:
 
 jobs:
   # ------ TEST ------
-  # test:
-  #   name: Lancer les Tests Backend
-  #   runs-on: ubuntu-latest
+  test:
+    name: Lancer les Tests d'Intégration Backend
+    runs-on: ubuntu-latest
 
-  #   # Démarrer une BDD MySQL temporaire juste pour ce job
-  #   services:
-  #     mysql:
-  #       image: mysql:8.0
-  #       env:
-  #         MYSQL_ROOT_PASSWORD: root_password_test # Un mot de passe simple pour le test
-  #         MYSQL_DATABASE: b2connect_db_test
-  #       ports:
-  #         - 3306:3306 # Le runner parlera au conteneur sur le port 3306
-  #       # Attendre que la BDD soit prête avant de lancer les tests
-  #       options: --health-cmd="mysqladmin ping -h localhost -u root -proot_password_test" --health-interval=10s --health-timeout=5s --health-retries=3
+    # Démarrer une BDD MySQL temporaire juste pour ce job
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password_test
+          MYSQL_DATABASE: b2connect_db_test
+        ports:
+          - 3306:3306
+        # Attendre que la BDD soit prête avant de lancer les tests
+        options: --health-cmd="mysqladmin ping -h localhost -u root -proot_password_test" --health-interval=10s --health-timeout=5s --health-retries=5
 
-  #   steps:
-  #     - name: 1. Récupérer le code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: 1. Récupérer le code
+        uses: actions/checkout@v4
 
-  #     - name: 2. Installer Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
+      - name: 2. Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
-  #     - name: 3. Installer les dépendances du Backend
-  #       run: |
-  #         cd backend
-  #         npm install
+      - name: 3. Installer les dépendances du Backend
+        run: |
+          cd backend
+          npm ci
 
-  #     - name: 4. Lancer les tests Jest
-  #       run: |
-  #         cd backend
-  #         npm test
-  #       env:
-  #         # --- Variables de Test ---
-  #         NODE_ENV: test
-  #         FRONTEND_URL: http://localhost:3000
+      - name: 4. Lancer les tests d'intégration
+        run: |
+          cd backend
+          npm test
+        env:
+          # --- Variables de Test ---
+          NODE_ENV: test
+          FRONTEND_URL: http://localhost:3000
           
-  #         # --- Secrets de Sécurité (lus depuis GitHub Secrets) ---
-  #         JWT_SECRET: "un_secret_de_test_123_pour_jest"
-  #         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-  #         STRIPE_WEBHOOK_SECRET: "whsec_un_secret_de_test_webhook"
+          # --- Secrets de Sécurité ---
+          JWT_SECRET: "un_secret_de_test_123_pour_jest"
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: "whsec_un_secret_de_test_webhook"
 
-  #         # --- Base de Données MongoDB (lue depuis GitHub Secrets) ---
-  #         MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
+          # --- Base de Données MongoDB (Atlas) ---
+          MONGODB_URI: ${{ secrets.MONGODB_URI_TEST }}
 
-  #         # --- Base de Données MySQL (gérée par le "service") ---
-  #         MYSQL_HOST: 127.0.0.1
-  #         MYSQL_PORT: 3306
-  #         MYSQL_USER: root
-  #         MYSQL_PASSWORD: root_password_test
-  #         MYSQL_DATABASE: b2connect_db_test
+          # --- Base de Données MySQL (service GitHub Actions) ---
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_PORT: 3306
+          MYSQL_USER: root
+          MYSQL_PASSWORD: root_password_test
+          MYSQL_DATABASE: b2connect_db_test
           
-  #         # --- Configuration Email (Secrets + Placeholders) ---
-  #         EMAIL_HOST: smtp.gmail.com
-  #         EMAIL_PORT: 587
-  #         EMAIL_USER: ${{ secrets.EMAIL_USER }}
-  #         EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-  #         EMAIL_FROM_NAME: "B2CONNECT STORE (Test)"
+          # --- Configuration Email (mockée dans les tests) ---
+          EMAIL_HOST: smtp.gmail.com
+          EMAIL_PORT: 587
+          EMAIL_USER: test@example.com
+          EMAIL_PASS: test_password
+          EMAIL_FROM_NAME: "B2CONNECT STORE TEST"
+
+      - name: 5. Générer le rapport de couverture
+        if: always()
+        run: |
+          cd backend
+          npm run test:coverage
+        continue-on-error: true
+
+      - name: 6. Upload du rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage/
+          retention-days: 30
 
   # ------ BUILD ------
   build-and-push:
     name: Construire et Pousser les images Docker
     runs-on: ubuntu-latest
-    # needs: test
+    needs: test
 
     steps:
       - name: 1. Récupérer le code
