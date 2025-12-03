@@ -11,6 +11,10 @@ const { initModels } = require("./models/mysql");
 
 const app = express();
 
+// Configuration pour faire confiance au proxy (important pour rate limiting)
+// Permet d'obtenir la vraie IP du client derrière un proxy/load balancer
+app.set('trust proxy', 1);
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
