@@ -10,9 +10,11 @@ module.exports = {
   testMatch: ['**/tests/**/*.test.js'],
   verbose: true,
   forceExit: true,
+  detectOpenHandles: false, // Désactiver pour éviter les warnings sur les connexions DB
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
   testTimeout: 30000,
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  globalTeardown: '<rootDir>/tests/teardown.js',
 };

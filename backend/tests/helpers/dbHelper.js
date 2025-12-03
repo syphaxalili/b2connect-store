@@ -53,12 +53,20 @@ const cleanDatabase = async () => {
  */
 const closeDatabase = async () => {
   try {
-    await sequelize.close();
-    await mongoose.connection.close();
+    // Fermer Sequelize (MySQL) avec force pour éviter les connexions pendantes
+    if (sequelize) {
+      await sequelize.connectionManager.close();
+    }
+    
+    // Fermer Mongoose (MongoDB) proprement
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close(true); // force = true
+    }
+    
     console.log('✓ Connexions aux bases de données fermées');
   } catch (error) {
     console.error('Erreur lors de la fermeture des connexions:', error);
-    throw error;
+    // Ne pas throw pour éviter de bloquer la fermeture des tests
   }
 };
 
