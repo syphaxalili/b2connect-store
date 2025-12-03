@@ -1,0 +1,15 @@
+# Coverage directory
+coverage/
+*.lcov
+
+# Test results
+test-results/
+junit.xml
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
