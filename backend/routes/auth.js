@@ -11,13 +11,19 @@ const {
   verifyResetToken,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/auth");
+const {
+  loginLimiter,
+  passwordResetLimiter,
+  authLimiter,
+} = require("../middleware/rateLimiter");
 
-router.post("/login", login);
-router.post("/register", register);
-router.post("/request-password-reset", requestPasswordReset);
-router.post("/reset-password", resetPassword);
-router.get("/verify-reset-token", verifyResetToken);
-router.post("/refresh", refresh);
+// Endpoints avec rate limiting strict
+router.post("/login", loginLimiter, login);
+router.post("/register", authLimiter, register);
+router.post("/request-password-reset", passwordResetLimiter, requestPasswordReset);
+router.post("/reset-password", passwordResetLimiter, resetPassword);
+router.get("/verify-reset-token", authLimiter, verifyResetToken);
+router.post("/refresh", authLimiter, refresh);
 router.post("/logout", logout);
 
 // protected routes
