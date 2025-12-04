@@ -12,9 +12,6 @@ const rateLimit = require('express-rate-limit');
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limite de 5 requêtes par fenêtre
-  message: {
-    error: 'Trop de tentatives de connexion. Veuillez réessayer dans 15 minutes.',
-  },
   standardHeaders: true, // Retourne les infos de rate limit dans les headers `RateLimit-*`
   legacyHeaders: false, // Désactive les headers `X-RateLimit-*`
   
@@ -26,12 +23,6 @@ const loginLimiter = rateLimit({
       retryAfter: Math.ceil(req.rateLimit.resetTime / 1000), // Temps en secondes
     });
   },
-  
-  // Skip les requêtes réussies (optionnel - décommenter si souhaité)
-  // skipSuccessfulRequests: true,
-  
-  // Skip les requêtes échouées (optionnel)
-  // skipFailedRequests: false,
 });
 
 /**
@@ -41,9 +32,6 @@ const loginLimiter = rateLimit({
 const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 heure
   max: 3, // Maximum 3 tentatives par heure
-  message: {
-    error: 'Trop de demandes de réinitialisation. Veuillez réessayer dans 1 heure.',
-  },
   standardHeaders: true,
   legacyHeaders: false,
   

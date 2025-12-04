@@ -24,9 +24,7 @@ app.use(
 
 // IMPORTANT: Le webhook Stripe doit être AVANT express.json()
 // car il a besoin du body brut (raw) pour vérifier la signature
-app.post(
-  "/api/stripe/webhook",
-  express.raw({ type: "application/json" }),
+app.post("/api/stripe/webhook", express.raw({ type: "application/json" }),
   require("./controllers/stripeController").handleWebhook
 );
 
