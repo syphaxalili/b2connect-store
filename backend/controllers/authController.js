@@ -110,6 +110,7 @@ const login = async (req, res) => {
       refreshTokenCookieOptions.maxAge = 30 * 24 * 60 * 60 * 1000;
     } else {
       refreshTokenExpiry = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
+      refreshTokenCookieOptions.maxAge = 1 * 24 * 60 * 60 * 1000;
     }
 
     await user.update({
