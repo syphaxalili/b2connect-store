@@ -1,4 +1,4 @@
-const { User, Address } = require("../models/mysql");
+const { User, Address, Cart, CartItem } = require("../models/mysql");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -399,6 +399,55 @@ const me = async (req, res) => {
   }
 };
 
+/**
+ * Supprimer le compte utilisateur
+ */
+const deleteAccount = async (req, res) => {
+  const t = await sequelize.transaction();
+
+  try {
+    const userId = req.user.user_id;
+
+    // Vérifier que l'utilisateur existe
+    const user = await User.findByPk(userId);
+    if (!user) {
+      await t.rollback();
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+    }
+
+    // Supprimer les données associées dans l'ordre
+    // 1. Supprimer les items du panier
+    const cart = await Cart.findOne({ where: { user_id: userId } });
+    if (cart) {
+      await CartItem.destroy({ where: { cart_id: cart.id }, transaction: t });
+      await Cart.destroy({ where: { user_id: userId }, transaction: t });
+    }
+
+    // 2. Supprimer l'adresse
+    if (user.address_id) {
+      await Address.destroy({ where: { id: user.address_id }, transaction: t });
+    }
+
+    // 3. Supprimer l'utilisateur
+    await User.destroy({ where: { id: userId }, transaction: t });
+
+    await t.commit();
+
+    // Nettoyer les cookies
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+
+    res.status(200).json({ message: "Compte supprimé avec succès" });
+  } catch (error) {
+    await t.rollback();
+    console.error("Erreur lors de la suppression du compte:", error);
+    res.status(500).json({
+      error: "Erreur lors de la suppression du compte",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -408,4 +457,5 @@ module.exports = {
   requestPasswordReset,
   resetPassword,
   verifyResetToken,
+  deleteAccount,
 };
