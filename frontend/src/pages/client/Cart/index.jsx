@@ -19,6 +19,7 @@ import {
   Typography
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
 import { useCart } from "../../../hooks/useCart";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 
@@ -27,6 +28,7 @@ import { useSnackbar } from "../../../hooks/useSnackbar";
  */
 function Cart() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const {
     items,
     total: cartTotal,
@@ -67,6 +69,17 @@ function Cart() {
       showSuccess("Panier vidé");
     } catch {
       showError("Erreur lors du vidage du panier");
+    }
+  };
+
+  const handleCheckout = () => {
+    // Vérifier si l'utilisateur est connecté avant d'aller sur checkout
+    if (!isAuthenticated) {
+      // Rediriger vers login avec le paramètre from pour revenir après connexion
+      navigate("/login?from=/cart");
+    } else {
+      // Utilisateur connecté, aller directement sur checkout
+      navigate("/checkout");
     }
   };
 
@@ -358,7 +371,7 @@ function Cart() {
                     fontWeight: 600,
                     mb: 2
                   }}
-                  onClick={() => navigate("/checkout")}
+                  onClick={handleCheckout}
                 >
                   Passer la commande
                 </Button>

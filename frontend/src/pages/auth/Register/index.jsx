@@ -8,7 +8,7 @@ import {
   Typography
 } from "@mui/material";
 import { useState } from "react";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import { register } from "../../../api";
 import PasswordField from "../../../components/auth/PasswordField";
 import { useSnackbar } from "../../../hooks/useSnackbar";
@@ -23,6 +23,8 @@ import {
 
 const Register = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const from = searchParams.get('from');
   const { showSuccess, showError } = useSnackbar();
   const [formData, setFormData] = useState({
     email: "",
@@ -116,7 +118,12 @@ const Register = () => {
 
       showSuccess("Inscription reussie");
 
-      navigate("/login");
+      // Transmettre le paramètre 'from' vers Login si présent
+      if (from) {
+        navigate(`/login?from=${encodeURIComponent(from)}`);
+      } else {
+        navigate("/login");
+      }
     } catch (error) {
       showError(
         error.response.data.error || "Inscription echouée. Veuillez reessayer."
@@ -336,7 +343,7 @@ const Register = () => {
             Déjà un compte?{" "}
             <Link
               component={RouterLink}
-              to="/login"
+              to={from ? `/login?from=${encodeURIComponent(from)}` : "/login"}
               underline="hover"
               sx={{ fontWeight: 600 }}
             >

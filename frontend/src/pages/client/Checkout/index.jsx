@@ -20,7 +20,7 @@ import {
   useMediaQuery,
   useTheme
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCheckoutSession } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
@@ -33,75 +33,41 @@ import { useSnackbar } from "../../../hooks/useSnackbar";
 function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items: cartItems, total: cartTotal } = useCart();
+  const { items: cartItems, total: cartTotal, isLoading } = useCart();
   const { showError } = useSnackbar();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [activeStep, setActiveStep] = useState(0);
   const [useMyAddress, setUseMyAddress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const isInitialMount = useRef(true); // Vérifier si c'est le premier chargement
 
-  // Clé localStorage pour la persistance du formulaire
-  const CHECKOUT_FORM_KEY = 'checkout_form_data';
+  const [formData, setFormData] = useState({
+    // Informations personnelles
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    // Adresse de livraison
+    street: "",
+    city: "",
+    postalCode: "",
+    country: "France",
+    // Notes
+    notes: ""
+  });
 
-  // Initialiser formData avec les données sauvegardées ou valeurs par défaut
-  const getInitialFormData = () => {
-    try {
-      const savedData = localStorage.getItem(CHECKOUT_FORM_KEY);
-      if (savedData) {
-        return JSON.parse(savedData);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la récupération des données du formulaire:', error);
-    }
-    return {
-      // Informations personnelles
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      // Adresse de livraison
-      street: "",
-      city: "",
-      postalCode: "",
-      country: "France",
-      // Notes
-      notes: ""
-    };
-  };
-
-  const [formData, setFormData] = useState(getInitialFormData);
-
-  // Charger les données utilisateur au montage (seulement si le formulaire est vide)
+  // Charger les données utilisateur au montage
   useEffect(() => {
     if (user) {
-      setFormData((prev) => {
-        // Ne remplacer que si les champs sont vides (pour ne pas écraser les données sauvegardées)
-        const shouldUpdatePersonalInfo = !prev.firstName && !prev.lastName && !prev.email;
-        
-        if (shouldUpdatePersonalInfo) {
-          return {
-            ...prev,
-            firstName: user.first_name || "",
-            lastName: user.last_name || "",
-            email: user.email || "",
-            phone: user.phone_number || ""
-          };
-        }
-        return prev;
-      });
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.first_name || "",
+        lastName: user.last_name || "",
+        email: user.email || "",
+        phone: user.phone_number || ""
+      }));
     }
   }, [user]);
-
-  // Sauvegarder les données du formulaire dans localStorage à chaque modification
-  useEffect(() => {
-    try {
-      localStorage.setItem(CHECKOUT_FORM_KEY, JSON.stringify(formData));
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde des données du formulaire:', error);
-    }
-  }, [formData]);
 
   // Gérer le changement de la checkbox
   const handleUseMyAddressChange = (e) => {
@@ -219,8 +185,6 @@ function Checkout() {
 
       // Rediriger directement vers l'URL Stripe Checkout
       if (response.data.url) {
-        // Nettoyer les données sauvegardées avant de rediriger vers le paiement
-        localStorage.removeItem(CHECKOUT_FORM_KEY);
         window.location.href = response.data.url;
       } else {
         showError("Erreur: URL de paiement non reçue");
@@ -239,21 +203,13 @@ function Checkout() {
   const shipping = cartItems.length > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
 
-  // Rediriger si le panier est vide (seulement au premier chargement)
+  // Rediriger si le panier est vide
   useEffect(() => {
-    if (isInitialMount.current && cartItems.length === 0) {
-      // Attendre un peu pour que le panier se charge depuis l'API
-      const timer = setTimeout(() => {
-        if (cartItems.length === 0) {
-          showError("Votre panier est vide");
-          navigate("/cart");
-        }
-        isInitialMount.current = false;
-      }, 500);
-
-      return () => clearTimeout(timer);
+    if (cartItems.length === 0 && !isLoading) {
+      showError("Votre panier est vide");
+      navigate("/cart");
     }
-  }, [cartItems, navigate, showError]);
+  }, [cartItems, isLoading, navigate, showError]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 2 }}>

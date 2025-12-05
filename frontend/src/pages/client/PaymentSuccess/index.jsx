@@ -44,9 +44,6 @@ function PaymentSuccess() {
         // Vider le panier
         await clearItems();
         
-        // Nettoyer les données du formulaire Checkout sauvegardées
-        localStorage.removeItem('checkout_form_data');
-        
         showSuccess("Paiement réussi! Votre commande a été confirmée.");
       } catch {
         showError("Erreur lors du traitement");
