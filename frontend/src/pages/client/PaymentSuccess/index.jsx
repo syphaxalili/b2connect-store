@@ -8,7 +8,6 @@ import {
 } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { axiosPublic } from "../../../api";
 import { useCart } from "../../../hooks/useCart";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { useSelector } from "react-redux";
@@ -38,19 +37,16 @@ function PaymentSuccess() {
     }
     hasProcessed.current = true;
 
-    // Créer la commande et vider le panier après paiement réussi
+    // Vider le panier après paiement réussi
+    // Note: La commande est créée automatiquement par le webhook Stripe
     const processPaymentSuccess = async () => {
       try {
-        // Simuler le webhook pour créer la commande (en développement)
-        await axiosPublic.post("/stripe/simulate-webhook", {
-          session_id: sessionId
-        });
-
         // Vider le panier
         await clearItems();
+        
         showSuccess("Paiement réussi! Votre commande a été confirmée.");
       } catch {
-        showError("Erreur lors de la création de la commande");
+        showError("Erreur lors du traitement");
       }
     };
 

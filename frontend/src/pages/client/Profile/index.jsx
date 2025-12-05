@@ -1,5 +1,6 @@
 import {
   ArrowBack as ArrowBackIcon,
+  DeleteForever as DeleteForeverIcon,
   Edit as EditIcon,
   Save as SaveIcon
 } from "@mui/icons-material";
@@ -10,6 +11,11 @@ import {
   Card,
   CardContent,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Divider,
   Grid,
   MenuItem,
@@ -20,8 +26,9 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { requestPasswordReset, updateUser } from "../../../api";
+import { deleteAccount, requestPasswordReset, updateUser } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
+import { useLogout } from "../../../hooks/useLogout";
 import { useSnackbar } from "../../../hooks/useSnackbar";
 import { setCredentials } from "../../../store/slices/authSlice";
 
@@ -30,9 +37,11 @@ function Profile() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const { user } = useAuth();
+  const { logout } = useLogout();
   const { showSuccess, showError } = useSnackbar();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -151,6 +160,21 @@ function Profile() {
       showError(
         error.response?.data?.message || "Erreur lors de l'envoi de l'email"
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setLoading(true);
+    try {
+      await deleteAccount();
+      showSuccess("Votre compte a été supprimé avec succès");
+      // Déconnecter et rediriger vers la page d'accueil
+      logout("/");
+    } catch {
+      showError("Erreur lors de la suppression du compte");
+      setDeleteDialogOpen(false);
     } finally {
       setLoading(false);
     }
@@ -462,6 +486,83 @@ function Profile() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Delete Account Section */}
+      <Card elevation={0} sx={{ borderRadius: 2, mt: 3, borderColor: "error.main" }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h6" fontWeight={600} gutterBottom color="error">
+            Zone de danger
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            La suppression de votre compte est irréversible. Toutes vos données seront
+            définitivement supprimées.
+          </Typography>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteForeverIcon />}
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={loading}
+          >
+            Supprimer mon compte
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !loading && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 600,
+            color: "error.main"
+          }}
+        >
+          Confirmer la suppression du compte
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est
+            <strong> irréversible</strong> et entraînera la suppression de :
+          </DialogContentText>
+          <Box component="ul" sx={{ mt: 2, pl: 2 }}>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Toutes vos informations personnelles
+            </Typography>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Votre historique de commandes
+            </Typography>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Votre panier en cours
+            </Typography>
+            <Typography component="li" variant="body2" color="text.secondary">
+              Tous vos paramètres de compte
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={loading}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleDeleteAccount}
+            color="error"
+            variant="contained"
+            disabled={loading}
+            startIcon={<DeleteForeverIcon />}
+          >
+            {loading ? "Suppression..." : "Supprimer définitivement"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

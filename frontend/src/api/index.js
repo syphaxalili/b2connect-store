@@ -9,7 +9,8 @@ export {
   register,
   requestPasswordReset,
   resetPassword,
-  verifyResetToken
+  verifyResetToken,
+  deleteAccount
 } from "./modules/auth";
 
 // ============================================================================

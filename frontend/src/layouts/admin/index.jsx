@@ -1,12 +1,8 @@
 import { Box, Drawer, useMediaQuery, useTheme } from "@mui/material";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
-import { logout } from "../../api";
 import { useAuth } from "../../hooks/useAuth";
-import { useSnackbar } from "../../hooks/useSnackbar";
-import { clearCredentials } from "../../store/slices/authSlice";
-import { resetCart } from "../../store/slices/cartSlice";
+import { useLogout } from "../../hooks/useLogout";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 
@@ -15,9 +11,8 @@ const drawerWidth = 280;
 function AdminLayout() {
   const navigate = useNavigate();
   const theme = useTheme();
-  const dispatch = useDispatch();
   const { user } = useAuth();
-  const { showSuccess, showError } = useSnackbar();
+  const { logout } = useLogout();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -25,20 +20,8 @@ function AdminLayout() {
     setMobileOpen(!mobileOpen);
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      dispatch(clearCredentials());
-      dispatch(resetCart()); // Réinitialiser le panier lors de la déconnexion
-      showSuccess("Déconnexion réussie");
-      navigate("/login");
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      dispatch(clearCredentials());
-      dispatch(resetCart());
-      showError("Erreur lors de la déconnexion");
-      navigate("/login");
-    }
+  const handleLogout = () => {
+    logout("/login"); // Admin redirige vers /login au lieu de /
   };
 
   const handleNavigation = (path) => {

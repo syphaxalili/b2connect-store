@@ -20,7 +20,7 @@ import {
   useMediaQuery,
   useTheme
 } from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createCheckoutSession } from "../../../api";
 import { useAuth } from "../../../hooks/useAuth";
@@ -33,14 +33,13 @@ import { useSnackbar } from "../../../hooks/useSnackbar";
 function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { items: cartItems, total: cartTotal } = useCart();
+  const { items: cartItems, total: cartTotal, isLoading } = useCart();
   const { showError } = useSnackbar();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
   const [activeStep, setActiveStep] = useState(0);
   const [useMyAddress, setUseMyAddress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const isInitialMount = useRef(true); // Vérifier si c'est le premier chargement
 
   const [formData, setFormData] = useState({
     // Informations personnelles
@@ -191,10 +190,6 @@ function Checkout() {
         showError("Erreur: URL de paiement non reçue");
       }
     } catch (error) {
-      console.error(
-        "Erreur lors de la création de la session de paiement:",
-        error
-      );
       showError(
         error.response?.data?.error ||
           "Erreur lors de la création de la session de paiement"
@@ -208,21 +203,13 @@ function Checkout() {
   const shipping = cartItems.length > 0 ? 5.99 : 0;
   const total = subtotal + shipping;
 
-  // Rediriger si le panier est vide (seulement au premier chargement)
+  // Rediriger si le panier est vide
   useEffect(() => {
-    if (isInitialMount.current && cartItems.length === 0) {
-      // Attendre un peu pour que le panier se charge depuis l'API
-      const timer = setTimeout(() => {
-        if (cartItems.length === 0) {
-          showError("Votre panier est vide");
-          navigate("/cart");
-        }
-        isInitialMount.current = false;
-      }, 500);
-
-      return () => clearTimeout(timer);
+    if (cartItems.length === 0 && !isLoading) {
+      showError("Votre panier est vide");
+      navigate("/cart");
     }
-  }, [cartItems, navigate, showError]);
+  }, [cartItems, isLoading, navigate, showError]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 2 }}>

@@ -1,7 +1,6 @@
 import axios from "axios";
 import store from "../../store";
 import { clearCredentials } from "../../store/slices/authSlice";
-import { resetCart } from "../../store/slices/cartSlice";
 import { startLoading, stopLoading } from "../../store/slices/loadingSlice";
 import axiosPublic from "./axiosPublic";
 
@@ -97,12 +96,17 @@ axiosPrivate.interceptors.response.use(
       // Déconnexion complète
       store.dispatch(stopLoading());
       store.dispatch(clearCredentials());
-      store.dispatch(resetCart());
       localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('cart');
       
+      // Smart Redirect: mémoriser la page actuelle
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        const currentPath = window.location.pathname;
+        // Ne pas mémoriser les pages d'auth
+        if (currentPath !== '/login' && currentPath !== '/register') {
+          window.location.href = `/login?from=${encodeURIComponent(currentPath)}`;
+        } else {
+          window.location.href = "/login";
+        }
       }
       return Promise.reject(error);
     }
@@ -138,17 +142,22 @@ axiosPrivate.interceptors.response.use(
       // 1. Déconnecter l'utilisateur (Redux)
       store.dispatch(clearCredentials());
       
-      // 2. Nettoyer le panier (Redux)
-      store.dispatch(resetCart());
+      // 2. Note: On ne vide PAS le panier ici pour préserver le panier invité
+      // Il sera fusionné avec le panier DB après la connexion via mergeCartAsync
       
       // 3. Nettoyer le localStorage
       localStorage.removeItem('isLoggedIn');
-      localStorage.removeItem('cart'); // Panier invité
 
-      // 4. Forcer la redirection vers le login
+      // 4. Forcer la redirection vers le login avec Smart Redirect
       // C'est une mesure "forte" mais efficace pour nettoyer l'état
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        const currentPath = window.location.pathname;
+        // Ne pas mémoriser les pages d'auth
+        if (currentPath !== '/login' && currentPath !== '/register') {
+          window.location.href = `/login?from=${encodeURIComponent(currentPath)}`;
+        } else {
+          window.location.href = "/login";
+        }
       }
 
       return Promise.reject(refreshError);

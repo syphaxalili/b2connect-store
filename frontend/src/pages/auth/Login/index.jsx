@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router-dom";
 import { getCurrentUser, login } from "../../../api";
 import ForgotPasswordDialog from "../../../components/auth/ForgotPasswordDialog";
 import PasswordField from "../../../components/auth/PasswordField";
@@ -20,6 +20,8 @@ import { validateEmail, validatePassword } from "../../../utils/validation";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const from = searchParams.get('from');
   const { showSuccess, showError } = useSnackbar();
   const [formData, setFormData] = useState({
     email: "",
@@ -79,10 +81,11 @@ const Login = () => {
       // Fusionner le panier invité avec le panier utilisateur
       await dispatch(mergeCartAsync());
 
-      showSuccess("Connexion réussie!");
-
+      // Smart Redirect: rediriger vers la page d'origine ou page par défaut
       if (userData.role === "admin") {
         navigate("/admin");
+      } else if (from && from !== '/login' && from !== '/register') {
+        navigate(from);
       } else {
         navigate("/");
       }
@@ -204,7 +207,7 @@ const Login = () => {
             Pas de compte?{" "}
             <Link
               component={RouterLink}
-              to="/register"
+              to={from ? `/register?from=${encodeURIComponent(from)}` : "/register"}
               underline="hover"
               sx={{ fontWeight: 600 }}
             >

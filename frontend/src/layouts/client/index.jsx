@@ -1,36 +1,15 @@
 import { Box, Container } from "@mui/material";
-import { useDispatch } from "react-redux";
-import { Outlet, useNavigate } from "react-router-dom";
-import { logout } from "../../api";
+import { Outlet } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useCart } from "../../hooks/useCart";
-import { useSnackbar } from "../../hooks/useSnackbar";
-import { clearCredentials } from "../../store/slices/authSlice";
-import { resetCart } from "../../store/slices/cartSlice";
+import { useLogout } from "../../hooks/useLogout";
 import Footer from "./Footer";
 import Header from "./Header";
 
 function ClientLayout() {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { user } = useAuth();
-  const { showSuccess, showError } = useSnackbar();
   const { itemsCount: cartCount } = useCart();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      dispatch(clearCredentials());
-      dispatch(resetCart()); // Réinitialiser le panier lors de la déconnexion
-      showSuccess("Déconnexion réussie");
-      navigate("/");
-    } catch {
-      dispatch(clearCredentials());
-      dispatch(resetCart());
-      showError("Erreur lors de la déconnexion");
-      navigate("/");
-    }
-  };
+  const { logout: handleLogout } = useLogout();
 
   return (
     <Container maxWidth="lg" sx={{ padding: "0" }}>

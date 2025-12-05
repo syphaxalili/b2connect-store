@@ -3,13 +3,14 @@
  *
  * ARCHITECTURE:
  * 1. createCheckoutSession() - Crée une session de paiement Stripe
- * 2. handleWebhook() - Traite les événements Stripe (webhook réel en production)
- * 3. simulateWebhook() - Simule le webhook en développement (À SUPPRIMER EN PRODUCTION)
+ * 2. handleWebhook() - Traite les événements Stripe (webhook unifié prod/dev)
  *
  * FLUX DE PAIEMENT:
  * Frontend → POST /create-checkout-session → Stripe Checkout
- * User paie → Stripe → POST /webhook (ou simulate-webhook en dev)
+ * User paie → Stripe → POST /webhook
  * Webhook crée la commande → Frontend redirigé vers /payment-success
+ *
+ * DEV: Utilisez Stripe CLI pour tester: stripe listen --forward-to localhost:5000/api/stripe/webhook
  */
 
 const { Order, OrderItem, User, Address } = require("../models/mysql");
@@ -236,131 +237,8 @@ const handleWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
-/**
- * Simule le webhook Stripe en développement
- *
- * ⚠️ À SUPPRIMER EN PRODUCTION
- *
- * En production, Stripe appellera directement le webhook /api/stripe/webhook
- * Voir handleWebhook() pour la logique complète
- */
-const simulateWebhook = async (req, res) => {
-  const { session_id } = req.body;
-  const stripe = getStripeClient();
-
-  try {
-    // Récupérer la session depuis Stripe
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-
-    // Simuler l'événement checkout.session.completed
-    const event = {
-      type: "checkout.session.completed",
-      data: {
-        object: session,
-      },
-    };
-
-    // Traiter l'événement comme le webhook
-    if (event.type === "checkout.session.completed") {
-      const sessionData = event.data.object;
-
-      // Récupérer les métadonnées
-      const { user_id, product_ids, quantities, shipping_address } =
-        sessionData.metadata;
-
-      const parsedProductIds = JSON.parse(product_ids);
-      const parsedQuantities = JSON.parse(quantities);
-      const parsedShippingAddress = JSON.parse(shipping_address);
-
-      // Récupérer les produits
-      const products = await Product.find({ _id: { $in: parsedProductIds } });
-
-      // Calculer le sous-total
-      const subtotal = products.reduce((total, product, index) => {
-        return total + product.price * parsedQuantities[index];
-      }, 0);
-
-      const shipping_fee = 5.99;
-      const total_amount = subtotal + shipping_fee;
-
-      // Créer l'adresse de livraison
-      let shippingAddressId = null;
-      if (parsedShippingAddress && parsedShippingAddress.street) {
-        const newShippingAddress = await Address.create({
-          street: parsedShippingAddress.street,
-          postal_code: parsedShippingAddress.postal_code,
-          city: parsedShippingAddress.city,
-          country: parsedShippingAddress.country || "France",
-        });
-        shippingAddressId = newShippingAddress.id;
-      }
-
-      // Créer la commande
-      const order = await Order.create({
-        user_id: parseInt(user_id),
-        total_amount,
-        shipping_fee,
-        shipping_address_id: shippingAddressId,
-        status: "pending",
-      });
-
-      // Créer les articles de commande
-      const orderItems = parsedProductIds.map((product_id, index) => ({
-        order_id: order.id,
-        product_id,
-        quantity: parsedQuantities[index],
-        unit_price: products.find((p) => p._id.toString() === product_id).price,
-      }));
-      await OrderItem.bulkCreate(orderItems);
-
-      // Mettre à jour le stock
-      for (let i = 0; i < products.length; i++) {
-        await Product.findByIdAndUpdate(parsedProductIds[i], {
-          $inc: { stock: -parsedQuantities[i] },
-        });
-      }
-
-      // Envoyer l'email de confirmation de commande
-      const user = await User.findByPk(parseInt(user_id));
-      if (user && user.email) {
-        const emailOrderItems = products.map((product, index) => ({
-          name: product.name,
-          quantity: parsedQuantities[index],
-          price: product.price,
-        }));
-
-        const emailTemplate = getOrderConfirmationEmail({
-          orderId: order.id,
-          firstName: user.first_name,
-          totalAmount: total_amount,
-          shippingFee: shipping_fee,
-          subtotal: subtotal,
-          items: emailOrderItems,
-        });
-
-        // Envoi asynchrone pour ne pas bloquer la réponse
-        sendEmail({
-          to: user.email,
-          subject: emailTemplate.subject,
-          text: emailTemplate.text,
-          html: emailTemplate.html,
-        }).catch(error => {
-          console.error("Erreur lors de l'envoi de l'email de confirmation (simulate webhook):", error);
-        });
-      }
-
-      return res.json({ success: true, order_id: order.id });
-    }
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Erreur lors de la simulation du webhook:", error);
-    res.status(500).json({ error: error.message });
-  }
-};
 
 module.exports = {
   createCheckoutSession,
   handleWebhook,
-  simulateWebhook,
 };
