@@ -1,6 +1,12 @@
 const rateLimit = require('express-rate-limit');
 
 /**
+ * Désactiver le rate limiting en mode test
+ * Les tests lancent beaucoup de requêtes rapidement et seraient bloqués
+ */
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+
+/**
  * Rate limiter pour l'endpoint de connexion
  * Protège contre les attaques par force brute
  * 
@@ -9,7 +15,7 @@ const rateLimit = require('express-rate-limit');
  * - Fenêtre de 15 minutes
  * - Bloque l'IP pendant 15 minutes après dépassement
  */
-const loginLimiter = rateLimit({
+const loginLimiter = isTestEnvironment ? (req, res, next) => next() : rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limite de 5 requêtes par fenêtre
   standardHeaders: true, // Retourne les infos de rate limit dans les headers `RateLimit-*`
@@ -29,7 +35,7 @@ const loginLimiter = rateLimit({
  * Rate limiter plus strict pour les tentatives de réinitialisation de mot de passe
  * Protège contre l'énumération d'emails et le spam
  */
-const passwordResetLimiter = rateLimit({
+const passwordResetLimiter = isTestEnvironment ? (req, res, next) => next() : rateLimit({
   windowMs: 60 * 60 * 1000, // 1 heure
   max: 3, // Maximum 3 tentatives par heure
   standardHeaders: true,
@@ -48,7 +54,7 @@ const passwordResetLimiter = rateLimit({
  * Rate limiter général pour l'API d'authentification
  * Protège contre les abus généraux
  */
-const authLimiter = rateLimit({
+const authLimiter = isTestEnvironment ? (req, res, next) => next() : rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // 100 requêtes par fenêtre
   message: {
