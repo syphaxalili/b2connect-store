@@ -18,3 +18,4 @@ export const getCurrentUser = () => axiosPublic.get("/auth/me");
 // Protected routes
 export const logout = () => axiosPrivate.post("/auth/logout");
 export const refreshToken = () => axiosPrivate.post("/auth/refresh");
+export const deleteAccount = () => axiosPrivate.delete("/auth/account");

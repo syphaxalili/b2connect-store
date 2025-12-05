@@ -9,6 +9,7 @@ const {
   requestPasswordReset,
   resetPassword,
   verifyResetToken,
+  deleteAccount,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/auth");
 const {
@@ -28,5 +29,6 @@ router.post("/logout", logout);
 
 // protected routes
 router.get("/me", protect, me);
+router.delete("/account", protect, deleteAccount);
 
 module.exports = router;
