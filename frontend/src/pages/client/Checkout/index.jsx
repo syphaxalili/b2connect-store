@@ -191,10 +191,6 @@ function Checkout() {
         showError("Erreur: URL de paiement non reçue");
       }
     } catch (error) {
-      console.error(
-        "Erreur lors de la création de la session de paiement:",
-        error
-      );
       showError(
         error.response?.data?.error ||
           "Erreur lors de la création de la session de paiement"
