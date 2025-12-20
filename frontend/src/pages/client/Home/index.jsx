@@ -22,15 +22,23 @@ function Home() {
       try {
         const params = {
           page,
-          limit: 20,
-          category_id: filters.category === "all" ? undefined : filters.category,
+          limit: 10,
+          category_id:
+            filters.category === "all" ? undefined : filters.category,
           brand: filters.brand === "all" ? undefined : filters.brand,
-          price: filters.price === "all" ? undefined : filters.price,
-          sort: filters.sort === "new" ? undefined : filters.sort,
+          price: filters.price === "all" ? undefined : filters.price
         };
 
+        if (filters.sort === "price_asc") {
+          params.sortBy = "price";
+          params.sortOrder = "asc";
+        } else if (filters.sort === "price_desc") {
+          params.sortBy = "price";
+          params.sortOrder = "desc";
+        }
+
         const response = await getProducts(params);
-        
+
         setProducts(response.data.products || []);
         setTotalPages(response.data.pagination.pages || 1);
       } catch {
@@ -54,7 +62,7 @@ function Home() {
 
   const handlePageChange = useCallback((event, value) => {
     setPage(value);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   return (
@@ -102,18 +110,18 @@ function Home() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={handlePageChange}
-                color="primary"
-                size="large"
-                showFirstButton
-                showLastButton
-              />
-            </Box>
-          )}
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
     </Container>
   );
 }

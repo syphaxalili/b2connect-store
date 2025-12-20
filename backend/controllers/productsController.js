@@ -24,7 +24,7 @@ const getAllProducts = async (req, res) => {
         query.price = { $gte: 500 };
       } else {
         const [min, max] = price.split("-").map(Number);
-        if (min && max) {
+        if (!isNaN(min) && !isNaN(max)) {
           query.price = { $gte: min, $lte: max };
         }
       }
