@@ -95,7 +95,9 @@ const ProductCard = memo(({ product }) => {
 
         {/* Product Description */}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-          {product.description || "Description non spécifiée"}
+          {(product.description || "Description non spécifiée").length > 80
+            ? (product.description || "Description non spécifiée").substring(0, 80) + "..."
+            : (product.description || "Description non spécifiée")}
         </Typography>
 
         {/* Product Price */}
