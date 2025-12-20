@@ -26,8 +26,15 @@ function Home() {
           category_id: filters.category === "all" ? undefined : filters.category,
           brand: filters.brand === "all" ? undefined : filters.brand,
           price: filters.price === "all" ? undefined : filters.price,
-          sort: filters.sort === "new" ? undefined : filters.sort,
         };
+
+        if (filters.sort === "price_asc") {
+          params.sortBy = "price";
+          params.sortOrder = "asc";
+        } else if (filters.sort === "price_desc") {
+          params.sortBy = "price";
+          params.sortOrder = "desc";
+        }
 
         const response = await getProducts(params);
         
