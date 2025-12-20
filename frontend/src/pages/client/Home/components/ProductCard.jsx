@@ -94,10 +94,19 @@ const ProductCard = memo(({ product }) => {
         </Typography>
 
         {/* Product Description */}
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-          {(product.description || "Description non spécifiée").length > 80
-            ? (product.description || "Description non spécifiée").substring(0, 80) + "..."
-            : (product.description || "Description non spécifiée")}
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mb: 0.5,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis"
+          }}
+        >
+          {product.description || "Aucune description"}
         </Typography>
 
         {/* Product Price */}
@@ -116,6 +125,6 @@ const ProductCard = memo(({ product }) => {
   );
 });
 
-ProductCard.displayName = 'ProductCard';
+ProductCard.displayName = "ProductCard";
 
 export default ProductCard;
