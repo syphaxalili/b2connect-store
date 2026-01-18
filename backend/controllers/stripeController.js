@@ -206,15 +206,15 @@ const handleWebhook = async (req, res) => {
       }));
       await OrderItem.bulkCreate(orderItems, { transaction });
 
+      // Commit de la transaction si tout s'est bien passé
+      await transaction.commit();
+
       // Mettre à jour le stock
       for (let i = 0; i < products.length; i++) {
         await Product.findByIdAndUpdate(parsedProductIds[i], {
           $inc: { stock: -parsedQuantities[i] },
         });
       }
-
-      // Commit de la transaction si tout s'est bien passé
-      await transaction.commit();
 
       // Envoyer l'email de confirmation de commande
       const user = await User.findByPk(parseInt(user_id));
