@@ -22,7 +22,7 @@ function Home() {
       try {
         const params = {
           page,
-          limit: 10,
+          limit: 12,
           category_id:
             filters.category === "all" ? undefined : filters.category,
           brand: filters.brand === "all" ? undefined : filters.brand,
