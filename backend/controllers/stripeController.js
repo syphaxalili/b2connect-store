@@ -13,7 +13,13 @@
  * DEV: Utilisez Stripe CLI pour tester: stripe listen --forward-to localhost:5000/api/stripe/webhook
  */
 
-const { Order, OrderItem, User, Address } = require("../models/mysql");
+const {
+  Order,
+  OrderItem,
+  User,
+  Address,
+  sequelize,
+} = require("../models/mysql");
 const Product = require("../models/mongodb/product");
 const { sendEmail } = require("../utils/mailService");
 const { getOrderConfirmationEmail } = require("../utils/emailTemplates");
@@ -142,6 +148,7 @@ const handleWebhook = async (req, res) => {
   // Gérer l'événement
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
+    const transaction = await sequelize.transaction();
 
     try {
       // Récupérer les métadonnées
@@ -166,23 +173,29 @@ const handleWebhook = async (req, res) => {
       // Créer l'adresse de livraison
       let shippingAddressId = null;
       if (parsedShippingAddress && parsedShippingAddress.street) {
-        const newShippingAddress = await Address.create({
-          street: parsedShippingAddress.street,
-          postal_code: parsedShippingAddress.postal_code,
-          city: parsedShippingAddress.city,
-          country: parsedShippingAddress.country || "France",
-        });
+        const newShippingAddress = await Address.create(
+          {
+            street: parsedShippingAddress.street,
+            postal_code: parsedShippingAddress.postal_code,
+            city: parsedShippingAddress.city,
+            country: parsedShippingAddress.country || "France",
+          },
+          { transaction },
+        );
         shippingAddressId = newShippingAddress.id;
       }
 
       // Créer la commande
-      const order = await Order.create({
-        user_id: parseInt(user_id),
-        total_amount,
-        shipping_fee,
-        shipping_address_id: shippingAddressId,
-        status: "pending",
-      });
+      const order = await Order.create(
+        {
+          user_id: parseInt(user_id),
+          total_amount,
+          shipping_fee,
+          shipping_address_id: shippingAddressId,
+          status: "pending",
+        },
+        { transaction },
+      );
 
       // Créer les articles de commande
       const orderItems = parsedProductIds.map((product_id, index) => ({
@@ -191,7 +204,7 @@ const handleWebhook = async (req, res) => {
         quantity: parsedQuantities[index],
         unit_price: products.find((p) => p._id.toString() === product_id).price,
       }));
-      await OrderItem.bulkCreate(orderItems);
+      await OrderItem.bulkCreate(orderItems, { transaction });
 
       // Mettre à jour le stock
       for (let i = 0; i < products.length; i++) {
@@ -199,6 +212,9 @@ const handleWebhook = async (req, res) => {
           $inc: { stock: -parsedQuantities[i] },
         });
       }
+
+      // Commit de la transaction si tout s'est bien passé
+      await transaction.commit();
 
       // Envoyer l'email de confirmation de commande
       const user = await User.findByPk(parseInt(user_id));
@@ -224,11 +240,16 @@ const handleWebhook = async (req, res) => {
           subject: emailTemplate.subject,
           text: emailTemplate.text,
           html: emailTemplate.html,
-        }).catch(error => {
-          console.error("Erreur lors de l'envoi de l'email de confirmation (webhook):", error);
+        }).catch((error) => {
+          console.error(
+            "Erreur lors de l'envoi de l'email de confirmation (webhook):",
+            error,
+          );
         });
       }
     } catch (error) {
+      // Rollback de la transaction en cas d'erreur
+      await transaction.rollback();
       console.error("Erreur lors de la création de la commande:", error);
       return res.status(500).json({ error: error.message });
     }
@@ -236,7 +257,6 @@ const handleWebhook = async (req, res) => {
 
   res.json({ received: true });
 };
-
 
 module.exports = {
   createCheckoutSession,
