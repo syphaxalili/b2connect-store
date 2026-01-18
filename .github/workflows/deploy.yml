@@ -2,7 +2,7 @@ name: CI/CD Pipeline - Déploiement Production
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   # ------ TEST ------
@@ -29,8 +29,8 @@ jobs:
       - name: 2. Installer Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: backend/package-lock.json
 
       - name: 3. Installer les dépendances du Backend
@@ -57,7 +57,7 @@ jobs:
           # --- Variables de Test ---
           NODE_ENV: test
           FRONTEND_URL: http://localhost:3000
-          
+
           # --- Secrets de Sécurité ---
           JWT_SECRET: "un_secret_de_test_123_pour_jest"
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -72,28 +72,13 @@ jobs:
           MYSQL_USER: root
           MYSQL_PASSWORD: root_password_test
           MYSQL_DATABASE: b2connect_db_test
-          
+
           # --- Configuration Email (mockée dans les tests) ---
           EMAIL_HOST: smtp.gmail.com
           EMAIL_PORT: 587
           EMAIL_USER: test@example.com
           EMAIL_PASS: test_password
           EMAIL_FROM_NAME: "B2CONNECT STORE TEST"
-
-      - name: 5. Générer le rapport de couverture
-        if: always()
-        run: |
-          cd backend
-          npm run test:coverage
-        continue-on-error: true
-
-      - name: 6. Upload du rapport de couverture
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: backend/coverage/
-          retention-days: 30
 
   # ------ BUILD ------
   build-and-push:
@@ -119,7 +104,7 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: ghcr.io/syphaxalili/b2connect-store-backend:latest
-          
+
       - name: 4. Construire et Pousser l'image Frontend
         uses: docker/build-push-action@v5
         with:
@@ -130,7 +115,7 @@ jobs:
           build-args: |
             VITE_API_URL=${{ vars.VITE_API_URL }}
             VITE_STRIPE_PUBLISHABLE_KEY=${{ vars.VITE_STRIPE_PUBLISHABLE_KEY }}
-            
+
   # ------ DEPLOY ------
   deploy:
     name: Déployer sur le VPS

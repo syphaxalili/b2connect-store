@@ -18,6 +18,7 @@ const {
   OrderItem,
   User,
   Address,
+  Payment,
   sequelize,
 } = require("../models/mysql");
 const Product = require("../models/mongodb/product");
@@ -205,6 +206,17 @@ const handleWebhook = async (req, res) => {
         unit_price: products.find((p) => p._id.toString() === product_id).price,
       }));
       await OrderItem.bulkCreate(orderItems, { transaction });
+
+      // Créer l'enregistrement de paiement
+      await Payment.create(
+        {
+          order_id: order.id,
+          amount: total_amount,
+          payment_method: "card",
+          status: "completed",
+        },
+        { transaction },
+      );
 
       // Commit de la transaction si tout s'est bien passé
       await transaction.commit();

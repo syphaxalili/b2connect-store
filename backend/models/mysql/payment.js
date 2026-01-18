@@ -33,7 +33,7 @@ module.exports = (sequelize) => {
     {
       tableName: "payments",
       timestamps: false,
-    }
+    },
   );
   return Payment;
 };
