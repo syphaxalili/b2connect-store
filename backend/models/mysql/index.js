@@ -13,11 +13,14 @@ User.belongsTo(Address, { foreignKey: "address_id", as: "address" });
 Address.hasOne(User, { foreignKey: "address_id" });
 
 // User - Order
-User.hasMany(Order, { foreignKey: "user_id", onDelete: "CASCADE" });
+User.hasMany(Order, { foreignKey: "user_id", onDelete: "SET NULL" });
 Order.belongsTo(User, { foreignKey: "user_id" });
 
 // Order - Address (Many-to-One pour shipping_address)
-Order.belongsTo(Address, { foreignKey: "shipping_address_id", as: "shippingAddress" });
+Order.belongsTo(Address, {
+  foreignKey: "shipping_address_id",
+  as: "shippingAddress",
+});
 Address.hasMany(Order, { foreignKey: "shipping_address_id" });
 
 Order.hasMany(OrderItem, { foreignKey: "order_id", onDelete: "CASCADE" });
@@ -40,7 +43,7 @@ const initModels = async () => {
   } catch (error) {
     console.error(
       "Erreur lors de la synchronisation des modèles MySQL:",
-      error
+      error,
     );
     process.exit(1);
   }
