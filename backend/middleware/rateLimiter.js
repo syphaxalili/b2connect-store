@@ -22,7 +22,6 @@ const loginLimiter = isTestEnvironment
       max: 5,
       standardHeaders: true,
       legacyHeaders: false,
-
       handler: (req, res) => {
         console.warn(`Rate limit dépassé pour l'IP: ${req.ip}`);
         res.status(429).json({
@@ -44,7 +43,6 @@ const passwordResetLimiter = isTestEnvironment
       max: 3,
       standardHeaders: true,
       legacyHeaders: false,
-
       handler: (req, res) => {
         console.warn(
           `Rate limit de réinitialisation de mot de passe dépassé pour l'IP: ${req.ip}`,
@@ -66,11 +64,11 @@ const authLimiter = isTestEnvironment
   : rateLimit({
       windowMs: 15 * 60 * 1000,
       max: 100,
+      standardHeaders: true,
+      legacyHeaders: false,
       message: {
         error: "Trop de requêtes. Veuillez réessayer plus tard.",
       },
-      standardHeaders: true,
-      legacyHeaders: false,
     });
 
 module.exports = {
