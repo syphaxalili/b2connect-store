@@ -85,9 +85,12 @@ const login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
     const user = await User.findOne({ where: { email } });
-    const isCorrectPassword = await bcrypt.compare(password, user.password);
 
-    if (!user || !user.password || !isCorrectPassword) {
+    if (!user || !user.password) {
+      return res.status(401).json({ error: "Identifiants invalides" });
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
