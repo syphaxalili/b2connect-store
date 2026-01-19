@@ -37,7 +37,7 @@ const register = async (req, res) => {
         .status(400)
         .json({ error: "Une adresse complète est requise pour l'inscription" });
     }
-    
+
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res
@@ -47,27 +47,32 @@ const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newAddress = await Address.create({
-      street: address.street,
-      postal_code: address.postal_code,
-      city: address.city,
-      country: address.country || "France",
-    }, { transaction: t });
+    const newAddress = await Address.create(
+      {
+        street: address.street,
+        postal_code: address.postal_code,
+        city: address.city,
+        country: address.country || "France",
+      },
+      { transaction: t },
+    );
 
-    const user = await User.create({
-      email,
-      password: hashedPassword,
-      first_name,
-      last_name,
-      address_id: newAddress.id,
-      phone_number,
-      gender,
-    }, { transaction: t });
+    const user = await User.create(
+      {
+        email,
+        password: hashedPassword,
+        first_name,
+        last_name,
+        address_id: newAddress.id,
+        phone_number,
+        gender,
+      },
+      { transaction: t },
+    );
 
     await t.commit();
 
     res.status(201).json({ user_id: user.id, email: user.email });
-
   } catch (error) {
     await t.rollback();
 
@@ -80,19 +85,16 @@ const login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
     const user = await User.findOne({ where: { email } });
+    const isCorrectPassword = await bcrypt.compare(password, user.password);
 
-    if (!user || !user.password) {
-      return res.status(401).json({ error: "Identifiants invalides" });
-    }
-
-    if (!(await bcrypt.compare(password, user.password))) {
+    if (!user || !user.password || !isCorrectPassword) {
       return res.status(401).json({ error: "Identifiants invalides" });
     }
 
     const accessToken = jwt.sign(
       { user_id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     const refreshToken = crypto.randomBytes(64).toString("hex");
@@ -170,21 +172,24 @@ const requestPasswordReset = async (req, res) => {
 
     // Construire le lien de réinitialisation
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-    
+
     // Envoyer l'email de réinitialisation de manière asynchrone
     const emailTemplate = getPasswordResetEmail({
       resetLink,
       firstName: user.first_name,
     });
-    
+
     // Envoi asynchrone pour ne pas bloquer la réponse
     sendEmail({
       to: user.email,
       subject: emailTemplate.subject,
       text: emailTemplate.text,
       html: emailTemplate.html,
-    }).catch(error => {
-      console.error("Erreur lors de l'envoi de l'email de réinitialisation:", error);
+    }).catch((error) => {
+      console.error(
+        "Erreur lors de l'envoi de l'email de réinitialisation:",
+        error,
+      );
     });
 
     res.status(200).json({
@@ -304,7 +309,7 @@ const refresh = async (req, res) => {
     const newAccessToken = jwt.sign(
       { user_id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     res.cookie("access_token", newAccessToken, {
@@ -332,7 +337,7 @@ const logout = async (req, res) => {
           refresh_token: null,
           refresh_token_expires_at: null,
         },
-        { where: { refresh_token } }
+        { where: { refresh_token } },
       );
     }
 
