@@ -118,27 +118,12 @@ jobs:
 
   # ------ DEPLOY ------
   deploy:
-    name: Déployer sur le VPS
+    name: Déployer via Webhook Dokploy
     runs-on: ubuntu-latest
-    # needs: [build-and-push, test]
     needs: build-and-push
-
     steps:
-      - name: 1. Configurer la clé SSH privée
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+      - name: Déployer le Backend
+        run: curl -X POST ${{ secrets.DOKPLOY_WEBHOOK_BACKEND }}
 
-      - name: 2. Se connecter au VPS et déployer
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /var/www/b2connect-store
-            git pull
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
-            docker compose pull
-            docker compose up -d --no-build
-            docker image prune -f
+      - name: Déployer le Frontend
+        run: curl -X POST ${{ secrets.DOKPLOY_WEBHOOK_FRONTEND }}
