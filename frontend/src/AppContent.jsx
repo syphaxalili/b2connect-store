@@ -16,14 +16,14 @@ const AppContent = () => {
 
   useEffect(() => {
     const hydrateAuth = async () => {
-      if (localStorage.getItem('isLoggedIn') === 'true') {
+      if (localStorage.getItem("isLoggedIn") === "true") {
         try {
           const response = await getCurrentUser();
           dispatch(setCredentials(response.data));
           await dispatch(mergeCartAsync());
         } catch {
           dispatch(loadGuestCartFromStorage());
-          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem("isLoggedIn");
         }
       } else {
         dispatch(loadGuestCartFromStorage());
